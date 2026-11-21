@@ -6,7 +6,7 @@ folder with a rules engine in C++, a training loop in PyTorch, tests, logs and t
 | Folder | Game | Status | Headline result |
 | --- | --- | --- | --- |
 | [`dara/`](dara/README.md) | [Dara](https://en.wikipedia.org/wiki/Dara_(game)), 5×6 three-in-a-row game | Finished: 3 hours of training | 12–0 against the arcadiagames.io bot; 15 wins, 0 losses in 20 games against Daka Dara's AI |
-| [`toy-battle/`](toy-battle/README.md) | [Toy Battle](https://www.rprod.com/en/games/toy-battle), all 8 terrains with one network | Training in progress | 98–100% against the scripted bot and hand-written search; still improving against its own earlier checkpoints |
+| [`toy-battle/`](toy-battle/README.md) | [Toy Battle](https://www.rprod.com/en/games/toy-battle), all 8 terrains with one network | Finished: 6.3 hours of training | 98–100% against the scripted bot and hand-written search; 65% against its own checkpoint from 4 hours earlier |
 | [`quoridor/`](quoridor/README.md) | Quoridor | Engine and training loop only, never trained | none |
 
 ## The approach

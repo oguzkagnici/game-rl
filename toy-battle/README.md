@@ -82,9 +82,9 @@ tests/test_engine.py    rules checks
 
 ## Results
 
-Training is still in progress; these are the numbers so far (4.4 hours on 4 CPU cores, no GPU, 94 rounds,
-1.78 million positions, about 600 self-play games per round). Raw numbers: `runs/main/log.jsonl`,
-`runs/main/ladder.jsonl`.
+One run: 6.3 hours on 4 CPU cores (no GPU), 128 rounds, about 75,000 self-play games, 2.48 million
+positions. Raw numbers: `runs/main/log.jsonl`, `runs/main/ladder.jsonl`. The final network is
+`runs/main/latest.pt` (round 128).
 
 **Against fixed opponents during training.** Every third round the network (searching 4 deals × 40
 simulations) plays 64 games, 8 per terrain, against each of:
@@ -104,10 +104,11 @@ scripted bot 39–25; 4 × 800 vs scripted bot 53–11.
 | 24 | 1.0 | 100% | 98% | 98% | 98% |
 | 36 | 1.5 | 100% | 100% | 100% | 100% |
 | 93 | 4.4 | 100% | 100% | 100% | 98% |
+| 126 | 6.2 | 100% | 100% | 98% | 100% |
 
 These opponents stop being informative after about round 9.
 
-**Against its own earlier checkpoints** (`python ladder.py --new 90 --vs 55 75 35 --games 256`; both sides
+**Against its own earlier checkpoints** (`python ladder.py --new 125 --vs 90 110 55 --games 256`; 128 games per row for round 55, 256 for the others; both sides
 search 4 deals × 40 simulations; games spread evenly over the 8 terrains, colours and first move):
 
 | Newer | Older | Wins–losses | Score |
@@ -120,11 +121,16 @@ search 4 deals × 40 simulations; games spread evenly over the 8 terrains, colou
 | Round 90 | Round 35 | 174–82 | 68% |
 | Round 90 | Round 55 | 159–97 | 62% |
 | Round 90 | Round 75 | 143–113 | 56% |
+| Round 125 | Round 55 | 166–90 | 65% |
+| Round 125 | Round 90 | 139–117 | 54% |
+| Round 125 | Round 110 | 122–134 | 48% |
 
 Progress flattened between rounds 35 and 55 with the default settings (learning rate 0.001, full search
-4 × 50). From round 58 the run uses `--lr 3e-4 --full-sims 100 --fast-sims 30`, after which it improved
-again. Per-terrain results are in `ladder.jsonl`; at 16–32 games per terrain they are too noisy to name a
-weak terrain, though Tropical Pool and Caribbean Sea were the two where round 90 did not beat round 55.
+4 × 50). From round 58 the run used `--lr 3e-4 --full-sims 100 --fast-sims 30`, after which it improved
+again up to about round 90–110. Round 125 is no better than round 110 and only slightly ahead of round 90
+(54%, within the ±6 point margin of 256 games), so this network size and search budget have probably given
+most of what they can. Per-terrain results are in `ladder.jsonl`; at 16–32 games per terrain they vary from
+match to match and no terrain is consistently weak.
 
 In self-play the first player wins about 50% of games and Blue about 50%.
 
