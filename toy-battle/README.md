@@ -35,6 +35,14 @@ bonus between bases joined by a path and between bases around the same region. F
 the point of view of the player to move, so both colours and the mirrored halves of a terrain share
 everything.
 
+## Play against it
+
+Open `web/dist/toybattle-standalone.html` in a browser (everything, including the network, is in that one
+file). Pick a terrain, your colour, who starts and how long the model may think. The page runs a
+JavaScript port of the engine, search and network (`web/toybattle.js`); `python web/build.py` rebuilds it
+from `runs/main/latest.pt`. The model does not see your rack: it re-deals the tiles it cannot see before
+every search, exactly as in training.
+
 ## Rules implemented
 
 From the official rulebook and player aid. Troop = strength: Kwak (joker), Skully 1, Cap'n 2, Jumbo 3,
@@ -77,7 +85,12 @@ toybattle/engine.py     Python wrapper, hand-written evaluator
 toybattle/model.py      the network
 toybattle/arena.py      matches between agents, spread evenly over terrains, colours and first move
 train.py                self-play training loop
+ladder.py               newest checkpoint against earlier ones
+web/toybattle.js        JavaScript port of rules, features, search and network
+web/template.html       the playable page; web/build.py and web/export.py assemble it
 tests/test_engine.py    rules checks
+tests/test_web.py       JavaScript port against the C++ engine and PyTorch, position by position
+tests/browser_*.js      headless-browser runs of the page on all 8 terrains
 ```
 
 ## Results

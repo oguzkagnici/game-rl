@@ -1,0 +1,519 @@
+<title>Toy Battle Sparring</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the terrain is a tall play mat on the left; a rail on the right reads top to bottom as
+   the table does: opponent, what to do now, your rack, then settings and the move record. */
+:root {
+  --ground: #efece4; --surface: #faf8f3; --ink: #1d2030; --muted: #666a7c; --line: #d6d1c3;
+  --mat: #e3dfd2; --path: #a9a393; --base: #faf8f3; --base-edge: #8c8676;
+  --blue: #2c5fc9; --blue-ink: #ffffff; --red: #cf4631; --red-ink: #ffffff;
+  --gold: #e3a008; --gold-soft: rgba(227,160,8,.28); --region: rgba(29,32,48,.05);
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #14151c; --surface: #1c1e28; --ink: #ecebe6; --muted: #9a9cab; --line: #32354a;
+    --mat: #23252f; --path: #555869; --base: #2d303d; --base-edge: #747789;
+    --blue: #4f7fe6; --blue-ink: #ffffff; --red: #e05a44; --red-ink: #ffffff;
+    --gold: #f2b530; --gold-soft: rgba(242,181,48,.3); --region: rgba(236,235,230,.05); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #14151c; --surface: #1c1e28; --ink: #ecebe6; --muted: #9a9cab; --line: #32354a;
+  --mat: #23252f; --path: #555869; --base: #2d303d; --base-edge: #747789;
+  --blue: #4f7fe6; --blue-ink: #ffffff; --red: #e05a44; --red-ink: #ffffff;
+  --gold: #f2b530; --gold-soft: rgba(242,181,48,.3); --region: rgba(236,235,230,.05); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1040px; margin: 0 auto; padding-block: 26px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 26px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2.3rem; line-height: 1; margin: 0; letter-spacing: -0.02em; }
+header p { margin: 0; color: var(--muted); max-width: 56ch; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 1.2rem; margin: 0 0 10px; text-wrap: balance; }
+.label { font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.table { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.mat { background: var(--mat); border-radius: 16px; padding: 8px; min-width: 0; }
+.mat svg { display: block; width: 100%; height: auto; max-height: 86vh; }
+.rail { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.seat { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seat .who { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.dot { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.dot.p0, .tile.p0 { background: var(--blue); color: var(--blue-ink); }
+.dot.p1, .tile.p1 { background: var(--red); color: var(--red-ink); }
+.seat.turn .who::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+.seat .nums { margin-left: auto; font-family: var(--mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.medals { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+
+.tiles { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; align-items: center; }
+.tile { border: 0; border-radius: 8px; min-width: 62px; padding: 5px 8px; font: 600 .82rem var(--body); text-align: left;
+  display: grid; grid-template-columns: auto 1fr; column-gap: 7px; align-items: center; line-height: 1.15; cursor: default; position: relative; }
+.tile b { font: 700 1.25rem var(--display); grid-row: span 2; }
+.tile small { font-weight: 400; font-size: .68rem; opacity: .9; }
+.tile:disabled { opacity: .45; }
+.tile.can { cursor: pointer; box-shadow: 0 0 0 2px var(--gold); opacity: 1; }
+.tile.sel { box-shadow: 0 0 0 3px var(--gold), 0 0 0 7px var(--gold-soft); }
+.tile.pinned::after { content: "pinned"; position: absolute; right: 4px; top: -8px; background: var(--ink); color: var(--ground);
+  font: 600 .6rem var(--body); padding: 1px 5px; border-radius: 6px; }
+.tile:focus-visible, .btn:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.tile.mini { min-width: 0; padding: 2px 7px; grid-template-columns: auto auto; cursor: default; }
+.tile.mini b { font-size: .95rem; grid-row: auto; }
+.tile.back { background: var(--line); color: var(--muted); min-width: 22px; width: 22px; height: 30px; padding: 0; }
+.none { color: var(--muted); font-size: .85rem; }
+
+.status p { margin: 0; font-weight: 500; }
+.status .note { color: var(--muted); font-weight: 400; font-size: .86rem; }
+.bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--gold); }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 9px;
+  font: 600 .9rem var(--body); padding: 9px 10px; cursor: pointer; }
+.btn.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.btn:disabled { opacity: .4; cursor: default; }
+.fields { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+.fields label { font-size: .85rem; color: var(--muted); }
+select { font: 500 .9rem var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; width: 100%; }
+#log { margin: 0; padding: 0; list-style: none; max-height: 210px; overflow-y: auto; font-size: .84rem; display: flex; flex-direction: column; gap: 2px; }
+#log li { display: grid; grid-template-columns: 12px 1fr; gap: 7px; align-items: baseline; }
+#log li i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+#log li.sys { color: var(--muted); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
+.notes > div { min-width: 0; }
+.notes p, .notes li { color: var(--muted); margin: 0 0 6px; }
+.notes ul { margin: 0; padding-left: 18px; }
+.notes strong { color: var(--ink); font-weight: 600; }
+table.troops { border-collapse: collapse; width: 100%; font-size: .87rem; }
+table.troops td { padding: 3px 8px 3px 0; vertical-align: top; color: var(--muted); }
+table.troops td:first-child { font: 700 1rem var(--display); color: var(--ink); width: 1.6em; }
+table.troops td:nth-child(2) { color: var(--ink); font-weight: 600; white-space: nowrap; }
+footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: 14px; }
+
+/* board */
+.edge { stroke: var(--path); stroke-width: 1.1; stroke-linecap: round; }
+.region { fill: var(--region); }
+.medal circle { fill: var(--surface); stroke: var(--base-edge); stroke-width: .35; stroke-dasharray: 1 .7; }
+.medal text { font: 600 3.4px var(--mono); fill: var(--muted); }
+.medal.p0 circle { fill: var(--blue); stroke: none; } .medal.p1 circle { fill: var(--red); stroke: none; }
+.medal.p0 text, .medal.p1 text { fill: #fff; }
+.base > circle.pad { fill: var(--base); stroke: var(--base-edge); stroke-width: .5; }
+.base.special > circle.pad { stroke-width: 1.1; stroke-dasharray: 1.6 1; }
+.disc.p0 { fill: var(--blue); } .disc.p1 { fill: var(--red); }
+.disc.under { opacity: .55; }
+.base text.str { font: 700 6.2px var(--display); fill: #fff; }
+.base text.nm { font: 500 2.5px var(--body); fill: #fff; opacity: .92; }
+.base text.gate, .hq text.gate { font: 500 2.4px var(--mono); fill: var(--muted); }
+.base text.cnt { font: 600 2.6px var(--mono); fill: var(--ink); }
+.base .cntbg { fill: var(--surface); stroke: var(--base-edge); stroke-width: .25; }
+.hq.p0 rect.body { fill: var(--blue); } .hq.p1 rect.body { fill: var(--red); }
+.hq text.t { font: 700 3.6px var(--display); fill: #fff; }
+.target { cursor: pointer; }
+.target .ring { fill: none; stroke: var(--gold); stroke-width: 1.3; }
+.target:hover .ring, .target:focus-visible .ring { stroke-width: 2.2; }
+.target:focus-visible { outline: none; }
+.ring { fill: none; stroke: none; }
+.last .ring { stroke: var(--ink); stroke-width: .5; stroke-dasharray: 1 1; }
+.src .ring { stroke: var(--gold); stroke-width: .8; stroke-dasharray: 2 1; }
+
+@media (max-width: 860px) {
+  .table { display: flex; flex-direction: column; gap: 12px; }
+  .rail { display: contents; }
+  .rail > .panel:nth-child(1) { order: 1; } .mat { order: 2; }
+  .rail > .panel:nth-child(2) { order: 3; } .rail > .panel:nth-child(3) { order: 4; }
+  .rail > .panel:nth-child(4) { order: 5; } .rail > .panel:nth-child(5) { order: 6; }
+  h1 { font-size: 1.9rem; }
+  .mat svg { max-height: 66vh; margin: 0 auto; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Toy Battle Sparring</h1>
+    <p>Play the self-taught network on any of the 8 terrains. Unofficial fan-made test page, plain shapes only.</p>
+  </header>
+
+  <div class="table">
+    <div class="mat"><svg id="board" viewBox="0 0 100 166" role="group" aria-label="Terrain"></svg></div>
+
+    <div class="rail">
+      <div class="panel">
+        <div class="seat" id="seat-model"><span class="who"><span class="dot" id="dot-model"></span>Model</span><span class="nums" id="nums-model"></span></div>
+        <div class="tiles" id="rack-model"></div>
+        <div class="tiles" id="disc-model"></div>
+      </div>
+
+      <div class="panel status">
+        <p id="status">Loading the network…</p>
+        <p class="note" id="note"></p>
+        <div class="bar"><i id="progress"></i></div>
+        <div class="row">
+          <button class="btn" id="draw" disabled>Draw 2</button>
+          <button class="btn" id="skip" disabled>Skip effect</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="seat" id="seat-you"><span class="who"><span class="dot" id="dot-you"></span>You</span><span class="nums" id="nums-you"></span></div>
+        <div class="tiles" id="rack-you"></div>
+        <div class="tiles" id="disc-you"></div>
+      </div>
+
+      <div class="panel">
+        <div class="fields">
+          <label for="map">Terrain</label><select id="map"></select>
+          <label for="side">You play</label><select id="side"><option value="0">Blue</option><option value="1">Red</option></select>
+          <label for="first">First move</label><select id="first"><option value="you">You</option><option value="model">Model</option><option value="random">Random</option></select>
+          <label for="level">Model thinks</label><select id="level">
+            <option value="2x30">Quick (2 deals × 30)</option><option value="4x60" selected>Normal (4 deals × 60)</option><option value="4x150">Long (4 deals × 150)</option></select>
+        </div>
+        <button class="btn primary" id="new-game">New game</button>
+      </div>
+
+      <div class="panel">
+        <span class="label">Moves</span>
+        <ol id="log"></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h2 id="map-title">Terrain</h2>
+      <p id="map-effect"></p>
+      <p id="map-goal"></p>
+      <ul>
+        <li>On your turn: <strong>draw 2</strong> troops, or <strong>place 1</strong> (click a troop, then a ringed base).</li>
+        <li>You may place on an empty base, your own troop, or an enemy troop of lower strength. The base must be linked to your H.Q. through bases you hold.</li>
+        <li>Hold every base around a region to take its medals for good.</li>
+        <li>Win by placing a troop on the enemy H.Q. or by reaching the medal target.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Troops</h2>
+      <table class="troops"><tbody id="troops"></tbody></table>
+    </div>
+    <div>
+      <h2>About the model</h2>
+      <p id="about"></p>
+      <p>It does not see your rack. Before each search the tiles it cannot see are dealt at random, several times, and it picks the move that does best across those deals.</p>
+      <p>House rulings where the rulebook leaves room: troop and base effects with a target can be skipped; Kwak passes every gate; Hook needs a normal link on Station Metal-X special bases; a game stops after 200 turns.</p>
+    </div>
+  </div>
+  <footer>Unofficial. Toy Battle is a game by Paolo Mori and Alessandro Zucchini, published by Repos Production. No game art is used here. Terrain graphs follow a third-party transcription; the medal counts of Volcanic Jungle and Caribbean Sea are unverified.</footer>
+</div>
+
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+/*__DATA__*/
+(function () {
+"use strict";
+const D = window.TB_DATA, $ = (id) => document.getElementById(id), NS = "http://www.w3.org/2000/svg";
+const NAMES = ["Kwak", "Skully", "Cap'n", "Jumbo", "Hook", "XB-42", "Star", "Roxy"];
+const GLYPH = ["K", "1", "2", "3", "4", "5", "6", "7"];
+const SHORT = ["joker", "draw 2", "place again", "remove next to it", "place anywhere", "foe discards 1", "draw 1", "no effect"];
+const LONG = ["Joker: goes on any troop, and any troop goes on it.", "Draw 2 troops.", "Place one more troop.",
+  "Send an adjacent enemy top troop to its discard.", "Can be placed on a base that is not linked to your H.Q.",
+  "The opponent discards one random troop from their rack.", "Draw 1 troop.", "No effect, strongest troop."];
+const EFFECT = {
+  recall: "Special bases (dashed): after placing there you may take the top troop of another base of yours back into your rack.",
+  gate: "Special bases (dashed) and some H.Q. only accept the strengths printed under them. Kwak passes everywhere.",
+  draw: "Special bases (dashed): placing there draws 1 troop.",
+  erupt: "Special bases (dashed): after placing there you may move an adjacent enemy top troop onto a base next to it.",
+  exhume: "Special bases (dashed): after placing there you may take one troop from your discard back into your rack.",
+  none: "No special bases. Blue has two H.Q., Red has one.",
+  shield: "Special bases (dashed): a troop placed there does not use its effect.",
+  sniper: "Special bases (dashed): placing there pins one random troop in the opponent's rack for their next turn.",
+};
+const PHASE_TEXT = ["", "Cap'n: place one more troop, or skip.", "Jumbo: pick an adjacent enemy troop to remove, or skip.",
+  "Pick one of your troops to take back, or skip.", "Eruption: pick an adjacent enemy troop to move, or skip.",
+  "Eruption: pick where the troop lands.", "Cemetery: pick a troop from your discard, or skip."];
+
+TB.setTerrains(D.terrains.map((t) => t.packed));
+let evaluate = null, S = null, human = 0, sel = -1, token = 0, busy = false, owners = {}, last = [], lastValue = null;
+const rand32 = () => (Math.random() * 4294967296) >>> 0;
+const who = (p) => (p === human ? "You" : "Model");
+const el = (tag, attrs, parent, text) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const gateText = (g) => (g === 255 ? "" : [1, 2, 3, 4, 5, 6, 7].filter((t) => (g >> t) & 1).join("·"));
+
+function log(text, p) {
+  const li = document.createElement("li"), i = document.createElement("i"), span = document.createElement("span");
+  if (p === undefined) li.className = "sys"; else i.className = "dot p" + p;
+  span.textContent = text; li.append(i, span); $("log").appendChild(li);
+  $("log").scrollTop = $("log").scrollHeight;
+}
+
+function describe(s, a) {
+  const T = D.terrains[s.ter], v = (w) => (s.turn === human ? w : w + "s");
+  if (a === TB.A_DRAW) return "";
+  if (a === TB.A_SKIP) return v("skip") + " the effect";
+  if (a < TB.A_BASE) { const t = Math.floor((a - 2) / 17), slot = (a - 2) % 17; return `${NAMES[t]} → ${slot >= 15 ? "enemy H.Q." : T.bases[slot].name}`; }
+  if (a >= TB.A_TYPE) return `${v("take")} ${NAMES[a - TB.A_TYPE]} back from the discard`;
+  const b = a - TB.A_BASE, nm = T.bases[b].name;
+  return s.phase === TB.JUMBO ? `Jumbo removes the troop on ${nm}` : s.phase === TB.RECALL ? `${v("take")} the troop on ${nm} back`
+       : s.phase === TB.ERUPT_SRC ? `eruption: ${v("move")} the troop on ${nm}` : `… to ${nm}`;
+}
+
+// Apply an action, attribute regions and write the move record.
+function act(a) {
+  const me = S.turn, before = TB.clone(S), text = describe(S, a);
+  TB.applyAction(S, a);
+  const extra = [];
+  const placedType = a >= 2 && a < TB.A_BASE ? Math.floor((a - 2) / 17) : -1;
+  for (const p of [me, 1 - me]) {
+    const drawn = before.reserve[p] - S.reserve[p];
+    if (drawn > 0) {
+      const names = [];
+      if (p === human) for (let t = 0; t < 8; t++) {
+        const was = before.rack[p * 8 + t] - (p === me && t === placedType ? 1 : 0);
+        for (let k = was; k < S.rack[p * 8 + t]; k++) names.push(NAMES[t]);
+      }
+      extra.push(`${p === me && a !== TB.A_DRAW ? "" : who(p) + " "}${p === human ? "draw" : "draws"} ${names.length ? names.join(", ") : drawn}`.trim());
+    }
+    for (let t = 0; t < 8; t++) if (S.disc[p * 8 + t] > before.disc[p * 8 + t] && !(a >= TB.A_BASE && a < TB.A_TYPE))
+      extra.push(`${who(p)} ${p === human ? "lose" : "loses"} ${NAMES[t]} from the rack`);
+    if (S.pin[p] && !before.pin[p]) extra.push(p === human ? `your ${NAMES[S.pin[p] - 1]} is pinned` : "one of the model's troops is pinned");
+    const gained = S.medals[p] - before.medals[p];
+    if (gained > 0) extra.push(`${who(p)} ${p === human ? "take" : "takes"} ${gained} medal${gained > 1 ? "s" : ""}`);
+  }
+  const Tt = TB.TER[S.ter];
+  for (let r = 0; r < Tt.nreg; r++) if (((S.taken >> r) & 1) && !((before.taken >> r) & 1)) {
+    const holds = (p) => { let ok = true; for (let b = 0; b < Tt.nb; b++) if (((Tt.reg[r] >> b) & 1) && TB.owner(S, b) !== p) ok = false; return ok; };
+    owners[r] = holds(me) ? me : 1 - me;
+  }
+  log(text ? `${who(me)}: ${text}${extra.length ? " (" + extra.join("; ") + ")" : ""}` : extra.join("; "), me);
+  if (a >= 2 && a < TB.A_BASE && (a - 2) % 17 < 15) last = [(a - 2) % 17];
+  else if (a >= TB.A_BASE && a < TB.A_TYPE) last = [a - TB.A_BASE];
+  if (S.winner >= 0) {
+    const T = D.terrains[S.ter], hq = a >= 2 && a < TB.A_BASE && (a - 2) % 17 >= 15;
+    const why = hq ? "a troop reached the enemy H.Q." : S.winner < 2 && S.medals[S.winner] >= T.objective ? `${T.objective} medals reached`
+      : S.nturn >= TB.MAXTURN ? "200-turn limit, most medals" : `${who(S.turn)} can neither draw nor place, most medals`;
+    log(S.winner === 2 ? `Draw (${why}).` : `${who(S.winner)} ${S.winner === human ? "win" : "wins"}: ${why}.`);
+  }
+}
+
+function tile(p, t, opts = {}) {
+  const b = document.createElement("button");
+  b.className = `tile p${p}` + (opts.mini ? " mini" : "");
+  b.type = "button";
+  const g = document.createElement("b"); g.textContent = GLYPH[t];
+  const n = document.createElement("span"); n.textContent = NAMES[t] + (opts.count > 1 ? ` ×${opts.count}` : "");
+  b.append(g, n);
+  if (!opts.mini) { const sm = document.createElement("small"); sm.textContent = SHORT[t]; b.append(sm); }
+  b.title = `${NAMES[t]} (strength ${t === 0 ? "joker" : t}). ${LONG[t]}`;
+  b.disabled = true;
+  return b;
+}
+
+function render() {
+  const T = D.terrains[S.ter], Tt = TB.TER[S.ter], svg = $("board"), legal = TB.legalActions(S), mine = S.turn === human && S.winner < 0 && !busy;
+  const fx = (x) => (human ? 100 - x : x), fy = (y) => (human ? 166 - y : y);
+  svg.replaceChildren();
+  // regions
+  T.regions.forEach((r, i) => {
+    const pts = r.bases.map((b) => [fx(T.bases[b].x), fy(T.bases[b].y)]);
+    const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+    pts.sort((a, b) => Math.atan2(a[1] - cy, a[0] - cx) - Math.atan2(b[1] - cy, b[0] - cx));
+    el("polygon", { class: "region", points: pts.map((p) => `${cx + (p[0] - cx) * 0.8},${cy + (p[1] - cy) * 0.8}`).join(" ") }, svg);
+    const taken = (S.taken >> i) & 1, g = el("g", { class: "medal" + (taken ? " p" + owners[i] : "") }, svg);
+    el("title", {}, g, `${r.medals} medal${r.medals > 1 ? "s" : ""}` + (taken ? `, taken by ${who(owners[i]).toLowerCase()}` : ""));
+    el("circle", { cx, cy, r: 3 }, g);
+    el("text", { x: cx, y: cy + 1.2, "text-anchor": "middle" }, g, r.medals);
+  });
+  for (const e of T.edges) el("line", { class: "edge", x1: fx(e[0]), y1: fy(e[1]), x2: fx(e[2]), y2: fy(e[3]) }, svg);
+  const target = (g, action, label) => {
+    g.classList.add("target"); g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); g.setAttribute("aria-label", label);
+    const go = () => humanAct(action);
+    g.addEventListener("click", go);
+    g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
+  };
+  // H.Q.
+  for (const p of [0, 1]) T.hqs[p].forEach((h, k) => {
+    const g = el("g", { class: `hq p${p}` }, svg), x = fx(h.x), y = fy(h.y);
+    el("rect", { class: "body", x: x - 7, y: y - 5, width: 14, height: 10, rx: 2.2 }, g);
+    el("text", { class: "t", x, y: y + 1.3, "text-anchor": "middle" }, g, "H.Q.");
+    el("rect", { class: "ring", x: x - 8.2, y: y - 6.2, width: 16.4, height: 12.4, rx: 3 }, g);
+    if (h.gate !== 255) el("text", { class: "gate", x, y: y + (y < 83 ? -6.6 : 8.6), "text-anchor": "middle" }, g, "only " + gateText(h.gate));
+    const a = 2 + sel * 17 + 15 + k;
+    if (mine && p !== human && sel >= 0 && legal.includes(a)) target(g, a, `Place ${NAMES[sel]} on the enemy H.Q.`);
+  });
+  // bases
+  const pickPhase = S.phase >= TB.JUMBO && S.phase <= TB.ERUPT_DST;
+  T.bases.forEach((bs, b) => {
+    const x = fx(bs.x), y = fy(bs.y), h = S.h[b];
+    const g = el("g", { class: "base" + (bs.special ? " special" : "") + (last.includes(b) ? " last" : "") + (S.phase !== TB.MAIN && S.phase !== TB.EXHUME && S.src === b && S.winner < 0 ? " src" : "") }, svg);
+    const stack = []; for (let i = 0; i < h; i++) stack.push(S.st[b * TB.MAXH + i]);
+    el("title", {}, g, `${bs.name}${bs.special ? " (special)" : ""}: ` + (h ? stack.map((u) => `${u >> 3 === human ? "your" : "model's"} ${NAMES[u & 7]}`).reverse().join(" on ") : "empty"));
+    el("circle", { class: "pad", cx: x, cy: y, r: 6.6 }, g);
+    const under = stack.slice(Math.max(0, h - 4), Math.max(0, h - 1));
+    under.forEach((u, i) => el("circle", { class: `disc under p${u >> 3}`, cx: x, cy: y + (under.length - i) * 1.5, r: 5.4 }, g));
+    if (h) {
+      const u = stack[h - 1];
+      el("circle", { class: `disc p${u >> 3}`, cx: x, cy: y, r: 5.4, stroke: "var(--mat)", "stroke-width": 0.5 }, g);
+      el("text", { class: "str", x, y: y + 1.3, "text-anchor": "middle" }, g, GLYPH[u & 7]);
+      el("text", { class: "nm", x, y: y + 4.1, "text-anchor": "middle" }, g, NAMES[u & 7]);
+      if (h > 1) { el("circle", { class: "cntbg", cx: x + 5.6, cy: y - 4.6, r: 2.3 }, g); el("text", { class: "cnt", x: x + 5.6, y: y - 3.7, "text-anchor": "middle" }, g, h); }
+    }
+    if (bs.gate !== 255) el("text", { class: "gate", x, y: y + 10.2, "text-anchor": "middle" }, g, "only " + gateText(bs.gate));
+    el("circle", { class: "ring", cx: x, cy: y, r: 7.6 }, g);
+    if (!mine) return;
+    if (pickPhase && legal.includes(TB.A_BASE + b)) target(g, TB.A_BASE + b, `Pick ${bs.name}`);
+    else if (!pickPhase && sel >= 0 && legal.includes(2 + sel * 17 + b)) target(g, 2 + sel * 17 + b, `Place ${NAMES[sel]} on ${bs.name}`);
+  });
+
+  // seats
+  const model = 1 - human;
+  $("dot-you").className = "dot p" + human; $("dot-model").className = "dot p" + model;
+  $("seat-you").classList.toggle("turn", S.turn === human && S.winner < 0);
+  $("seat-model").classList.toggle("turn", S.turn === model && S.winner < 0);
+  const nums = (p) => `medals ${S.medals[p]}/${T.objective} · rack ${TB.total(S.rack, p)} · reserve ${S.reserve[p]}`;
+  $("nums-you").textContent = nums(human); $("nums-model").textContent = nums(model);
+  // my rack
+  const rack = $("rack-you"); rack.replaceChildren();
+  const placeable = (t) => legal.some((a) => a >= 2 && a < TB.A_BASE && Math.floor((a - 2) / 17) === t);
+  for (let t = 0; t < 8; t++) {
+    const n = S.rack[human * 8 + t]; if (!n) continue;
+    const b = tile(human, t, { count: n });
+    if (S.pin[human] === t + 1) b.classList.add("pinned");
+    if (mine && (S.phase === TB.MAIN || S.phase === TB.EXTRA) && placeable(t)) {
+      b.disabled = false; b.classList.add("can"); if (sel === t) b.classList.add("sel");
+      b.setAttribute("aria-pressed", sel === t);
+      b.addEventListener("click", () => { sel = sel === t ? -1 : t; render(); });
+    }
+    rack.appendChild(b);
+  }
+  if (!rack.children.length) rack.innerHTML = '<span class="none">Your rack is empty.</span>';
+  // model rack: face down, except tiles everyone saw it take back
+  const mr = $("rack-model"); mr.replaceChildren();
+  let hidden = TB.total(S.rack, model);
+  for (let t = 0; t < 8; t++) for (let k = 0; k < S.known[model * 8 + t]; k++) { mr.appendChild(tile(model, t, { mini: true })); hidden--; }
+  for (let k = 0; k < hidden; k++) { const b = document.createElement("span"); b.className = "tile back"; b.title = "hidden troop"; mr.appendChild(b); }
+  if (S.winner >= 0 && hidden > 0) {          // show what it held once the game is over
+    mr.replaceChildren();
+    for (let t = 0; t < 8; t++) if (S.rack[model * 8 + t]) mr.appendChild(tile(model, t, { mini: true, count: S.rack[model * 8 + t] }));
+  }
+  if (!mr.children.length) mr.innerHTML = '<span class="none">Rack empty.</span>';
+  // discards
+  for (const [p, id] of [[human, "disc-you"], [model, "disc-model"]]) {
+    const box = $(id); box.replaceChildren();
+    const lab = document.createElement("span"); lab.className = "label"; lab.textContent = "Discard"; box.appendChild(lab);
+    let any = false;
+    for (let t = 0; t < 8; t++) {
+      const n = S.disc[p * 8 + t]; if (!n) continue; any = true;
+      const b = tile(p, t, { mini: true, count: n });
+      if (mine && p === human && S.phase === TB.EXHUME && legal.includes(TB.A_TYPE + t)) {
+        b.disabled = false; b.classList.add("can"); b.style.cursor = "pointer";
+        b.addEventListener("click", () => humanAct(TB.A_TYPE + t));
+      }
+      box.appendChild(b);
+    }
+    if (!any) { const s = document.createElement("span"); s.className = "none"; s.textContent = "none"; box.appendChild(s); }
+  }
+  // status
+  $("draw").disabled = !(mine && legal.includes(TB.A_DRAW));
+  $("skip").disabled = !(mine && legal.includes(TB.A_SKIP));
+  let status, note = "";
+  if (S.winner >= 0) {
+    status = S.winner === 2 ? "Draw." : S.winner === human ? "You win." : "The model wins.";
+    note = "Its last rack is shown above. Start a new game below.";
+  } else if (S.turn !== human) status = "The model is thinking…";
+  else if (S.phase !== TB.MAIN) status = PHASE_TEXT[S.phase];
+  else if (sel >= 0) status = `Place ${NAMES[sel]}: click a ringed base.`;
+  else status = legal.includes(TB.A_DRAW) ? "Your turn: draw 2, or click a troop to place." : "Your turn: click a troop to place.";
+  if (S.winner < 0 && lastValue !== null) note = `The model rates its own chances at ${Math.round(50 * (lastValue + 1))}%.`;
+  $("status").textContent = status; $("note").textContent = note;
+}
+
+function humanAct(a) {
+  if (busy || S.winner >= 0 || S.turn !== human || !TB.legalActions(S).includes(a)) return;
+  act(a); sel = -1;
+  render();
+  if (S.winner < 0 && S.turn !== human) modelTurn();
+}
+
+async function modelTurn() {
+  const my = ++token, sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  busy = true; render();
+  const [deals, sims] = $("level").value.split("x").map(Number);
+  while (S.winner < 0 && S.turn !== human && my === token) {
+    const legal = TB.legalActions(S);
+    let a = legal[0];
+    if (legal.length > 1) {
+      const search = TB.makeSearch(S, evaluate, sims, deals, rand32);
+      for (;;) {
+        const t0 = performance.now(); let done = false;
+        while (!done && performance.now() - t0 < 30) done = search.step(4);
+        $("progress").style.width = `${Math.round(100 * search.simsDone / search.total)}%`;
+        if (done) break;
+        await sleep(0);
+        if (my !== token) return;
+      }
+      a = search.best(); lastValue = search.value();
+    }
+    await sleep(350);
+    if (my !== token) return;
+    act(a);
+    $("progress").style.width = "0";
+    busy = S.winner < 0 && S.turn !== human;
+    render();
+  }
+  busy = false; render();
+}
+
+function newGame() {
+  token++; busy = false; sel = -1; owners = {}; last = []; lastValue = null;
+  human = +$("side").value;
+  const f = $("first").value, first = f === "you" ? human : f === "model" ? 1 - human : (rand32() & 1);
+  S = TB.newGame(+$("map").value, first, rand32());
+  const T = D.terrains[S.ter];
+  $("log").replaceChildren();
+  log(`${T.name}. ${who(first)} ${first === human ? "start" : "starts"} with 3 troops, ${who(1 - first).toLowerCase()} with 4.`);
+  $("map-title").textContent = T.name;
+  $("map-effect").textContent = EFFECT[T.effect];
+  $("map-goal").textContent = `Medal target: ${T.objective}.`;
+  $("progress").style.width = "0";
+  render();
+  if (S.turn !== human) modelTurn();
+}
+
+D.terrains.forEach((t, i) => { const o = document.createElement("option"); o.value = i; o.textContent = t.name; $("map").appendChild(o); });
+NAMES.forEach((n, t) => {
+  const tr = document.createElement("tr");
+  for (const txt of [GLYPH[t], n, LONG[t]]) { const td = document.createElement("td"); td.textContent = txt; tr.appendChild(td); }
+  $("troops").appendChild(tr);
+});
+$("about").textContent = D.about;
+$("draw").addEventListener("click", () => humanAct(TB.A_DRAW));
+$("skip").addEventListener("click", () => humanAct(TB.A_SKIP));
+$("new-game").addEventListener("click", newGame);
+try { const m = localStorage.getItem("tb-map"); if (m !== null && D.terrains[+m]) $("map").value = m; } catch (e) {}
+$("map").addEventListener("change", () => { try { localStorage.setItem("tb-map", $("map").value); } catch (e) {} });
+
+(async function start() {
+  try {
+    const spec = window.TB_WEIGHTS || await (await fetch("weights.json")).json();
+    evaluate = TB.loadNet(spec);
+    window.TB_PAGE = { state: () => S, legal: () => TB.legalActions(S), human: () => human, render };
+    newGame();
+  } catch (e) {
+    $("status").textContent = "Could not load the network.";
+    $("note").textContent = String(e);
+  }
+})();
+})();
+</script>
