@@ -1,0 +1,19 @@
+{"algo": "dqn", "hours": 0.0, "steps": 0, "games": 0, "vs_random": 0.844, "vs_greedy": 0.0, "vs_heuristic200": 0.0}
+{"algo": "dqn", "hours": 0.083, "steps": 107776, "games": 699, "updates": 803, "eps": 0.824, "loss": 0.0034, "vs_random": 0.156, "vs_greedy": 0.0, "vs_heuristic200": 0.031}
+{"algo": "dqn", "hours": 0.167, "steps": 201344, "games": 1425, "updates": 1534, "eps": 0.649, "loss": 0.0034, "vs_random": 0.688, "vs_greedy": 0.031, "vs_heuristic200": 0.0}
+{"algo": "dqn", "hours": 0.25, "steps": 290432, "games": 2099, "updates": 2230, "eps": 0.472, "loss": 0.0025, "vs_random": 0.875, "vs_greedy": 0.094, "vs_heuristic200": 0.0}
+{"algo": "dqn", "hours": 0.334, "steps": 373504, "games": 2955, "updates": 2879, "eps": 0.296, "loss": 0.0023, "vs_random": 0.672, "vs_greedy": 0.031, "vs_heuristic200": 0.062}
+{"algo": "dqn", "hours": 0.417, "steps": 460416, "games": 3871, "updates": 3558, "eps": 0.12, "loss": 0.0022, "vs_random": 0.75, "vs_greedy": 0.125, "vs_heuristic200": 0.0}
+{"algo": "dqn", "hours": 0.501, "steps": 544384, "games": 4749, "updates": 4214, "eps": 0.05, "loss": 0.0017, "vs_random": 0.938, "vs_greedy": 0.125, "vs_heuristic200": 0.094}
+{"algo": "dqn", "hours": 0.584, "steps": 706048, "games": 6451, "updates": 5477, "eps": 0.05, "loss": 0.0011, "vs_random": 0.953, "vs_greedy": 0.125, "vs_heuristic200": 0.0}
+{"algo": "dqn", "hours": 0.668, "steps": 869248, "games": 8371, "updates": 6752, "eps": 0.05, "loss": 0.0011, "vs_random": 0.938, "vs_greedy": 0.219, "vs_heuristic200": 0.031}
+{"algo": "dqn", "hours": 0.751, "steps": 1023744, "games": 10219, "updates": 7959, "eps": 0.05, "loss": 0.0023, "vs_random": 0.75, "vs_greedy": 0.094, "vs_heuristic200": 0.062}
+{"algo": "dqn", "hours": 0.835, "steps": 1191040, "games": 12420, "updates": 9266, "eps": 0.05, "loss": 0.0016, "vs_random": 1.0, "vs_greedy": 0.5, "vs_heuristic200": 0.281}
+{"algo": "dqn", "hours": 0.918, "steps": 1357440, "games": 14605, "updates": 10566, "eps": 0.05, "loss": 0.0018, "vs_random": 1.0, "vs_greedy": 0.562, "vs_heuristic200": 0.219}
+{"algo": "dqn", "hours": 1.001, "steps": 1481600, "games": 16370, "updates": 11536, "eps": 0.05, "loss": 0.0011, "vs_random": 1.0, "vs_greedy": 0.812, "vs_heuristic200": 0.406}
+{"algo": "dqn", "hours": 1.085, "steps": 1572736, "games": 17669, "updates": 12248, "eps": 0.05, "loss": 0.0012, "vs_random": 1.0, "vs_greedy": 0.719, "vs_heuristic200": 0.438}
+{"algo": "dqn", "hours": 1.168, "steps": 1635328, "games": 18564, "updates": 12737, "eps": 0.05, "loss": 0.0013, "vs_random": 1.0, "vs_greedy": 0.812, "vs_heuristic200": 0.438}
+{"algo": "dqn", "hours": 1.252, "steps": 1694976, "games": 19439, "updates": 13203, "eps": 0.05, "loss": 0.0012, "vs_random": 1.0, "vs_greedy": 0.906, "vs_heuristic200": 0.531}
+{"algo": "dqn", "hours": 1.335, "steps": 1746688, "games": 20190, "updates": 13607, "eps": 0.05, "loss": 0.0014, "vs_random": 1.0, "vs_greedy": 0.906, "vs_heuristic200": 0.469}
+{"algo": "dqn", "hours": 1.418, "steps": 1796352, "games": 20930, "updates": 13995, "eps": 0.05, "loss": 0.0015, "vs_random": 1.0, "vs_greedy": 0.875, "vs_heuristic200": 0.406}
+{"algo": "dqn", "hours": 1.5, "steps": 1843968, "games": 21612, "updates": 14367, "eps": 0.05, "loss": 0.0015, "vs_random": 1.0, "vs_greedy": 0.875, "vs_heuristic200": 0.609}

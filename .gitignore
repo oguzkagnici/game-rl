@@ -1,0 +1,5 @@
+__pycache__/
+*.so
+replay.npz
+*.tmp.npz
+node_modules/

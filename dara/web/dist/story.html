@@ -1,0 +1,357 @@
+<title>Dara Learning Curve</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the scrubbable training chart is the hero, everything else is quiet. */
+:root {
+  --ground: #eceef4; --surface: #f8f9fc; --ink: #171c36; --muted: #5d6381; --line: #cfd3e2;
+  --board: #27326f; --bone: #f3eee2; --bone-edge: #b9b09a; --kola: #b9432f; --saffron: #c98a00;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --lose: #e34948;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1022; --surface: #151930; --ink: #e7e9f3; --muted: #9499b8; --line: #2b3154;
+    --board: #2a3678; --bone: #efe9dc; --bone-edge: #a39a84; --kola: #c9503a; --saffron: #f5c04a;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --lose: #e66767; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1022; --surface: #151930; --ink: #e7e9f3; --muted: #9499b8; --line: #2b3154;
+  --board: #2a3678; --bone: #efe9dc; --bone-edge: #a39a84; --kola: #c9503a; --saffron: #f5c04a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --lose: #e66767; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--ground); color: var(--ink); font: 16px/1.55 var(--body); }
+.wrap { max-width: 900px; margin: 0 auto; padding-block: 36px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.12; }
+h1 { font-size: clamp(2rem, 6vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; max-width: 66ch; }
+.eyebrow { font: 500 0.75rem var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.1rem; color: var(--muted); }
+section, header { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.note { color: var(--muted); font-size: 0.9rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px 20px; }
+.readout .k { font: 500 0.7rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.readout .v { font: 700 1.7rem var(--display); font-variant-numeric: tabular-nums; }
+.sw { width: 10px; height: 10px; border-radius: 3px; flex: none; display: inline-block; }
+.controls { display: flex; gap: 12px; align-items: center; }
+.controls input[type=range] { flex: 1; min-width: 0; accent-color: var(--board); }
+button { font: 600 0.9rem var(--body); color: var(--bone); background: var(--board); border: 0; border-radius: 999px; padding: 8px 18px; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--saffron); outline-offset: 2px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font: 500 11px var(--mono); fill: var(--muted); }
+.chart .lab { font: 600 12px var(--body); fill: var(--ink); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--ground); font-size: 0.8rem; padding: 8px 10px; border-radius: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.tip b { font-weight: 600; }
+.tip .row { display: flex; align-items: center; gap: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 3px; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+th { font: 500 0.72rem var(--mono); color: var(--muted); text-align: left; padding: 6px 8px; font-weight: 500; }
+thead th { text-align: center; max-width: 92px; vertical-align: bottom; }
+td { text-align: center; padding: 9px 8px; border-radius: 6px; min-width: 58px; color: var(--ink); font-weight: 600; }
+td.self { color: var(--muted); font-weight: 400; }
+tbody th { color: var(--ink); font: 600 0.85rem var(--body); white-space: nowrap; }
+.rank { color: var(--muted); font-weight: 400; }
+.algos { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+.algo { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.algo .tag { font: 500 0.7rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.algo ol { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; }
+.algo p { font-size: 0.92rem; }
+.algo .why { color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 24px; }
+.facts .v { font: 700 2rem var(--display); font-variant-numeric: tabular-nums; }
+.facts .k { color: var(--muted); font-size: 0.88rem; }
+a { color: inherit; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Dara · 5×6 board · 12 stones each</div>
+    <h1>From random moves to unbeaten in three hours</h1>
+    <p class="lede">A neural network learned Dara only by playing against itself. Drag the slider to watch its score against three fixed opponents rise as the self-play games pile up.</p>
+  </header>
+
+  <section>
+    <div class="panel">
+      <div class="readouts" id="readouts"></div>
+      <div class="chart" id="chart-main"></div>
+      <div class="controls">
+        <button id="play" type="button">Replay</button>
+        <input id="scrub" type="range" min="0" max="1000" value="1000" aria-label="Training time">
+      </div>
+      <div class="legend" id="legend-main"></div>
+    </div>
+    <p class="note">Score = wins plus half of draws, over 32 games per opponent, measured every third training round with the network searching 100 simulations per move. The two search opponents use the same tree search with a hand-written evaluation (count the stones) instead of a network.</p>
+  </section>
+
+  <section id="sec-ladder" hidden>
+    <h2>It kept beating its younger selves</h2>
+    <p>The fixed opponents stop being informative after the first hour, because the network wins every game. Against its own earlier checkpoints, the final network still gains ground.</p>
+    <div class="panel"><div class="chart" id="chart-ladder"></div></div>
+    <p class="note">Final network against each checkpoint, 48 games each, both sides searching 200 simulations per move.</p>
+  </section>
+
+  <section id="sec-arcadia" hidden>
+    <h2>Against a bot it had never seen</h2>
+    <p id="arcadia-text"></p>
+    <div class="panel"><div class="facts" id="arcadia-facts"></div></div>
+    <p class="note" id="arcadia-note"></p>
+  </section>
+
+  <section id="sec-daka" hidden>
+    <h2>Against a commercial game's AI</h2>
+    <p id="daka-text"></p>
+    <div class="panel"><div class="facts" id="daka-facts"></div></div>
+    <p class="note" id="daka-note"></p>
+  </section>
+
+  <section id="sec-algos" hidden>
+    <h2>Three ways to learn the same game</h2>
+    <p>The same network body was trained three ways on the same environment. For a like-for-like picture, every curve here is the network playing its single preferred move with <em>no tree search</em>, against the scripted bot that makes a three whenever it can.</p>
+    <div class="panel">
+      <div class="chart" id="chart-algos"></div>
+      <div class="legend" id="legend-algos"></div>
+    </div>
+    <p class="note" id="algos-note"></p>
+  </section>
+
+  <section id="sec-tour" hidden>
+    <h2>Head to head</h2>
+    <p>Every player met every other player. Each cell is the row player's score against the column player.</p>
+    <div class="panel"><div class="scroll"><table id="tour"></table></div></div>
+    <p class="note" id="tour-note"></p>
+  </section>
+
+  <section>
+    <h2>How each algorithm works</h2>
+    <div class="algos">
+      <div class="algo">
+        <div class="tag">Search + network · used for the main model</div>
+        <h3>AlphaZero</h3>
+        <ol>
+          <li>The network looks at a position and outputs two things: which moves look promising (policy) and who is winning (value).</li>
+          <li>Before every move, a tree search (MCTS) plays out 200 short what-if continuations, steered by those two outputs. Moves that keep looking good get visited more.</li>
+          <li>The visit counts are a better move choice than the network's first guess. The game is played with them.</li>
+          <li>After the game, the network is trained to predict the search's choice and the final winner. Then repeat.</li>
+        </ol>
+        <p class="why">Why it works well here: the search corrects the network's mistakes immediately, so every position yields a strong training signal instead of just a win or loss at the end.</p>
+      </div>
+      <div class="algo">
+        <div class="tag">Policy gradient · no search</div>
+        <h3>PPO</h3>
+        <ol>
+          <li>The network outputs move probabilities and an estimate of who is winning (the critic).</li>
+          <li>It plays games by sampling moves from those probabilities.</li>
+          <li>For each move it asks: did things turn out better or worse than the critic expected? That difference is the advantage.</li>
+          <li>Moves with positive advantage are made more likely, others less. A clip stops any single update from changing the policy by more than about 20%.</li>
+        </ol>
+        <p class="why">Stable and simple, but it learns only from what actually happened in its own games, and throws that data away after a few passes.</p>
+      </div>
+      <div class="algo">
+        <div class="tag">Value learning · no search</div>
+        <h3>DQN</h3>
+        <ol>
+          <li>The network outputs one number per move: the expected final result if I play this move and play well afterwards (the Q-value).</li>
+          <li>It plays mostly its highest-rated move, sometimes a random one to explore, and stores every step in a replay buffer.</li>
+          <li>Training pulls each Q-value towards "reward now, plus the best Q-value of the next position", negated when the opponent moves next.</li>
+          <li>A frozen copy of the network supplies those targets and is refreshed periodically, to keep training stable.</li>
+        </ol>
+        <p class="why">Reuses old data well, but in Dara the only reward is the result after roughly 90 actions, so the signal has to seep backwards one step at a time.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const STORY = {"az":[{"h":0.148,"games":171,"greedy":0.5,"h200":0.188,"h2000":0.047},{"h":0.218,"games":314,"greedy":null,"h200":null,"h2000":null},{"h":0.256,"games":522,"greedy":0.969,"h200":0.859,"h2000":0.5},{"h":0.338,"games":761,"greedy":null,"h200":null,"h2000":null},{"h":0.4,"games":997,"greedy":null,"h200":null,"h2000":null},{"h":0.44,"games":1232,"greedy":1.0,"h200":0.875,"h2000":0.891},{"h":0.527,"games":1491,"greedy":null,"h200":null,"h2000":null},{"h":0.565,"games":1755,"greedy":null,"h200":null,"h2000":null},{"h":0.607,"games":2019,"greedy":1.0,"h200":0.969,"h2000":0.969},{"h":0.698,"games":2276,"greedy":null,"h200":null,"h2000":null},{"h":0.74,"games":2534,"greedy":null,"h200":null,"h2000":null},{"h":0.782,"games":2796,"greedy":1.0,"h200":1.0,"h2000":0.875},{"h":0.863,"games":3046,"greedy":null,"h200":null,"h2000":null},{"h":0.903,"games":3288,"greedy":null,"h200":null,"h2000":null},{"h":0.944,"games":3539,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":1.022,"games":3791,"greedy":null,"h200":null,"h2000":null},{"h":1.062,"games":4043,"greedy":null,"h200":null,"h2000":null},{"h":1.103,"games":4304,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":1.202,"games":4530,"greedy":null,"h200":null,"h2000":null},{"h":1.24,"games":4766,"greedy":null,"h200":null,"h2000":null},{"h":1.281,"games":5010,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":1.371,"games":5247,"greedy":null,"h200":null,"h2000":null},{"h":1.409,"games":5493,"greedy":null,"h200":null,"h2000":null},{"h":1.453,"games":5750,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":1.531,"games":5999,"greedy":null,"h200":null,"h2000":null},{"h":1.571,"games":6228,"greedy":null,"h200":null,"h2000":null},{"h":1.617,"games":6469,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":1.718,"games":6703,"greedy":null,"h200":null,"h2000":null},{"h":1.764,"games":6922,"greedy":null,"h200":null,"h2000":null},{"h":1.801,"games":7143,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":1.908,"games":7367,"greedy":null,"h200":null,"h2000":null},{"h":1.943,"games":7571,"greedy":null,"h200":null,"h2000":null},{"h":1.984,"games":7781,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":2.069,"games":7994,"greedy":null,"h200":null,"h2000":null},{"h":2.106,"games":8211,"greedy":null,"h200":null,"h2000":null},{"h":2.146,"games":8442,"greedy":1.0,"h200":1.0,"h2000":0.938},{"h":2.232,"games":8663,"greedy":null,"h200":null,"h2000":null},{"h":2.271,"games":8878,"greedy":null,"h200":null,"h2000":null},{"h":2.311,"games":9089,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":2.389,"games":9301,"greedy":null,"h200":null,"h2000":null},{"h":2.431,"games":9513,"greedy":null,"h200":null,"h2000":null},{"h":2.468,"games":9709,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":2.576,"games":9917,"greedy":null,"h200":null,"h2000":null},{"h":2.616,"games":10129,"greedy":null,"h200":null,"h2000":null},{"h":2.662,"games":10341,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":2.756,"games":10545,"greedy":null,"h200":null,"h2000":null},{"h":2.793,"games":10744,"greedy":null,"h200":null,"h2000":null},{"h":2.837,"games":10947,"greedy":1.0,"h200":1.0,"h2000":1.0},{"h":2.933,"games":11131,"greedy":null,"h200":null,"h2000":null},{"h":2.971,"games":11330,"greedy":null,"h200":null,"h2000":null},{"h":3.013,"games":11536,"greedy":1.0,"h200":1.0,"h2000":1.0}],"ladder":[{"h":0.4,"score":1.0,"w":48,"l":0,"d":0},{"h":0.698,"score":0.979,"w":47,"l":1,"d":0},{"h":1.24,"score":0.885,"w":41,"l":4,"d":3},{"h":1.801,"score":0.74,"w":31,"l":8,"d":9}],"arcadia":{"games":12,"wins":12,"losses":0,"avg_mine":12.0,"avg_bot":8.75,"avg_turns":20.666666666666668,"blockades":11,"note":"Most games ended early by blockade: the network arranged its drops so that, after its first capture, the bot had no legal move left, which is a loss under both rule sets (confirmed on the two games whose final boards were recorded). Network searching 300 simulations per move and always moving first (the site gives the human side the first move). One rule differs: the site allows a line of four but does not count it, while the network was trained with lines of four forbidden."},"daka":{"games":20,"wins":15,"losses":0,"blockades":4,"abandoned":1,"avg_mine":11.0,"avg_bot":2.0,"note":"Network searching 300 simulations per move. Daka Dara has no blockade rule: a side without a move passes. The network was trained with \"no legal move = loss\", so those games were stopped at the blockade and are counted separately rather than as wins. The abandoned game stood at 10 stones to 7 for the network when the game left a captured stone in its internal board and the driver could not continue. Two changes were needed to run the game outside Windows: it is told it is a web build, and its first-launch tutorial is skipped."},"algos":{"az":[[0.0,0.0],[1.6,0.969],[2.79,1.0],[3.78,0.969],[4.96,1.0],[6.12,1.0],[7.2,1.0],[8.42,1.0],[9.56,1.0],[10.65,1.0],[11.88,1.0],[12.0,1.0]],"ppo":[[0.0,0.0],[0.172,0.625],[0.35,0.938],[0.518,0.906],[0.688,0.969],[0.882,0.969],[1.064,0.969],[1.246,1.0],[1.424,0.969],[1.596,0.938],[1.766,1.0],[1.954,1.0],[2.14,1.0],[2.348,0.938],[2.52,0.969],[2.708,1.0],[2.906,1.0],[3.004,1.0]],"dqn":[[0.0,0.0],[0.166,0.0],[0.334,0.031],[0.5,0.094],[0.668,0.031],[0.834,0.125],[1.002,0.125],[1.168,0.125],[1.336,0.219],[1.502,0.094],[1.67,0.5],[1.836,0.562],[2.002,0.812],[2.17,0.719],[2.336,0.812],[2.504,0.906],[2.67,0.906],[2.836,0.875],[3.0,0.875]],"xmax":12,"note":"32 games per point. AlphaZero trained for 3 hours on 4 cores (12 core-hours); PPO and DQN trained for 1.5 hours on 2 cores each (3 core-hours), so their curves stop early. AlphaZero's training used search; only this measurement switches it off."},"tournament":{"names":["AlphaZero + search","AlphaZero, no search","PPO + search","PPO","DQN","Scripted bot","Random"],"score":[[null,0.891,0.969,1.0,1.0,1.0,1.0],[0.109,null,0.594,1.0,1.0,1.0,1.0],[0.031,0.406,null,0.969,1.0,1.0,1.0],[0.0,0.0,0.031,null,0.75,1.0,1.0],[0.0,0.0,0.0,0.25,null,0.906,1.0],[0.0,0.0,0.0,0.0,0.094,null,1.0],[0.0,0.0,0.0,0.0,0.0,0.0,null]],"detail":[{"a":"AlphaZero + search","b":"AlphaZero, no search","wins":26,"losses":1,"draws":5},{"a":"AlphaZero + search","b":"PPO + search","wins":31,"losses":1,"draws":0},{"a":"AlphaZero + search","b":"PPO","wins":32,"losses":0,"draws":0},{"a":"AlphaZero + search","b":"DQN","wins":32,"losses":0,"draws":0},{"a":"AlphaZero + search","b":"Scripted bot","wins":32,"losses":0,"draws":0},{"a":"AlphaZero + search","b":"Random","wins":32,"losses":0,"draws":0},{"a":"AlphaZero, no search","b":"PPO + search","wins":18,"losses":12,"draws":2},{"a":"AlphaZero, no search","b":"PPO","wins":32,"losses":0,"draws":0},{"a":"AlphaZero, no search","b":"DQN","wins":32,"losses":0,"draws":0},{"a":"AlphaZero, no search","b":"Scripted bot","wins":32,"losses":0,"draws":0},{"a":"AlphaZero, no search","b":"Random","wins":32,"losses":0,"draws":0},{"a":"PPO + search","b":"PPO","wins":30,"losses":0,"draws":2},{"a":"PPO + search","b":"DQN","wins":32,"losses":0,"draws":0},{"a":"PPO + search","b":"Scripted bot","wins":32,"losses":0,"draws":0},{"a":"PPO + search","b":"Random","wins":32,"losses":0,"draws":0},{"a":"PPO","b":"DQN","wins":24,"losses":8,"draws":0},{"a":"PPO","b":"Scripted bot","wins":32,"losses":0,"draws":0},{"a":"PPO","b":"Random","wins":32,"losses":0,"draws":0},{"a":"DQN","b":"Scripted bot","wins":29,"losses":3,"draws":0},{"a":"DQN","b":"Random","wins":32,"losses":0,"draws":0},{"a":"Scripted bot","b":"Random","wins":32,"losses":0,"draws":0}],"note":"32 games per pairing, sides alternating. The first 4 actions of every game are random so that games differ; after that every player picks its best move. \"+ search\" means a 200-simulation tree search guided by that network; PPO's network has a value output, so it can be searched the same way, while DQN's cannot."}};
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+const pct = (v) => Math.round(v * 100) + "%";
+const css = (name) => `var(${name})`;
+const fmtH = (h) => { const m = Math.round(h * 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`; };
+
+// A small line chart: one y scale (0..100%), end labels, hover tooltip. Returns {setProgress}.
+function lineChart(host, { series, xmax, xfmt, xlabel, tipx }) {
+  const W = 860, H = 380, m = { l: 44, r: 150, t: 14, b: 40 };
+  const narrow = host.clientWidth < 560;
+  if (narrow) { m.r = 16; }
+  const VW = narrow ? 480 : W, VH = narrow ? 330 : H;
+  const x = (v) => m.l + (v / xmax) * (VW - m.l - m.r), y = (v) => m.t + (1 - v) * (VH - m.t - m.b);
+  const svg = el("svg", { viewBox: `0 0 ${VW} ${VH}`, role: "img" });
+  for (const g of [0, 0.25, 0.5, 0.75, 1]) {
+    svg.append(el("line", { x1: m.l, x2: VW - m.r, y1: y(g), y2: y(g), stroke: css("--line"), "stroke-width": 1, "stroke-dasharray": g === 0.5 ? "4 4" : "" }));
+    svg.append(el("text", { x: m.l - 8, y: y(g) + 4, "text-anchor": "end" }, pct(g)));
+  }
+  const ticks = xmax <= 3.5 ? [0, 0.5, 1, 1.5, 2, 2.5, 3] : Array.from({ length: Math.floor(xmax / 2) + 1 }, (_, i) => i * 2);
+  for (const t of ticks) if (t <= xmax) svg.append(el("text", { x: x(t), y: VH - m.b + 18, "text-anchor": "middle" }, xfmt(t)));
+  svg.append(el("text", { x: (m.l + VW - m.r) / 2, y: VH - 4, "text-anchor": "middle" }, xlabel));
+  const clipId = "clip" + Math.random().toString(36).slice(2);
+  const clipRect = el("rect", { x: 0, y: 0, width: VW, height: VH });
+  const clip = el("clipPath", { id: clipId }); clip.append(clipRect);
+  svg.append(clip);
+  const g = el("g", { "clip-path": `url(#${clipId})` });
+  const dots = [], labels = [];
+  const ends = series.map((s) => y(s.points[s.points.length - 1][1]));
+  const order = ends.map((v, i) => i).sort((a, b) => ends[a] - ends[b]);   // spread end labels apart
+  const laby = []; order.forEach((i, k) => { laby[i] = Math.max(ends[i], k ? laby[order[k - 1]] + 16 : -1e9); });
+  series.forEach((s, i) => {
+    g.append(el("path", { d: s.points.map((p, k) => (k ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(""), fill: "none", stroke: s.color, "stroke-width": 2.5, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    const d = el("circle", { r: 5, fill: s.color, stroke: css("--surface"), "stroke-width": 2 }); dots.push(d);
+    if (!narrow) { const t = el("text", { class: "lab", x: VW - m.r + 12, y: laby[i] + 4 }, s.name); labels.push(t); svg.append(t); }
+  });
+  svg.append(g); dots.forEach((d) => svg.append(d));
+  const cross = el("line", { y1: m.t, y2: VH - m.b, stroke: css("--muted"), "stroke-width": 1, visibility: "hidden" });
+  svg.append(cross);
+  host.append(svg);
+  const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; host.append(tip);
+  const at = (s, v) => { let best = s.points[0]; for (const p of s.points) if (p[0] <= v + 1e-9) best = p; return best; };
+  let progress = xmax;
+  function setProgress(v) {
+    progress = v;
+    clipRect.setAttribute("width", x(v) + 1);
+    series.forEach((s, i) => { const p = at(s, v); dots[i].setAttribute("cx", x(p[0])); dots[i].setAttribute("cy", y(p[1])); });
+  }
+  setProgress(xmax);
+  svg.addEventListener("pointermove", (e) => {
+    const r = svg.getBoundingClientRect();
+    const v = Math.min(progress, Math.max(0, ((e.clientX - r.left) / r.width * VW - m.l) / (VW - m.l - m.r) * xmax));
+    let px = null;
+    const rows = series.map((s) => { const p = at(s, v); if (px === null || Math.abs(p[0] - v) < Math.abs(px - v)) px = p[0]; return `<div class="row"><span class="sw" style="background:${s.color}"></span>${s.name}: <b>${pct(p[1])}</b></div>`; });
+    cross.setAttribute("x1", x(px)); cross.setAttribute("x2", x(px)); cross.setAttribute("visibility", "visible");
+    tip.innerHTML = `<div>${tipx(px)}</div>` + rows.join("");
+    tip.hidden = false;
+    const left = x(px) / VW * r.width;
+    tip.style.left = Math.min(Math.max(0, left + 12), host.clientWidth - tip.offsetWidth) + "px";
+    tip.style.top = "8px";
+  });
+  svg.addEventListener("pointerleave", () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); });
+  return { setProgress, at };
+}
+const legend = (host, series) => { host.innerHTML = series.map((s) => `<span><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join(""); };
+
+// ---- 1. the main training run -------------------------------------------------
+(() => {
+  const rows = STORY.az, evals = rows.filter((r) => r.greedy != null), xmax = 3;
+  const mk = (key) => [[0, key === "greedy" ? 0.5 : 0]].concat(evals.map((r) => [Math.min(r.h, xmax), r[key]])).slice(1);
+  const series = [
+    { name: "Scripted bot", color: css("--s3"), points: mk("greedy") },
+    { name: "Search, 200 sims", color: css("--s1"), points: mk("h200") },
+    { name: "Search, 2,000 sims", color: css("--s2"), points: mk("h2000") },
+  ];
+  const chart = lineChart(document.getElementById("chart-main"), { series, xmax, xfmt: (t) => t + " h", xlabel: "training time", tipx: (v) => "after " + fmtH(v) });
+  legend(document.getElementById("legend-main"), series);
+  const out = document.getElementById("readouts");
+  function show(h) {
+    chart.setProgress(h);
+    let games = 0; for (const r of rows) if (Math.min(r.h, xmax) <= h + 1e-9) games = r.games;
+    out.innerHTML = `<div class="readout"><div class="k">Training time</div><div class="v">${fmtH(h)}</div></div>
+      <div class="readout"><div class="k">Self-play games</div><div class="v">${games.toLocaleString("en-US")}</div></div>` +
+      series.map((s) => `<div class="readout"><div class="k"><span class="sw" style="background:${s.color}"></span>vs ${s.name}</div><div class="v">${h < s.points[0][0] ? "–" : pct(chart.at(s, h)[1])}</div></div>`).join("");
+  }
+  const scrub = document.getElementById("scrub"), play = document.getElementById("play");
+  let raf = 0;
+  scrub.addEventListener("input", () => { cancelAnimationFrame(raf); show(scrub.value / 1000 * xmax); });
+  function run() {
+    cancelAnimationFrame(raf);
+    const t0 = performance.now(), dur = 9000;
+    const step = (t) => { const f = Math.min(1, (t - t0) / dur); scrub.value = Math.round(f * 1000); show(f * xmax); if (f < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  play.addEventListener("click", run);
+  show(xmax);
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setTimeout(run, 900);
+})();
+
+// ---- 2. final network against its earlier checkpoints -------------------------
+if (STORY.ladder && STORY.ladder.length) {
+  document.getElementById("sec-ladder").hidden = false;
+  const host = document.getElementById("chart-ladder"), L = STORY.ladder;
+  const W = 860, rowH = 34, m = { l: 150, r: 60, t: 6, b: 8 }, H = m.t + m.b + rowH * L.length;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" });
+  const x = (v) => m.l + v * (W - m.l - m.r);
+  svg.append(el("line", { x1: x(0.5), x2: x(0.5), y1: 0, y2: H, stroke: css("--muted"), "stroke-dasharray": "4 4" }));
+  L.forEach((r, i) => {
+    const yy = m.t + i * rowH;
+    svg.append(el("text", { class: "lab", x: m.l - 10, y: yy + 19, "text-anchor": "end" }, `after ${fmtH(r.h)}`));
+    svg.append(el("rect", { x: x(0), y: yy + 6, width: x(1) - x(0), height: 18, rx: 4, fill: css("--line") }));
+    const bar = el("rect", { x: x(0), y: yy + 6, width: x(r.score) - x(0), height: 18, rx: 4, fill: css("--s1") });
+    bar.append(el("title", {}, `${r.w} wins, ${r.l} losses, ${r.d} draws`));
+    svg.append(bar);
+    svg.append(el("text", { class: "lab", x: x(1) + 8, y: yy + 19 }, pct(r.score)));
+  });
+  host.append(svg);
+}
+
+// ---- 3. an outside opponent ---------------------------------------------------
+if (STORY.arcadia) {
+  const a = STORY.arcadia;
+  document.getElementById("sec-arcadia").hidden = false;
+  document.getElementById("arcadia-text").innerHTML = `The one Dara bot playable in a browser is the single-player game at <a href="https://arcadiagames.io/games/dara" target="_blank" rel="noopener">arcadiagames.io</a>. The network played it through a headless browser, reading the board from the page and clicking its moves.`;
+  document.getElementById("arcadia-facts").innerHTML =
+    `<div><div class="v">${a.wins}–${a.losses}</div><div class="k">wins–losses over ${a.games} game${a.games === 1 ? '' : 's'}</div></div>
+     <div><div class="v">${a.avg_mine.toFixed(1)} : ${a.avg_bot.toFixed(1)}</div><div class="k">average stones left, network : bot</div></div>
+     <div><div class="v">${Math.round(a.avg_turns)}</div><div class="k">average turns per game</div></div>
+     <div><div class="v">${a.blockades}</div><div class="k">games won by leaving the bot no legal move</div></div>`;
+  document.getElementById("arcadia-note").textContent = a.note;
+}
+
+// ---- 3b. Daka Dara -----------------------------------------------------------
+if (STORY.daka) {
+  const d = STORY.daka;
+  document.getElementById("sec-daka").hidden = false;
+  document.getElementById("daka-text").innerHTML = `<a href="https://fib.itch.io/daka-dara" target="_blank" rel="noopener">Daka Dara</a> (Sugarsnapp Games, 2019) is a Windows game with a “Human vs AI” mode. Under its desktop wrapper it is a web game, so it ran in a headless browser here; the network played its Classic mode with mouse clicks, always moving first because the game gives the human that seat. Unlike the Arcadia bot, this AI does take stones.`;
+  document.getElementById("daka-facts").innerHTML =
+    `<div><div class="v">${d.wins}–${d.losses}</div><div class="k">wins–losses declared by the game, over ${d.games} games</div></div>
+     <div><div class="v">${d.blockades}</div><div class="k">game${d.blockades === 1 ? '' : 's'} stopped with the AI left without a legal move</div></div>
+     <div><div class="v">${d.abandoned}</div><div class="k">game${d.abandoned === 1 ? '' : 's'} abandoned unfinished</div></div>
+     <div><div class="v">${d.avg_mine.toFixed(1)} : ${d.avg_bot.toFixed(1)}</div><div class="k">average stones left in decided games, network : AI</div></div>`;
+  document.getElementById("daka-note").textContent = d.note;
+}
+
+// ---- 4. three algorithms --------------------------------------------------------
+if (STORY.algos) {
+  document.getElementById("sec-algos").hidden = false;
+  const A = STORY.algos;
+  const series = [
+    { name: "AlphaZero", color: css("--s1"), points: A.az },
+    { name: "PPO", color: css("--s2"), points: A.ppo },
+    { name: "DQN", color: css("--s3"), points: A.dqn },
+  ];
+  lineChart(document.getElementById("chart-algos"), { series, xmax: A.xmax, xfmt: (t) => t, xlabel: "CPU core-hours of training", tipx: (v) => v.toFixed(1) + " core-hours" });
+  legend(document.getElementById("legend-algos"), series);
+  document.getElementById("algos-note").textContent = A.note;
+}
+
+// ---- 5. tournament ----------------------------------------------------------------
+if (STORY.tournament) {
+  document.getElementById("sec-tour").hidden = false;
+  const T = STORY.tournament, n = T.names.length;
+  const total = T.score.map((row) => row.reduce((a, v, j) => a + (v == null ? 0 : v), 0) / (n - 1));
+  const order = total.map((_, i) => i).sort((a, b) => total[b] - total[a]);
+  let html = "<thead><tr><th></th>" + order.map((j) => `<th>${T.names[j]}</th>`).join("") + "<th>Overall</th></tr></thead><tbody>";
+  for (const i of order) {
+    html += `<tr><th>${T.names[i]}</th>`;
+    for (const j of order) {
+      const v = T.score[i][j];
+      if (v == null) { html += `<td class="self">·</td>`; continue; }
+      const strength = Math.round(Math.abs(v - 0.5) * 2 * 62);
+      html += `<td style="background:color-mix(in srgb, var(${v >= 0.5 ? "--s1" : "--lose"}) ${strength}%, transparent)">${pct(v)}</td>`;
+    }
+    html += `<td class="self">${pct(total[i])}</td></tr>`;
+  }
+  document.getElementById("tour").innerHTML = html + "</tbody>";
+  document.getElementById("tour-note").textContent = T.note;
+}
+</script>

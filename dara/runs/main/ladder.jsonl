@@ -1,0 +1,6 @@
+{"opponent": "iteration 5 (same 200 simulations)", "wins": 48, "losses": 0, "draws": 0, "score": 1.0, "avg_actions": 87.6}
+{"opponent": "iteration 10 (same 200 simulations)", "wins": 47, "losses": 1, "draws": 0, "score": 0.979, "avg_actions": 92.1}
+{"opponent": "iteration 20 (same 200 simulations)", "wins": 41, "losses": 4, "draws": 3, "score": 0.885, "avg_actions": 97.6}
+{"opponent": "iteration 30 (same 200 simulations)", "wins": 31, "losses": 8, "draws": 9, "score": 0.74, "avg_actions": 124.9}
+{"opponent": "heuristic search, 5000 simulations", "wins": 16, "losses": 0, "draws": 0, "score": 1.0, "avg_actions": 71.0}
+{"opponent": "heuristic search, 2000 simulations, vs network with no search", "wins": 31, "losses": 1, "draws": 0, "score": 0.969, "avg_actions": 72.8}

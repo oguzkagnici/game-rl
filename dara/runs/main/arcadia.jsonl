@@ -1,0 +1,12 @@
+{"game":1,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 1 WINS 0 LOSSES 1 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":2,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 2 WINS 0 LOSSES 2 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":3,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 3 WINS 0 LOSSES 3 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":4,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 4 WINS 0 LOSSES 4 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":5,"network_stones":12,"bot_stones":5,"actions":60,"end":"VICTORY You have conquered the board! 5 WINS 0 LOSSES 5 GAMES PLAY AGAIN","values":[1,1,1,1,1,1]}
+{"game":6,"network_stones":12,"bot_stones":2,"actions":72,"end":"VICTORY You have conquered the board! 6 WINS 0 LOSSES 6 GAMES PLAY AGAIN","values":[1,1,1,1,1,1]}
+{"game":7,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 7 WINS 0 LOSSES 7 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":8,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 8 WINS 0 LOSSES 8 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":9,"network_stones":12,"bot_stones":11,"actions":30,"end":"VICTORY You have conquered the board! 9 WINS 0 LOSSES 9 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":10,"network_stones":12,"bot_stones":5,"actions":62,"end":"VICTORY You have conquered the board! 10 WINS 0 LOSSES 10 GAMES PLAY AGAIN","values":[1,1,1,1,1,1]}
+{"game":11,"network_stones":12,"bot_stones":11,"actions":30,"bot_legal_moves":0,"final_board":"001001001101121122122212221221","end":"VICTORY You have conquered the board! 1 WINS 0 LOSSES 1 GAMES PLAY AGAIN","values":[0.98,0.99,0.99,0.99,1,1]}
+{"game":12,"network_stones":12,"bot_stones":5,"actions":62,"bot_legal_moves":0,"final_board":"001000111001011001120012201221","end":"VICTORY You have conquered the board! 2 WINS 0 LOSSES 2 GAMES PLAY AGAIN","values":[1,1,1,1,1,1]}

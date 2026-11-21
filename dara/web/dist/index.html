@@ -1,0 +1,762 @@
+<title>Dara Challenge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an indigo-dyed board is the one loud object; a quiet side rail holds
+   controls and the move record; rules and training notes sit underneath. */
+:root {
+  --ground: #eceef4; --surface: #f8f9fc; --ink: #171c36; --muted: #5d6381; --line: #cfd3e2;
+  --board: #27326f; --pit: #18204c; --pit-edge: #3a4790;
+  --bone: #f3eee2; --bone-edge: #b9b09a; --kola: #b9432f; --kola-edge: #7a2618;
+  --saffron: #f0b429; --good: #2f7d5b;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1022; --surface: #151930; --ink: #e7e9f3; --muted: #9499b8; --line: #2b3154;
+    --board: #2a3678; --pit: #131a42; --pit-edge: #4352a3;
+    --bone: #efe9dc; --bone-edge: #a39a84; --kola: #c9503a; --kola-edge: #7d2a1b;
+    --saffron: #f5c04a; --good: #58b98d; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1022; --surface: #151930; --ink: #e7e9f3; --muted: #9499b8; --line: #2b3154;
+  --board: #2a3678; --pit: #131a42; --pit-edge: #4352a3;
+  --bone: #efe9dc; --bone-edge: #a39a84; --kola: #c9503a; --kola-edge: #7d2a1b;
+  --saffron: #f5c04a; --good: #58b98d; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1040px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2.5rem; line-height: 1; margin: 0; letter-spacing: -0.02em; }
+header p { margin: 0; color: var(--muted); max-width: 52ch; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 1.25rem; margin: 0 0 10px; text-wrap: balance; }
+.label { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.table { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 24px; align-items: start; }
+.play { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+.seat { display: flex; align-items: center; gap: 12px; min-height: 30px; }
+.seat .who { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.chip { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+.chip.bone, .stone.bone { background: radial-gradient(circle at 35% 30%, #fffdf6, var(--bone) 55%, var(--bone-edge)); }
+.chip.kola, .stone.kola { background: radial-gradient(circle at 35% 30%, #e2826c, var(--kola) 55%, var(--kola-edge)); }
+.seat .hand { display: flex; gap: 3px; flex-wrap: wrap; min-width: 0; }
+.seat .hand i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+.seat .count { margin-left: auto; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.seat.turn .who::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--saffron); }
+
+.board { background: var(--board); border-radius: 14px; padding: clamp(10px, 2.4vw, 22px);
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(5px, 1.3vw, 12px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 14px 30px -18px rgba(10, 14, 40, .7); }
+.pit { aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; position: relative; cursor: default;
+  background: var(--pit); box-shadow: inset 0 3px 7px rgba(0,0,0,.45), 0 1px 0 var(--pit-edge); }
+.pit:focus-visible { outline: 3px solid var(--saffron); outline-offset: 2px; }
+.pit.can { cursor: pointer; }
+.pit.can:not(.has)::after { content: ""; position: absolute; inset: 38%; border-radius: 50%; background: var(--saffron); opacity: .75; }
+.pit.can:not(.has):hover::after { inset: 30%; opacity: 1; }
+.pit .coord { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-family: var(--mono);
+  font-size: .62rem; color: var(--pit-edge); pointer-events: none; }
+.stone { position: absolute; inset: 9%; border-radius: 50%; box-shadow: 0 3px 5px rgba(0,0,0,.45); }
+.pit.can.has .stone { box-shadow: 0 0 0 3px var(--saffron), 0 3px 5px rgba(0,0,0,.45); }
+.pit.sel .stone { box-shadow: 0 0 0 4px var(--saffron), 0 0 0 7px rgba(240,180,41,.35); transform: scale(1.04); }
+.pit.last .stone::after { content: ""; position: absolute; inset: 40%; border-radius: 50%; background: rgba(0,0,0,.28); }
+.pit.three .stone { box-shadow: 0 0 0 3px var(--saffron), 0 0 16px 4px rgba(240,180,41,.6); }
+.pit.from::before { content: ""; position: absolute; inset: 30%; border-radius: 50%; border: 2px dashed var(--pit-edge); }
+.stone.arrive { animation: arrive .28s ease-out; }
+.stone.taken { animation: taken .5s ease-in forwards; }
+@keyframes arrive { from { transform: translate(var(--dx, 0), var(--dy, 0)) scale(var(--s0, 1)); opacity: var(--o0, 1); } }
+@keyframes taken { to { transform: scale(.3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .stone.arrive, .stone.taken { animation-duration: .01s; } }
+
+.status { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 8px; }
+.status p { margin: 0; font-weight: 500; min-height: 1.5em; }
+.status .note { color: var(--muted); font-weight: 400; font-size: .87rem; min-height: 0; }
+.bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--saffron); transition: width .12s linear; }
+
+.rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.group { display: flex; flex-direction: column; gap: 7px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 500 .87rem var(--body); padding: 8px 6px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--board); color: #f4f5fb; }
+.seg button:focus-visible, .btn:focus-visible { outline: 3px solid var(--saffron); outline-offset: -3px; }
+.hint { font-size: .8rem; color: var(--muted); margin: 0; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 9px;
+  font: 600 .9rem var(--body); padding: 9px 10px; cursor: pointer; }
+.btn.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.btn:disabled { opacity: .45; cursor: default; }
+.read { display: flex; align-items: center; gap: 10px; }
+.read .meter { flex: 1; height: 10px; border-radius: 5px; background: var(--bone-edge); overflow: hidden; }
+.read .meter i { display: block; height: 100%; width: 50%; background: var(--kola); transition: width .4s ease; }
+.read b { font-family: var(--mono); font-weight: 500; font-size: .85rem; min-width: 3.2em; text-align: right; }
+.log { font-family: var(--mono); font-size: .8rem; background: var(--surface); border: 1px solid var(--line); border-radius: 9px;
+  padding: 8px 10px; height: 150px; overflow-y: auto; display: grid; grid-template-columns: 2.4em 1fr 1fr; gap: 2px 8px; align-content: start; }
+.log .n { color: var(--muted); }
+.log .empty { grid-column: 1 / -1; color: var(--muted); font-family: var(--body); }
+
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 36px; border-top: 1px solid var(--line); padding-top: 26px; }
+.notes ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; }
+.notes p { margin: 0 0 10px; max-width: 62ch; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th, td { text-align: left; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); }
+th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; padding-right: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+@media (max-width: 800px) {
+  .table, .notes { grid-template-columns: minmax(0, 1fr); }
+  h1 { font-size: 2rem; }
+  .log { height: 110px; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Dara</h1>
+    <p>A three-in-a-row game from Nigeria and Niger, against a network that learned it only by playing itself.</p>
+  </header>
+
+  <div class="table">
+    <section class="play" aria-label="Game">
+      <div class="seat" id="seat-model"><span class="who"><span class="chip kola"></span>Model</span><span class="hand" id="hand-model"></span><span class="count" id="count-model"></span></div>
+      <div class="board" id="board" role="grid" aria-label="Dara board, 5 rows by 6 columns"></div>
+      <div class="seat" id="seat-you"><span class="who"><span class="chip bone"></span>You</span><span class="hand" id="hand-you"></span><span class="count" id="count-you"></span></div>
+      <div class="status" aria-live="polite">
+        <p id="status">Loading the model…</p>
+        <div class="bar" id="think-bar" hidden><i id="think-fill"></i></div>
+        <p class="note" id="note"></p>
+      </div>
+    </section>
+
+    <aside class="rail">
+      <div class="row">
+        <button class="btn primary" id="new-game" type="button">New game</button>
+        <button class="btn" id="undo" type="button">Take back</button>
+      </div>
+      <div class="group">
+        <span class="label">Who drops first</span>
+        <div class="seg" id="first">
+          <button type="button" id="first-you" data-v="0">You</button>
+          <button type="button" id="first-model" data-v="1">Model</button>
+        </div>
+        <p class="hint">Applies from the next new game.</p>
+      </div>
+      <div class="group">
+        <span class="label">Model thinking</span>
+        <div class="seg" id="level">
+          <button type="button" id="level-quick" data-v="quick">Quick</button>
+          <button type="button" id="level-standard" data-v="standard">Standard</button>
+          <button type="button" id="level-deep" data-v="deep">Deep</button>
+        </div>
+        <p class="hint" id="level-hint"></p>
+      </div>
+      <div class="group">
+        <span class="label">Model's estimate of its own chances</span>
+        <div class="read"><div class="meter"><i id="read-fill"></i></div><b id="read-num">–</b></div>
+      </div>
+      <div class="group">
+        <span class="label">Moves</span>
+        <div class="log" id="log"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="notes">
+    <section>
+      <h2>Rules used here</h2>
+      <ul>
+        <li>Each side has 12 stones. First you take turns dropping them on empty pits. No three in a row may be made while dropping.</li>
+        <li>Then you take turns sliding one stone one pit up, down, left or right.</li>
+        <li>A slide that makes exactly three of your stones in a row or column lets you take one enemy stone. Diagonals do not count.</li>
+        <li>Stones that sit inside an enemy three are safe, unless all of that side's stones are.</li>
+        <li>Four or more in a row is never allowed.</li>
+        <li>You lose when you are down to two stones or cannot move. After 200 actions the side with more stones wins.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>How the opponent learned</h2>
+      <p id="train-summary"></p>
+      <div class="tablewrap"><table id="train-table"></table></div>
+    </section>
+  </div>
+</div>
+
+<script id="engine">
+// Dara in plain JavaScript: rules, feature planes, network inference and MCTS.
+// A line-for-line port of dara/engine.cpp + dara/model.py so the trained
+// network can be played in a browser.  tests/test_web.py checks it against
+// the C++ engine and PyTorch.
+const Dara = (() => {
+  const R = 5, C = 6, NC = 30, NA = 180, NP = 10, MAX_PLY = 200;
+  const DR = [-1, 1, 0, 0], DC = [0, 0, -1, 1];
+  const DROP = 0, MOVE = 1, CAPTURE = 2;
+
+  const newState = () => ({ b: [0, 0], hand: [12, 12], turn: 0, phase: DROP, winner: -1, ply: 0 });
+  const clone = (s) => ({ b: [s.b[0], s.b[1]], hand: [s.hand[0], s.hand[1]], turn: s.turn,
+                          phase: s.phase, winner: s.winner, ply: s.ply });
+  const has = (m, r, c) => r >= 0 && r < R && c >= 0 && c < C && ((m >> (r * C + c)) & 1) === 1;
+  function run(m, x, dr, dc) {
+    const r = (x / C) | 0, c = x % C;
+    let n = 1;
+    for (let k = 1; has(m, r + k * dr, c + k * dc); k++) n++;
+    for (let k = 1; has(m, r - k * dr, c - k * dc); k++) n++;
+    return n;
+  }
+  const longest = (m, x) => Math.max(run(m, x, 0, 1), run(m, x, 1, 0));
+  const inThree = (m, x) => run(m, x, 0, 1) === 3 || run(m, x, 1, 0) === 3;
+  const popcount = (m) => { let n = 0; while (m) { m &= m - 1; n++; } return n; };
+
+  // Cells of the three(s) through x, for highlighting.
+  function threeCells(m, x) {
+    const out = [];
+    for (const [dr, dc] of [[0, 1], [1, 0]]) {
+      if (run(m, x, dr, dc) !== 3) continue;
+      const r = (x / C) | 0, c = x % C;
+      out.push(x);
+      for (let k = 1; has(m, r + k * dr, c + k * dc); k++) out.push((r + k * dr) * C + c + k * dc);
+      for (let k = 1; has(m, r - k * dr, c - k * dc); k++) out.push((r - k * dr) * C + c - k * dc);
+    }
+    return out;
+  }
+
+  function legalActions(s) {
+    const out = [];
+    if (s.winner >= 0) return out;
+    const me = s.turn, op = 1 - me, occ = s.b[0] | s.b[1];
+    if (s.phase === DROP) {
+      for (const limit of [2, 3, 30]) {
+        for (let x = 0; x < NC; x++)
+          if (!((occ >> x) & 1) && longest(s.b[me] | (1 << x), x) <= limit) out.push(x);
+        if (out.length) break;
+      }
+    } else if (s.phase === MOVE) {
+      for (let x = 0; x < NC; x++) {
+        if (!((s.b[me] >> x) & 1)) continue;
+        for (let d = 0; d < 4; d++) {
+          const r = ((x / C) | 0) + DR[d], c = (x % C) + DC[d];
+          if (r < 0 || r >= R || c < 0 || c >= C) continue;
+          const y = r * C + c;
+          if ((occ >> y) & 1) continue;
+          if (longest((s.b[me] ^ (1 << x)) | (1 << y), y) >= 4) continue;
+          out.push(30 + d * 30 + x);
+        }
+      }
+    } else {
+      for (let x = 0; x < NC; x++)
+        if (((s.b[op] >> x) & 1) && !inThree(s.b[op], x)) out.push(150 + x);
+      if (!out.length)
+        for (let x = 0; x < NC; x++) if ((s.b[op] >> x) & 1) out.push(150 + x);
+    }
+    return out;
+  }
+
+  function endTurn(s) {
+    s.turn ^= 1;
+    if (s.winner >= 0) return;
+    if (s.phase === MOVE && legalActions(s).length === 0) { s.winner = 1 - s.turn; return; }
+    if (s.ply >= MAX_PLY) {
+      const a = popcount(s.b[0]), b = popcount(s.b[1]);
+      s.winner = a > b ? 0 : b > a ? 1 : 2;
+    }
+  }
+
+  const moveTarget = (a) => {
+    const d = ((a - 30) / 30) | 0, x = (a - 30) % 30;
+    return [x, (((x / C) | 0) + DR[d]) * C + (x % C) + DC[d]];
+  };
+
+  function applyAction(s, a) {   // mutates s
+    const me = s.turn, op = 1 - me;
+    s.ply++;
+    if (a < 30) {
+      s.b[me] |= 1 << a;
+      s.hand[me]--;
+      if (s.hand[0] === 0 && s.hand[1] === 0) s.phase = MOVE;
+      endTurn(s);
+    } else if (a < 150) {
+      const [x, y] = moveTarget(a);
+      s.b[me] = (s.b[me] ^ (1 << x)) | (1 << y);
+      if (inThree(s.b[me], y)) s.phase = CAPTURE; else endTurn(s);
+    } else {
+      s.b[op] &= ~(1 << (a - 150));
+      s.phase = MOVE;
+      if (popcount(s.b[op]) < 3) s.winner = me;
+      endTurn(s);
+    }
+    return s;
+  }
+
+  function features(s, f) {      // f: Float32Array(30 * NP), layout [cell][plane]
+    f.fill(0);
+    const me = s.turn, op = 1 - me;
+    const nme = popcount(s.b[me]) / 12, nop = popcount(s.b[op]) / 12;
+    for (let i = 0; i < NC; i++) {
+      const o = i * NP;
+      f[o] = (s.b[me] >> i) & 1;
+      f[o + 1] = (s.b[op] >> i) & 1;
+      f[o + 2 + s.phase] = 1;
+      f[o + 5] = s.hand[me] / 12;
+      f[o + 6] = s.hand[op] / 12;
+      f[o + 7] = nme;
+      f[o + 8] = nop;
+      f[o + 9] = s.ply / MAX_PLY;
+    }
+    return f;
+  }
+
+  // ------------------------------------------------------------ network --
+  function decodeHalf(b64) {
+    const bin = atob(b64), n = bin.length >> 1, out = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const h = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8);
+      const sgn = h & 0x8000 ? -1 : 1, e = (h >> 10) & 31, m = h & 1023;
+      out[i] = sgn * (e === 0 ? m * 2 ** -24 : e === 31 ? Infinity : (1024 + m) * 2 ** (e - 25));
+    }
+    return out;
+  }
+
+  function makeNet(spec) {
+    const CH = spec.channels, data = decodeHalf(spec.data);
+    let off = 0;
+    const take = (n) => { const a = data.subarray(off, off + n); off += n; return a; };
+    const conv = (k, ic, oc) => ({ k, ic, oc, w: take(k * k * ic * oc), b: take(oc) });
+    const stem = conv(3, NP, CH), blocks = [];
+    for (let i = 0; i < spec.blocks; i++) blocks.push([conv(3, CH, CH), conv(3, CH, CH)]);
+    const pConv = conv(1, CH, 32), pOut = conv(1, 32, 6), vConv = conv(1, CH, 8);
+    const fc1 = { w: take(240 * 64), b: take(64) }, fc2 = { w: take(64), b: take(1) };
+    if (off !== data.length) throw new Error("weight size mismatch");
+
+    // Scatter-style convolution over channels-last buffers; skips zero inputs
+    // (about half of them after a ReLU).
+    function apply(L, inp, out) {
+      const { k, ic, oc, w, b } = L, half = k >> 1;
+      for (let p = 0; p < NC; p++) out.set(b, p * oc);
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+        const ib = (r * C + c) * ic;
+        for (let i = 0; i < ic; i++) {
+          const x = inp[ib + i];
+          if (x === 0) continue;
+          for (let ky = 0; ky < k; ky++) {
+            const orow = r - ky + half;
+            if (orow < 0 || orow >= R) continue;
+            for (let kx = 0; kx < k; kx++) {
+              const ocol = c - kx + half;
+              if (ocol < 0 || ocol >= C) continue;
+              const wb = ((ky * k + kx) * ic + i) * oc, ob = (orow * C + ocol) * oc;
+              for (let o = 0; o < oc; o++) out[ob + o] += x * w[wb + o];
+            }
+          }
+        }
+      }
+    }
+    const relu = (a) => { for (let i = 0; i < a.length; i++) if (a[i] < 0) a[i] = 0; };
+    const feat = new Float32Array(NC * NP);
+    const x = new Float32Array(NC * CH), y = new Float32Array(NC * CH), z = new Float32Array(NC * CH);
+    const p1 = new Float32Array(NC * 32), p2 = new Float32Array(NC * 6), v1 = new Float32Array(NC * 8);
+    const h = new Float32Array(64);
+
+    // Returns { logits: Float32Array(180) (reused between calls), value }.
+    const logits = new Float32Array(NA);
+    function evaluate(s) {
+      features(s, feat);
+      apply(stem, feat, x); relu(x);
+      for (const [c1, c2] of blocks) {
+        apply(c1, x, y); relu(y);
+        apply(c2, y, z);
+        for (let i = 0; i < x.length; i++) { const t = x[i] + z[i]; x[i] = t > 0 ? t : 0; }
+      }
+      apply(pConv, x, p1); relu(p1);
+      apply(pOut, p1, p2);
+      for (let p = 0; p < NC; p++) for (let k = 0; k < 6; k++) logits[k * NC + p] = p2[p * 6 + k];
+      apply(vConv, x, v1); relu(v1);
+      h.set(fc1.b);
+      for (let i = 0; i < 240; i++) {
+        const t = v1[i];
+        if (t === 0) continue;
+        const wb = i * 64;
+        for (let o = 0; o < 64; o++) h[o] += t * fc1.w[wb + o];
+      }
+      let v = fc2.b[0];
+      for (let o = 0; o < 64; o++) if (h[o] > 0) v += h[o] * fc2.w[o];
+      return { logits, value: Math.tanh(v) };
+    }
+    return { evaluate };
+  }
+
+  // ------------------------------------------------------------- search --
+  const terminalValue = (s) => (s.winner === 2 ? 0 : s.winner === s.turn ? 1 : -1);
+
+  // PUCT search from `root`.  Call step(n) repeatedly, then read result().
+  function makeSearch(net, root, cpuct = 1.5, fpu = 0.25) {
+    const mk = (s) => ({ s, n: 0, w: 0, edges: null });
+    const top = mk(clone(root));
+    let done = 0;
+
+    function simulate() {
+      const path = [];
+      let node = top;
+      while (true) {
+        if (node.s.winner >= 0) return backup(path, node, terminalValue(node.s));
+        if (!node.edges) break;
+        const sq = Math.sqrt(Math.max(node.n, 1));
+        const fq = (node.n > 0 ? node.w / node.n : 0) - fpu;
+        let best = null, bs = -Infinity;
+        for (const e of node.edges) {
+          const sc = (e.n > 0 ? e.w / e.n : fq) + cpuct * e.p * sq / (1 + e.n);
+          if (sc > bs) { bs = sc; best = e; }
+        }
+        path.push([node, best]);
+        if (!best.child) best.child = mk(applyAction(clone(node.s), best.a));
+        node = best.child;
+      }
+      const { logits, value } = net.evaluate(node.s);
+      const acts = legalActions(node.s);
+      let mx = -Infinity, sum = 0;
+      for (const a of acts) mx = Math.max(mx, logits[a]);
+      const pr = acts.map((a) => Math.exp(logits[a] - mx));
+      for (const p of pr) sum += p;
+      node.edges = acts.map((a, i) => ({ a, p: pr[i] / sum, n: 0, w: 0, child: null }));
+      backup(path, node, value);
+    }
+    function backup(path, leaf, v) {
+      leaf.n++; leaf.w += v;
+      for (let i = path.length - 1; i >= 0; i--) {
+        const [par, e] = path[i];
+        const pv = par.s.turn === leaf.s.turn ? v : -v;
+        e.n++; e.w += pv; par.n++; par.w += pv;
+      }
+      done++;
+    }
+    return {
+      step(n) { for (let i = 0; i < n; i++) simulate(); return done; },
+      result() {
+        let best = null;
+        for (const e of top.edges || []) if (!best || e.n > best.n) best = e;
+        return { action: best ? best.a : -1, value: top.n ? top.w / top.n : 0, sims: done,
+                 visits: (top.edges || []).map((e) => [e.a, e.n]) };
+      },
+    };
+  }
+
+  return { R, C, NC, NA, NP, MAX_PLY, DROP, MOVE, CAPTURE, newState, clone, legalActions,
+           applyAction, features, moveTarget, threeCells, inThree, popcount, makeNet, makeSearch };
+})();
+if (typeof module !== "undefined") module.exports = Dara;
+
+</script>
+<script>
+window.DARA_INFO = {"hours": 3.0, "games": 11536, "positions": 1022254, "results": [["Scripted bot that takes any three it can make", "100%"], ["Search with no network, 200 simulations", "100%"], ["Search with no network, 2,000 simulations", "100%"]], "eval_note": 51};
+(() => {
+  const D = Dara, $ = (id) => document.getElementById(id);
+  const LEVELS = { quick: 150, standard: 500, deep: 1500 };
+  const FILES = "abcdef", DIRS = "nswe";
+  const cellName = (x) => FILES[x % 6] + (5 - ((x / 6) | 0));
+  const actionName = (a) => a < 30 ? cellName(a) : a < 150 ? cellName((a - 30) % 30) + DIRS[((a - 30) / 30) | 0] : "x" + cellName(a - 150);
+
+  let G = { actions: [], human: 0, level: "standard", nextHuman: 0 };
+  let state = D.newState(), actors = [], sel = -1, token = 0, thinking = false;
+  let modelValue = null, anim = null, note = "";
+
+  // ---------------------------------------------------------------- thinker
+  // Runs the search in a worker when the host allows it, else in small
+  // slices on the main thread.
+  const runner = async function (D, net, st, sims, post, cancelled) {
+    const search = D.makeSearch(net, st);
+    let done = 0;
+    while (done < sims) {
+      const t0 = Date.now();
+      while (done < sims && Date.now() - t0 < 40) done = search.step(Math.min(4, sims - done));
+      post(done);
+      await new Promise((r) => setTimeout(r, 0));
+      if (cancelled()) return null;
+    }
+    const r = search.result();
+    return { action: r.action, value: r.value };
+  };
+  function workerMain(run) {
+    let net = null, cur = 0;
+    onmessage = async (e) => {
+      const m = e.data;
+      if (m.type === "init") net = Dara.makeNet(m.spec);
+      else if (m.type === "cancel") cur = -1;
+      else if (m.type === "search") {
+        const id = (cur = m.id);
+        const res = await run(Dara, net, m.state, m.sims, (d) => postMessage({ type: "progress", id, done: d }), () => cur !== id);
+        if (res) postMessage({ type: "done", id, result: res });
+      }
+    };
+  }
+  let spec = null, localNet = null, worker = null, pending = null, searchId = 0;
+  const ready = (async () => {
+    spec = window.DARA_WEIGHTS || await (await fetch("weights.json")).json();
+    try {
+      const src = $("engine").textContent + `;(${workerMain.toString()})(${runner.toString()});`;
+      worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+      worker.onmessage = (e) => {
+        const m = e.data;
+        if (!pending || m.id !== pending.id) return;
+        if (m.type === "progress") pending.onProgress(m.done);
+        else { const p = pending; pending = null; p.resolve(m.result); }
+      };
+      worker.onerror = () => { worker = null; if (pending) { const p = pending; pending = null; p.retry(); } };
+      worker.postMessage({ type: "init", spec });
+    } catch (err) { worker = null; }
+  })();
+  function think(st, sims, onProgress) {
+    const id = ++searchId;
+    const local = () => {
+      localNet = localNet || D.makeNet(spec);
+      return runner(D, localNet, st, sims, onProgress, () => searchId !== id);
+    };
+    if (!worker) return local();
+    return new Promise((resolve) => {
+      pending = { id, onProgress, resolve, retry: () => resolve(local()) };
+      worker.postMessage({ type: "search", id, state: st, sims });
+    });
+  }
+  function cancelThinking() {
+    token++; searchId++; pending = null; thinking = false;
+    if (worker) worker.postMessage({ type: "cancel" });
+  }
+
+  // ------------------------------------------------------------------ state
+  function replay() {
+    state = D.newState(); actors = [];
+    for (const a of G.actions) { actors.push(state.turn); D.applyAction(state, a); }
+  }
+  function save() {
+    try { localStorage.setItem("dara-game", JSON.stringify(G)); } catch (e) {}
+  }
+  function load(saved) {
+    try {
+      const g = saved || JSON.parse(localStorage.getItem("dara-game") || "null");
+      if (!g || !Array.isArray(g.actions)) return;
+      const s = D.newState();
+      for (const a of g.actions) {            // ignore anything that is not a legal game
+        if (!D.legalActions(s).includes(a)) return;
+        D.applyAction(s, a);
+      }
+      G = { actions: g.actions, human: g.human ? 1 : 0, level: LEVELS[g.level] ? g.level : "standard", nextHuman: g.nextHuman ? 1 : 0 };
+    } catch (e) {}
+  }
+
+  function play(a) {
+    const mover = state.turn;
+    G.actions.push(a);
+    actors.push(mover);
+    D.applyAction(state, a);
+    anim = { fresh: true, three: a >= 30 && a < 150 && state.phase === D.CAPTURE ? D.threeCells(state.b[mover], D.moveTarget(a)[1]) : [],
+             taken: a >= 150 ? a - 150 : -1, takenBy: mover };
+    sel = -1; note = "";
+    save();
+  }
+
+  async function advance() {
+    const modelToMove = state.winner < 0 && state.turn !== G.human;
+    const my = ++token;
+    thinking = modelToMove;
+    render();
+    if (!modelToMove) return;
+    const wasLoading = !spec;
+    await ready;
+    if (my !== token) return;
+    if (wasLoading) render();
+    const sims = state.phase === D.CAPTURE ? Math.min(LEVELS[G.level], 300) : LEVELS[G.level];
+    $("think-bar").hidden = false;
+    $("think-fill").style.width = "0%";
+    const t0 = Date.now();
+    const res = await think(D.clone(state), sims, (d) => { if (my === token) $("think-fill").style.width = (100 * d / sims) + "%"; });
+    if (my !== token || !res) return;
+    const wait = 450 - (Date.now() - t0);   // never answer instantly; moves are easier to follow
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    if (my !== token) return;
+    thinking = false;
+    modelValue = res.value;
+    play(res.action);
+    advance();
+  }
+
+  function clickCell(x) {
+    if (thinking || state.winner >= 0 || state.turn !== G.human) return;
+    const legal = D.legalActions(state), me = G.human;
+    if (state.phase === D.DROP) {
+      if (legal.includes(x)) { play(x); return advance(); }
+      note = ((state.b[0] | state.b[1]) >> x) & 1 ? "" : "That drop would make three in a row, which is not allowed while dropping.";
+    } else if (state.phase === D.MOVE) {
+      const target = legal.find((a) => { const [f, t] = D.moveTarget(a); return f === sel && t === x; });
+      if (target !== undefined) { play(target); return advance(); }
+      if ((state.b[me] >> x) & 1) {
+        if (legal.some((a) => D.moveTarget(a)[0] === x)) { sel = sel === x ? -1 : x; note = ""; }
+        else { sel = -1; note = "That stone has no legal slide."; }
+      } else { sel = -1; }
+    } else {
+      if (legal.includes(150 + x)) { play(150 + x); return advance(); }
+      if ((state.b[1 - me] >> x) & 1) note = "That stone is inside a three, so it is safe. Take one of the marked stones.";
+    }
+    render();
+  }
+
+  function newGame() {
+    cancelThinking();
+    G.actions = []; G.human = G.nextHuman;
+    modelValue = null; anim = null; sel = -1; note = "";
+    replay(); save(); advance();
+  }
+  function undo() {
+    cancelThinking();
+    let i = actors.length - 1;
+    while (i >= 0 && actors[i] !== G.human) i--;          // last action you made
+    while (i > 0 && actors[i - 1] === G.human) i--;        // start of that turn (slide + capture)
+    if (i < 0) i = 0;
+    G.actions.length = i;
+    modelValue = null; anim = null; sel = -1; note = "";
+    replay(); save(); advance();
+  }
+
+  // ----------------------------------------------------------------- render
+  const pits = [];
+  function buildBoard() {
+    const board = $("board");
+    for (let x = 0; x < 30; x++) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "pit"; b.id = "pit-" + x;
+      b.addEventListener("click", () => clickCell(x));
+      board.appendChild(b);
+      pits.push(b);
+    }
+  }
+  function render() {
+    const me = G.human, model = 1 - me, over = state.winner >= 0;
+    const myTurn = !over && !thinking && state.turn === me;
+    const legal = myTurn ? D.legalActions(state) : [];
+    const can = new Set();
+    if (state.phase === D.DROP) legal.forEach((a) => can.add(a));
+    else if (state.phase === D.CAPTURE) legal.forEach((a) => can.add(a - 150));
+    else legal.forEach((a) => { const [f, t] = D.moveTarget(a); if (sel < 0) can.add(f); else if (f === sel) can.add(t); });
+    const pitch = pits[1].offsetLeft - pits[0].offsetLeft;
+    const last = G.actions.length ? G.actions[G.actions.length - 1] : -1;
+    const lastTo = last < 0 || last >= 150 ? -1 : last < 30 ? last : D.moveTarget(last)[1];
+    const lastFrom = last >= 30 && last < 150 ? D.moveTarget(last)[0] : -1;
+    for (let x = 0; x < 30; x++) {
+      const owner = (state.b[0] >> x) & 1 ? 0 : (state.b[1] >> x) & 1 ? 1 : -1;
+      const p = pits[x];
+      p.className = "pit" + (owner >= 0 ? " has" : "") + (can.has(x) ? " can" : "") + (x === sel ? " sel" : "") +
+        (x === lastTo ? " last" : "") + (x === lastFrom && owner < 0 ? " from" : "") + (anim && anim.three.includes(x) ? " three" : "");
+      p.setAttribute("aria-label", cellName(x) + (owner < 0 ? ", empty" : owner === me ? ", your stone" : ", model's stone") + (can.has(x) ? ", playable" : ""));
+      p.textContent = "";
+      if (owner >= 0) {
+        const s = document.createElement("span");
+        s.className = "stone " + (owner === me ? "bone" : "kola");
+        if (anim && anim.fresh && x === lastTo) {
+          s.classList.add("arrive");
+          if (lastFrom >= 0) {
+            s.style.setProperty("--dx", ((lastFrom % 6) - (x % 6)) * pitch + "px");
+            s.style.setProperty("--dy", (((lastFrom / 6) | 0) - ((x / 6) | 0)) * pitch + "px");
+          } else { s.style.setProperty("--s0", "1.5"); s.style.setProperty("--o0", "0"); }
+        }
+        p.appendChild(s);
+      } else {
+        if (anim && anim.fresh && anim.taken === x) {
+          const g = document.createElement("span");
+          g.className = "stone taken " + (anim.takenBy === me ? "kola" : "bone");
+          p.appendChild(g);
+        }
+        const c = document.createElement("span");
+        c.className = "coord"; c.textContent = cellName(x);
+        p.appendChild(c);
+      }
+    }
+    if (anim) anim = anim.three.length ? { ...anim, fresh: false } : null;      // keep the three lit until the capture
+
+    for (const [who, side] of [["you", me], ["model", model]]) {
+      const hand = $("hand-" + who);
+      hand.textContent = "";
+      for (let i = 0; i < state.hand[side]; i++) {
+        const dot = document.createElement("i");
+        dot.className = "chip " + (side === me ? "bone" : "kola");
+        hand.appendChild(dot);
+      }
+      const on = D.popcount(state.b[side]), lost = 12 - on - state.hand[side];
+      $("count-" + who).textContent = `${on + state.hand[side]} stones` + (lost ? ` · ${lost} lost` : "");
+      $("seat-" + who).classList.toggle("turn", !over && state.turn === side);
+    }
+
+    let msg;
+    if (over) msg = state.winner === 2 ? "Draw. Equal stones after 200 actions." : state.winner === me ? "You win." : "The model wins.";
+    else if (thinking) msg = !spec ? "Loading the model…" : state.phase === D.CAPTURE ? "The model made three and is choosing a stone to take…" : "The model is thinking…";
+    else if (state.phase === D.DROP) msg = `Your turn. Drop a stone on a marked pit (${state.hand[me]} left).`;
+    else if (state.phase === D.CAPTURE) msg = "You made three. Take one of the model's marked stones.";
+    else msg = sel >= 0 ? "Now pick the pit to slide it to." : "Your turn. Pick a stone to slide.";
+    $("status").textContent = msg;
+    $("think-bar").hidden = !thinking || !spec;
+    const left = D.MAX_PLY - state.ply;
+    $("note").textContent = note || (!over && left <= 40 ? `${left} actions left before the game is decided on stone count.` : "");
+
+    $("read-fill").style.width = (modelValue === null ? 50 : 50 * (modelValue + 1)) + "%";
+    $("read-num").textContent = modelValue === null ? "–" : Math.round(50 * (modelValue + 1)) + "%";
+    $("undo").disabled = !actors.includes(G.human);
+    for (const b of $("first").children) b.setAttribute("aria-pressed", String(+b.dataset.v === G.nextHuman));
+    for (const b of $("level").children) b.setAttribute("aria-pressed", String(b.dataset.v === G.level));
+    $("level-hint").textContent = `${LEVELS[G.level]} simulated continuations per move.`;
+
+    const log = $("log");
+    log.textContent = "";
+    if (!G.actions.length) {
+      const e = document.createElement("span");
+      e.className = "empty"; e.textContent = "c3 drops, c3n slides north, xc3 takes.";
+      log.appendChild(e);
+    }
+    // one row per pair of turns; a slide and its capture share a cell
+    const turns = [];
+    G.actions.forEach((a, i) => {
+      if (i > 0 && actors[i - 1] === actors[i]) turns[turns.length - 1].text += " " + actionName(a);
+      else turns.push({ who: actors[i], text: actionName(a) });
+    });
+    for (let i = 0; i < turns.length; i += 2) {
+      const cells = [String(i / 2 + 1) + ".", turns[i].text, turns[i + 1] ? turns[i + 1].text : ""];
+      cells.forEach((t, k) => { const s = document.createElement("span"); if (k === 0) s.className = "n"; s.textContent = t; log.appendChild(s); });
+    }
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function renderInfo() {
+    const info = window.DARA_INFO;
+    if (!info) return;
+    $("train-summary").textContent =
+      `It started from random play and trained for ${info.hours} hours on 4 CPU cores: ${info.games.toLocaleString()} games against itself ` +
+      `(${info.positions.toLocaleString()} positions), each move chosen by a tree search guided by the network, with the network then ` +
+      `trained to predict the search's choices and the final result. It was never shown human games or strategy.`;
+    const t = $("train-table");
+    const head = t.insertRow();
+    for (const [h, num] of [["Opponent", 0], ["Model's score", 1]]) { const th = document.createElement("th"); th.textContent = h; if (num) th.className = "num"; head.appendChild(th); }
+    for (const [name, score] of info.results) {
+      const r = t.insertRow();
+      r.insertCell().textContent = name;
+      const c = r.insertCell(); c.className = "num"; c.textContent = score;
+    }
+  }
+
+  // ------------------------------------------------------------------- boot
+  function start(saved) {
+    load(saved && saved.G);
+    buildBoard(); renderInfo(); replay();
+    $("new-game").addEventListener("click", newGame);
+    $("undo").addEventListener("click", undo);
+    $("first").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { G.nextHuman = +b.dataset.v; save(); render(); } });
+    $("level").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { G.level = b.dataset.v; save(); render(); } });
+    window.addEventListener("resize", () => render());
+    advance();
+  }
+  const hot = window.claude && window.claude.hot;
+  if (hot && hot.snapshot) hot.snapshot(() => ({ G }));
+  if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>

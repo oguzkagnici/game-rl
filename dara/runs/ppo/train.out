@@ -1,0 +1,19 @@
+{"algo": "ppo", "hours": 0.0, "steps": 0, "games": 0, "vs_random": 0.844, "vs_greedy": 0.0, "vs_heuristic200": 0.0}
+{"algo": "ppo", "hours": 0.086, "steps": 98304, "games": 624, "updates": 6, "v_loss": 0.0305, "entropy": 2.144, "vs_random": 1.0, "vs_greedy": 0.625, "vs_heuristic200": 0.344}
+{"algo": "ppo", "hours": 0.175, "steps": 196608, "games": 1646, "updates": 12, "v_loss": 0.0474, "entropy": 2.003, "vs_random": 1.0, "vs_greedy": 0.938, "vs_heuristic200": 0.562}
+{"algo": "ppo", "hours": 0.259, "steps": 278528, "games": 2629, "updates": 17, "v_loss": 0.0556, "entropy": 1.971, "vs_random": 1.0, "vs_greedy": 0.906, "vs_heuristic200": 0.688}
+{"algo": "ppo", "hours": 0.344, "steps": 360448, "games": 3655, "updates": 22, "v_loss": 0.0547, "entropy": 1.937, "vs_random": 1.0, "vs_greedy": 0.969, "vs_heuristic200": 0.75}
+{"algo": "ppo", "hours": 0.441, "steps": 458752, "games": 4940, "updates": 28, "v_loss": 0.0559, "entropy": 1.91, "vs_random": 1.0, "vs_greedy": 0.969, "vs_heuristic200": 0.719}
+{"algo": "ppo", "hours": 0.532, "steps": 573440, "games": 6468, "updates": 35, "v_loss": 0.0579, "entropy": 1.889, "vs_random": 1.0, "vs_greedy": 0.969, "vs_heuristic200": 0.906}
+{"algo": "ppo", "hours": 0.623, "steps": 737280, "games": 8658, "updates": 45, "v_loss": 0.0599, "entropy": 1.892, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.875}
+{"algo": "ppo", "hours": 0.712, "steps": 901120, "games": 10883, "updates": 55, "v_loss": 0.0659, "entropy": 1.889, "vs_random": 1.0, "vs_greedy": 0.969, "vs_heuristic200": 0.875}
+{"algo": "ppo", "hours": 0.798, "steps": 1048576, "games": 12931, "updates": 64, "v_loss": 0.0684, "entropy": 1.871, "vs_random": 1.0, "vs_greedy": 0.938, "vs_heuristic200": 0.812}
+{"algo": "ppo", "hours": 0.883, "steps": 1212416, "games": 15214, "updates": 74, "v_loss": 0.0631, "entropy": 1.861, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.781}
+{"algo": "ppo", "hours": 0.977, "steps": 1359872, "games": 17303, "updates": 83, "v_loss": 0.0692, "entropy": 1.866, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.719}
+{"algo": "ppo", "hours": 1.07, "steps": 1474560, "games": 18855, "updates": 90, "v_loss": 0.0738, "entropy": 1.889, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.75}
+{"algo": "ppo", "hours": 1.174, "steps": 1556480, "games": 19953, "updates": 95, "v_loss": 0.062, "entropy": 1.866, "vs_random": 1.0, "vs_greedy": 0.938, "vs_heuristic200": 0.812}
+{"algo": "ppo", "hours": 1.26, "steps": 1622016, "games": 20849, "updates": 99, "v_loss": 0.074, "entropy": 1.875, "vs_random": 1.0, "vs_greedy": 0.969, "vs_heuristic200": 0.781}
+{"algo": "ppo", "hours": 1.354, "steps": 1687552, "games": 21719, "updates": 103, "v_loss": 0.0752, "entropy": 1.85, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.781}
+{"algo": "ppo", "hours": 1.453, "steps": 1753088, "games": 22609, "updates": 107, "v_loss": 0.0624, "entropy": 1.839, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.812}
+{"algo": "ppo", "hours": 1.502, "steps": 1785856, "games": 23052, "updates": 109, "v_loss": 0.0708, "entropy": 1.861, "vs_random": 1.0, "vs_greedy": 1.0, "vs_heuristic200": 0.812}
+done
