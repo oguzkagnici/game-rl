@@ -3,6 +3,7 @@
 An agent is a dict:
     {"kind": "mcts", "evaluator": fn, "sims": 50, "deals": 4}   search: `sims` simulations in each of `deals` deals
                                                                 + "oracle": True searches the true hidden tiles (a cheat, for measuring)
+                                                                + "belief": {...} deals come from a belief over the opponent's rack (belief.py)
     {"kind": "policy", "evaluator": fn}                         no search, best legal network output
     {"kind": "greedy"}                                          one-move-ahead scripted bot
     {"kind": "random"}                                          uniform random legal action
@@ -30,6 +31,11 @@ def play_match(a, b, games=64, seed=0, terrains=range(8), by_terrain=False):
     per = {t: [0, 0, 0] for t in terrains}
     for g in alive:
         pool.reset(g, ter[g], (g // 2) % 2)
+    beliefs = [None, None]
+    for k in (0, 1):
+        if agents[k].get("belief") is not None:
+            from .belief import Belief
+            beliefs[k] = Belief(games, agents[k]["evaluator"], seed=seed + 11 + k, **agents[k]["belief"])
     while alive:
         moves = {}
         for k in (0, 1):
@@ -39,7 +45,9 @@ def play_match(a, b, games=64, seed=0, terrains=range(8), by_terrain=False):
                 continue
             if ag["kind"] == "mcts":
                 for g in mine:
-                    pool.preset(g, pool.raw(g) if ag.get("oracle") else None)
+                    raw = pool.raw(g)
+                    pool.preset(g, raw if ag.get("oracle") else
+                                beliefs[k].deals(g, raw, seat[g] ^ k, ag.get("deals", 1)) if beliefs[k] else None)
                     pool.begin(g, ag["sims"], ag.get("deals", 1))
                 pool.run(ag["evaluator"])
                 pool.finished()
@@ -56,6 +64,7 @@ def play_match(a, b, games=64, seed=0, terrains=range(8), by_terrain=False):
                 for g in mine:
                     moves[g] = int(rng.choice(np.nonzero(pool.legal(g))[0]))
         still = []
+        before = {g: pool.raw(g) for g in alive} if any(beliefs) else {}
         for g in alive:
             w = pool.step(g, moves[g])
             if w < 0:
@@ -68,6 +77,12 @@ def play_match(a, b, games=64, seed=0, terrains=range(8), by_terrain=False):
             else:
                 wins[seat[g] ^ w] += 1
                 per[ter[g]][seat[g] ^ w] += 1
+        for k in (0, 1):
+            if beliefs[k]:
+                beliefs[k].update([(g, seat[g] ^ k, before[g], moves[g], pool.raw(g)) for g in alive])
         alive = still
+    for k in (0, 1):
+        if beliefs[k]:
+            agents[k]["belief_stats"] = beliefs[k].stats
     out = (wins[0], wins[1], draws, float(np.mean(lengths)))
     return out + (per,) if by_terrain else out
