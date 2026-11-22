@@ -13,7 +13,7 @@ from .terrains import MB, NT
 
 O_RACK = 16 + MB + MB * MAXH
 O_POOL, O_DISC, O_KNOWN = O_RACK + 2 * NT, O_RACK + 4 * NT, O_RACK + 6 * NT
-I_TURN, I_WINNER, I_PIN = 1, 3, 11
+I_TURN, I_WINNER, I_PIN, I_RNG = 1, 3, 11, 15
 
 
 def _cnt(raw, off, p):
@@ -54,6 +54,7 @@ class Belief:
         d[:, O_RACK + op * NT: O_RACK + (op + 1) * NT] = racks
         d[:, O_POOL + op * NT: O_POOL + (op + 1) * NT] = pools
         d[:, I_PIN + op] = pins
+        d[:, I_RNG] = self.rng.integers(1, 2**31 - 1, len(racks))   # never the game's own random state: it fixes the real draws
         return d
 
     def _get(self, g, raw, me):

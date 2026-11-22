@@ -434,12 +434,13 @@ function loadNet(spec) {
 // ------------------------------------------------------------------- search --
 // `sims` simulations in each of `deals` re-deals of the tiles the player to move cannot see.
 // step(budget) runs up to `budget` network evaluations and returns true when the search is finished.
-function makeSearch(game, evaluate, sims, deals, rand32, cpuct = 1.5, fpu = 0.25) {
+// `presets`: states to search as the deals (from a belief) instead of uniform re-deals.
+function makeSearch(game, evaluate, sims, deals, rand32, cpuct = 1.5, fpu = 0.25, presets = null) {
   const S = { visits: new Float64Array(NA), qsum: new Float64Array(NA), vsum: 0, vn: 0, dealsLeft: deals, evals: 0, total: sims * deals, simsDone: 0 };
   let nodes, done, path, leaf;
   const startDeal = () => {
-    const root = { s: clone(game), n: 0, w: 0, edges: null };
-    determinize(root.s, game.turn, rand32);
+    const root = { s: clone(presets ? presets[(S.dealsLeft - 1) % presets.length] : game), n: 0, w: 0, edges: null };
+    if (presets) root.s.rng = (rand32() | 1) >>> 0; else determinize(root.s, game.turn, rand32);
     nodes = root; done = 0;
   };
   const backup = (v) => {
@@ -498,9 +499,93 @@ function makeSearch(game, evaluate, sims, deals, rand32, cpuct = 1.5, fpu = 0.25
   return S;
 }
 
+// ------------------------------------------------------------------- belief --
+// Guess the opponent's rack from how they play (see toybattle/belief.py).  `me` is the player who guesses.
+// observe(before, action, after) after every action of the game; work(ms) does the pending updates in
+// slices and returns true when none are left; deals(state, n) gives n guessed states for makeSearch.
+function makeBelief(evaluate, me, rand32, P = 64, fresh = 0.1, temp = 1.5, floor = 0.02) {
+  const op = 1 - me, o = op * 8, queue = [], B = { resets: 0 };
+  let parts = null, cur = null;
+  const u = () => (rand32() >>> 0) / 4294967296;
+  const grab = (c) => ({ rack: c.rack.slice(o, o + 8), pool: c.pool.slice(o, o + 8), pin: c.pin[op] });
+  const uniform = (s) => { const c = clone(s); determinize(c, me, rand32); return grab(c); };
+  const dress = (s, p) => { const c = clone(s); c.rack.set(p.rack, o); c.pool.set(p.pool, o); c.pin[op] = p.pin; c.rng = (rand32() | 1) >>> 0; return c; };
+  const sum = (a) => { let n = 0; for (let t = 0; t < 8; t++) n += a[t]; return n; };
+  const pin = (rack) => { let r = Math.floor(u() * sum(rack)); for (let t = 0; t < 8; t++) { if (r < rack[t]) return t + 1; r -= rack[t]; } return 0; };
+  const fill = (s) => { parts = []; for (let j = 0; j < P; j++) parts.push(uniform(s)); };
+  B.observe = (before, a, after) => queue.push({ before: clone(before), a, after: clone(after) });
+  B.reset = () => { parts = null; cur = null; queue.length = 0; };
+  B.parts = () => parts;
+  function finish(it) {
+    const { before, a, after, w } = it;
+    if (after.winner >= 0) { parts = null; return; }
+    if (before.turn === me) {                // my own move: did it change their rack, or pin a tile?
+      for (let t = 0; t < 8; t++) {
+        if (after.rack[o + t] + after.pool[o + t] >= before.rack[o + t] + before.pool[o + t]) continue;
+        for (let j = 0; j < P; j++) { const r = parts[j].rack; w[j] *= r[t] / Math.max(sum(r), 1); if (r[t]) r[t]--; }
+      }
+      for (const p of parts) {
+        if (!after.pin[op]) p.pin = 0;
+        else if (!p.pin || !p.rack[p.pin - 1]) p.pin = pin(p.rack);
+      }
+    }
+    let tot = 0;
+    const n = total(after.rack, op);
+    for (let j = 0; j < P; j++) {            // a guess must agree with everything public
+      const p = parts[j];
+      let ok = sum(p.rack) === n;
+      for (let t = 0; t < 8 && ok; t++) ok = p.rack[t] + p.pool[t] === after.rack[o + t] + after.pool[o + t] && p.rack[t] >= after.known[o + t];
+      if (!ok) w[j] = 0;
+      tot += w[j];
+    }
+    if (tot <= 0) { B.resets++; fill(after); return; }
+    const keep = P - Math.round(fresh * P), next = [];
+    for (let k = 0; k < keep; k++) {
+      let r = u() * tot, j = 0;
+      while (j < P - 1 && (r -= w[j]) >= 0) j++;
+      next.push({ rack: parts[j].rack.slice(), pool: parts[j].pool.slice(), pin: parts[j].pin });
+    }
+    while (next.length < P) next.push(uniform(after));
+    parts = next;
+  }
+  B.work = (ms = 1e9) => {
+    const t0 = Date.now();
+    for (;;) {
+      if (!cur) {
+        if (!queue.length) return true;
+        cur = queue.shift(); cur.j = 0; cur.w = new Float64Array(P).fill(1);
+        if (!parts) fill(cur.before);
+      }
+      if (cur.before.turn === op) {          // their move: how likely was it from each guessed rack?
+        for (; cur.j < P; cur.j++) {
+          if (Date.now() - t0 > ms) return false;
+          const c = dress(cur.before, parts[cur.j]), acts = legalActions(c);
+          if (!acts.includes(cur.a)) { cur.w[cur.j] = 0; continue; }
+          const { logits } = evaluate(features(c));
+          let mx = -1e30, z = 0;
+          for (const a of acts) if (logits[a] > mx) mx = logits[a];
+          for (const a of acts) z += Math.exp(logits[a] - mx);
+          cur.w[cur.j] = Math.pow(Math.exp(logits[cur.a] - mx) / z + floor, temp);
+          applyAction(c, cur.a);             // the guess follows the move; its hidden draws are sampled
+          parts[cur.j] = grab(c);
+        }
+      }
+      finish(cur); cur = null;
+    }
+  };
+  B.deals = (s, n) => {
+    B.work();
+    if (!parts) fill(s);
+    const out = [];
+    for (let k = 0; k < n; k++) out.push(dress(s, parts[Math.floor(u() * P)]));
+    return out;
+  };
+  return B;
+}
+
 const TB = { MB, NT, NA, MAXH, MAXTURN, FEAT, A_DRAW, A_SKIP, A_PLACE, A_BASE, A_TYPE,
              MAIN, EXTRA, JUMBO, RECALL, ERUPT_SRC, ERUPT_DST, EXHUME, TER,
              setTerrains, newState, clone, newGame, legalActions, applyAction, features, determinize, owner, type, total,
-             reach, canDraw, fromDump, toDump, loadNet, makeSearch };
+             reach, canDraw, fromDump, toDump, loadNet, makeSearch, makeBelief };
 if (typeof module !== "undefined" && module.exports) module.exports = TB; else root.TB = TB;
 })(typeof self !== "undefined" ? self : this);

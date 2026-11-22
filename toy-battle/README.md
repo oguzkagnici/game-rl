@@ -166,20 +166,20 @@ Four times the search buys almost nothing, so search depth is not the limit.
 
 ### Hidden information (`toybattle/belief.py`, `match.py --a-belief / --a-oracle`)
 
-The plain search re-deals the opponent's rack uniformly at random.  Two alternatives, same network:
+The plain search re-deals the opponent's rack uniformly at random.  An oracle that searches the opponent's
+true rack (a cheat, used as the ceiling) scores **67%** against the plain search with the same network, so
+knowing the rack is worth far more than extra search.
 
-| Deals come from | Score vs plain search | Tiles wrong per guess |
-|---|---|---|
-| uniform re-deals (plain) | 50% | 2.3 |
-| belief, 64 particles, 10% uniform, temperature 2 | 60% | 1.3 |
-| belief, 128 particles, 5% uniform, temperature 2 | 64% | 1.1 |
-| belief, 128 particles, 0% uniform, temperature 3 | 64% | 0.9 |
-| the opponent's true rack (oracle: a cheat, the ceiling) | 67% | 0 |
+`belief.py` tries to get part of that honestly with a particle filter: after each opponent action every
+particle (a possible rack) is weighted by the policy network's probability of that action from that rack,
+follows the action with its hidden draws sampled, and the set is resampled.
 
-The belief is a particle filter: after each opponent action every particle (a possible rack) is weighted by
-the policy network's probability of that action from that rack, follows the action with its hidden draws
-sampled, and the set is resampled.  No retraining is needed.  It recovers most of what perfect knowledge of
-the rack would give.
+**Correction.** The first belief results (59-64% against the plain search, 0.9-1.5 tiles wrong per guess)
+were wrong: the particles were stepped with the real game's random state, so their "sampled" draws were
+often the opponent's real draws.  Those rows in `runs/main/belief_test.jsonl` and the belief matches in
+`runs/league.jsonl` before the fix are a partial oracle, not a belief.  The JavaScript port, which never had
+the real random state, exposed it.  With the leak closed the guesses are only slightly better than uniform
+(about 2.1 against 2.3 tiles wrong per guess); honest match results are below.
 
 ### Larger network (`runs/big`, 128×6, 864k parameters)
 
@@ -192,5 +192,5 @@ Warm-started on the current model's replay buffer, then its own self-play.
 | 28 | 4.5 | 44% |
 | 40 | 6.3 | 49% |
 
-With belief tracking on both sides, round 40 scores 48% against the current model.  At equal training time
+At equal training time
 the larger network is level with the smaller one, not ahead.
