@@ -111,9 +111,10 @@ class Belief:
             op = 1 - me
             racks, pools, pins = self._get(g, before, me)
             w = weights.get(g, np.ones(P))
-            if before[I_TURN] == me:                 # my own move: did it knock a tile out of their rack, or pin one?
-                lost = _cnt(after, O_DISC, op) - _cnt(before, O_DISC, op)
-                for x in np.nonzero(lost > 0)[0]:
+            if before[I_TURN] == me:                 # my own move: did it change their rack, or pin a tile?
+                change = (_cnt(after, O_RACK, op) + _cnt(after, O_POOL, op)
+                          - _cnt(before, O_RACK, op) - _cnt(before, O_POOL, op))
+                for x in np.nonzero(change < 0)[0]:  # XB-42 shot a random tile out of their rack
                     w = w * racks[:, x] / np.maximum(racks.sum(1), 1)
                     racks[:, x] = np.maximum(racks[:, x] - 1, 0)
                 for j in range(P):
