@@ -209,7 +209,6 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line
           <label for="first">First move</label><select id="first"><option value="you">You</option><option value="model">Model</option><option value="random">Random</option></select>
           <label for="level">Model thinks</label><select id="level">
             <option value="2x30">Quick (2 deals × 30)</option><option value="4x60" selected>Normal (4 deals × 60)</option><option value="4x150">Long (4 deals × 150)</option></select>
-          <label for="reads">Your rack</label><select id="reads"><option value="1" selected>Model guesses it from your play</option><option value="0">Model deals it at random</option></select>
         </div>
         <button class="btn primary" id="new-game">New game</button>
       </div>
@@ -235,7 +234,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line
     <div>
       <h2>About the model</h2>
       <p id="about"></p>
-      <p>It does not see your rack. Before each search the tiles it cannot see are dealt several times, and it picks the move that does best across those deals. With “guesses it from your play” it keeps 64 guesses of your rack and, after each of your moves, favours the ones from which it would have played that move itself; against a copy of itself dealing at random this won 64% of 256 games. It assumes you play roughly as it does, so it may guess worse against a person.</p>
+      <p>It does not see your rack. Before each search the tiles it cannot see are dealt at random, several times, and it picks the move that does best across those deals.</p>
       <p>House rulings where the rulebook leaves room: troop and base effects with a target can be skipped; Kwak passes every gate; Hook needs a normal link on Station Metal-X special bases; a game stops after 200 turns.</p>
     </div>
   </div>
@@ -869,7 +868,7 @@ const PHASE_TEXT = ["", "Cap'n: place one more troop, or skip.", "Jumbo: click a
   "Eruption: click the base where it lands.", "Cemetery: click a troop in your discard to take it back, or skip."];
 
 TB.setTerrains(D.terrains.map((t) => t.packed));
-let evaluate = null, belief = null, S = null, human = 0, sel = -1, token = 0, busy = false, owners = {}, last = [], pop = -1, lastValue = null, warn = "", caption = "";
+let evaluate = null, S = null, human = 0, sel = -1, token = 0, busy = false, owners = {}, last = [], pop = -1, lastValue = null, warn = "", caption = "";
 const rand32 = () => (Math.random() * 4294967296) >>> 0;
 const who = (p) => (p === human ? "You" : "Model");
 const el = (tag, attrs, parent, text) => {
@@ -903,7 +902,6 @@ function describe(s, a) {
 function act(a) {
   const me = S.turn, before = TB.clone(S), text = describe(S, a);
   TB.applyAction(S, a);
-  if (belief) belief.observe(before, a, S);
   const extra = [];
   const placedType = a >= 2 && a < TB.A_BASE ? Math.floor((a - 2) / 17) : -1;
   for (const p of [me, 1 - me]) {
@@ -1154,8 +1152,7 @@ async function modelTurn() {
     await sleep(500 * pace);
     if (my !== token) return;
     if (legal.length > 1) {
-      while (belief && !belief.work(30)) { await sleep(0); if (my !== token) return; }
-      const search = TB.makeSearch(S, evaluate, sims, deals, rand32, 1.5, 0.25, belief ? belief.deals(S, deals) : null);
+      const search = TB.makeSearch(S, evaluate, sims, deals, rand32);
       for (;;) {
         const t0 = performance.now(); let done = false;
         while (!done && performance.now() - t0 < 30) done = search.step(4);
@@ -1180,7 +1177,6 @@ function newGame() {
   human = +$("side").value;
   const f = $("first").value, first = f === "you" ? human : f === "model" ? 1 - human : (rand32() & 1);
   S = TB.newGame(+$("map").value, first, rand32());
-  belief = $("reads").value === "1" ? TB.makeBelief(evaluate, 1 - human, rand32) : null;
   const T = D.terrains[S.ter];
   $("log").replaceChildren();
   caption = `${T.name}: first to ${T.objective} medals, or to the enemy H.Q.`;

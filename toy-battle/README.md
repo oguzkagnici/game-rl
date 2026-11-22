@@ -179,7 +179,19 @@ were wrong: the particles were stepped with the real game's random state, so the
 often the opponent's real draws.  Those rows in `runs/main/belief_test.jsonl` and the belief matches in
 `runs/league.jsonl` before the fix are a partial oracle, not a belief.  The JavaScript port, which never had
 the real random state, exposed it.  With the leak closed the guesses are only slightly better than uniform
-(about 2.1 against 2.3 tiles wrong per guess); honest match results are below.
+(about 2.1 against 2.3 tiles wrong per guess) and the gain in play is within noise:
+
+| Deals come from (leak closed) | Score vs plain search | Tiles wrong per guess |
+|---|---|---|
+| uniform re-deals (plain) | 50% | 2.3 |
+| belief, 64 particles, 10% uniform, temperature 1 | 51% | 2.1 |
+| belief, 128 particles, 5% uniform, temperature 2 | 52% | 2.1 |
+| belief, 256 particles, 0% uniform, temperature 3 | 52% | 2.0 |
+| the opponent's true rack (oracle) | 67% | 0 |
+
+So the opponent's moves say little about their rack, which is mostly decided by random draws: the value of
+knowing it is real, but this kind of inference does not recover it.  `web/toybattle.js` has the same tracker
+(`makeBelief`, checked by `tests/belief_check.js`); the playable page does not use it.
 
 ### Larger network (`runs/big`, 128×6, 864k parameters)
 
@@ -191,6 +203,8 @@ Warm-started on the current model's replay buffer, then its own self-play.
 | 18 | 3.1 | 46% |
 | 28 | 4.5 | 44% |
 | 40 | 6.3 | 49% |
+| 50 | 7.5 | 50% |
+| 61 | 9.0 | 46% |
 
 At equal training time
 the larger network is level with the smaller one, not ahead.

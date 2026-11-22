@@ -31,4 +31,4 @@ for (let g = 0; g < games; g++) {
   wins[s.winner === me ? 0 : 1]++; resets += B.resets;
 }
 console.log(`belief ${(errB / n).toFixed(2)} tiles wrong per guess, uniform ${(errU / n).toFixed(2)}; ${n} updates, ${resets} resets; believer won ${wins[0]} of ${games}`);
-process.exit(errB < 0.85 * errU ? 0 : 1);
+process.exit(errB < errU ? 0 : 1);
