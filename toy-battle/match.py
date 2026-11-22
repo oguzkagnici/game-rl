@@ -18,6 +18,7 @@ ap.add_argument("--a-search", default="4x40")
 ap.add_argument("--b-search", default="4x40")
 ap.add_argument("--a-oracle", action="store_true", help="side a sees the opponent's tiles (a cheat: the ceiling for hidden-information methods)")
 ap.add_argument("--a-belief", default="", help="side a tracks a belief over the opponent's rack: particles,fresh,temp e.g. 32,0.25,1")
+ap.add_argument("--b-belief", default="")
 ap.add_argument("--seed", type=int, default=777)
 ap.add_argument("--out", default="runs/league.jsonl")
 cfg = ap.parse_args()
@@ -32,12 +33,13 @@ def agent(path, spec):
 
 a, ia = agent(cfg.a, cfg.a_search)
 a["oracle"] = cfg.a_oracle
-if cfg.a_belief:
-    n, fresh, temp = cfg.a_belief.split(",")
-    a["belief"] = {"particles": int(n), "fresh": float(fresh), "temp": float(temp)}
 b, ib = agent(cfg.b, cfg.b_search)
+for ag, spec in ((a, cfg.a_belief), (b, cfg.b_belief)):
+    if spec:
+        n, fresh, temp = spec.split(",")
+        ag["belief"] = {"particles": int(n), "fresh": float(fresh), "temp": float(temp)}
 w, l, d, turns, per = play_match(a, b, cfg.games, seed=cfg.seed, by_terrain=True)
-rec = {"a": cfg.a, "a_round": ia, "a_search": cfg.a_search, "a_oracle": cfg.a_oracle, "a_belief": cfg.a_belief, "b": cfg.b, "b_round": ib, "b_search": cfg.b_search,
+rec = {"a": cfg.a, "a_round": ia, "a_search": cfg.a_search, "a_oracle": cfg.a_oracle, "a_belief": cfg.a_belief, "b": cfg.b, "b_round": ib, "b_search": cfg.b_search, "b_belief": cfg.b_belief,
        "wins": w, "losses": l, "draws": d, "score": (w + d / 2) / cfg.games,
        "by_terrain": {NAMES[t]: v for t, v in per.items()}}
 if "belief_stats" in a:
