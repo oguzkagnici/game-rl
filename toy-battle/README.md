@@ -205,6 +205,7 @@ Warm-started on the current model's replay buffer, then its own self-play.
 | 40 | 6.3 | 49% |
 | 50 | 7.5 | 50% |
 | 61 | 9.0 | 46% |
+| 72 | 10.4 | 51% (512 games) |
 
 At equal training time
 the larger network is level with the smaller one, not ahead.
