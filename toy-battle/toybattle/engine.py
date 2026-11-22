@@ -36,6 +36,7 @@ for name, res, args in [
     ("tb_set_params", None, [_vp, _f, _f]), ("tb_reset", None, [_vp, _i, _i, _i]),
     ("tb_step", _i, [_vp, _i, _i]), ("tb_legal", _i, [_vp, _i, _u8]), ("tb_turn", _i, [_vp, _i]),
     ("tb_features", None, [_vp, _i, _f32]), ("tb_get", None, [_vp, _i, _i32]), ("tb_set", None, [_vp, _i, _i32]),
+    ("tb_preset", None, [_vp, _i, _i32, _i]),
     ("tb_greedy", _i, [_vp, _i]), ("tb_begin", None, [_vp, _i, _i, _i, _f, _f]),
     ("tb_collect", _i, [_vp, _f32]), ("tb_apply", None, [_vp, _f32, _f32]), ("tb_finished", _i, [_vp, _i32]),
     ("tb_result", _f, [_vp, _i, _f32, ctypes.c_void_p]),
@@ -96,6 +97,11 @@ class Pool:
 
     def set_raw(self, i, a):
         _lib.tb_set(self._p, i, np.ascontiguousarray(a, np.int32))
+
+    def preset(self, i, dumps=None):
+        """Search these states (rows as from raw()) as the deals of game i; None: random re-deals again."""
+        d = np.ascontiguousarray(dumps if dumps is not None else np.zeros((0, DUMP)), np.int32).reshape(-1, DUMP)
+        _lib.tb_preset(self._p, i, d, len(d))
 
     def state(self, i):
         a = self.raw(i)

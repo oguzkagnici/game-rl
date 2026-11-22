@@ -16,6 +16,7 @@ ap.add_argument("b")
 ap.add_argument("--games", type=int, default=256)
 ap.add_argument("--a-search", default="4x40")
 ap.add_argument("--b-search", default="4x40")
+ap.add_argument("--a-oracle", action="store_true", help="side a sees the opponent's tiles (a cheat: the ceiling for hidden-information methods)")
 ap.add_argument("--seed", type=int, default=777)
 ap.add_argument("--out", default="runs/league.jsonl")
 cfg = ap.parse_args()
@@ -29,9 +30,10 @@ def agent(path, spec):
 
 
 a, ia = agent(cfg.a, cfg.a_search)
+a["oracle"] = cfg.a_oracle
 b, ib = agent(cfg.b, cfg.b_search)
 w, l, d, turns, per = play_match(a, b, cfg.games, seed=cfg.seed, by_terrain=True)
-rec = {"a": cfg.a, "a_round": ia, "a_search": cfg.a_search, "b": cfg.b, "b_round": ib, "b_search": cfg.b_search,
+rec = {"a": cfg.a, "a_round": ia, "a_search": cfg.a_search, "a_oracle": cfg.a_oracle, "b": cfg.b, "b_round": ib, "b_search": cfg.b_search,
        "wins": w, "losses": l, "draws": d, "score": (w + d / 2) / cfg.games,
        "by_terrain": {NAMES[t]: v for t, v in per.items()}}
 print(json.dumps(rec), flush=True)

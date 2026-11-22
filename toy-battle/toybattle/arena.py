@@ -2,6 +2,7 @@
 
 An agent is a dict:
     {"kind": "mcts", "evaluator": fn, "sims": 50, "deals": 4}   search: `sims` simulations in each of `deals` deals
+                                                                + "oracle": True searches the true hidden tiles (a cheat, for measuring)
     {"kind": "policy", "evaluator": fn}                         no search, best legal network output
     {"kind": "greedy"}                                          one-move-ahead scripted bot
     {"kind": "random"}                                          uniform random legal action
@@ -38,6 +39,7 @@ def play_match(a, b, games=64, seed=0, terrains=range(8), by_terrain=False):
                 continue
             if ag["kind"] == "mcts":
                 for g in mine:
+                    pool.preset(g, pool.raw(g) if ag.get("oracle") else None)
                     pool.begin(g, ag["sims"], ag.get("deals", 1))
                 pool.run(ag["evaluator"])
                 pool.finished()

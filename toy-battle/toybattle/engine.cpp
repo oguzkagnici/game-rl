@@ -341,6 +341,7 @@ struct Slot {
     bool waiting = false, reported = true;
     float noise_eps = 0, noise_alpha = 0.3f;
     float visits[NA], qsum[NA], vsum; int vn;      // summed over the deals of this search
+    std::vector<State> preset;                     // if set: the deals to search, instead of random re-deals
     std::mt19937 rng;
 };
 
@@ -415,7 +416,8 @@ void expand(Slot& t, const float* logits, float value) {
 void start_deal(Slot& t) {
     t.nodes.clear(); t.edges.clear(); t.path.clear(); t.pnodes.clear();
     Node root; root.s = t.game;
-    determinize(root.s, t.game.turn, t.rng);
+    if (t.preset.empty()) determinize(root.s, t.game.turn, t.rng);
+    else { root.s = t.preset[(t.deals - 1) % t.preset.size()]; root.s.rng = t.rng() | 1; }   // future chance stays unknown
     t.nodes.push_back(root);
     t.done = 0;
 }
@@ -496,8 +498,7 @@ void tb_get(void* p, int i, int* o) {
     for (int q = 0; q < 2; q++) for (int t = 0; t < NT; t++) *o++ = s.known[q][t];
     for (int k = 0; k < MAXPLACED; k++) *o++ = k < s.nplaced ? s.placed[k] : 0;
 }
-void tb_set(void* p, int i, const int* o) {
-    State& s = ((Pool*)p)->slots[i].game;
+void from_dump(State& s, const int* o) {
     s = State();
     s.ter = o[0]; s.turn = o[1]; s.phase = o[2]; s.winner = o[3]; s.nturn = o[4]; s.medals[0] = o[5]; s.medals[1] = o[6];
     s.reserve[0] = o[7]; s.reserve[1] = o[8]; s.taken = o[9]; s.src = o[10]; s.pin[0] = o[11]; s.pin[1] = o[12];
@@ -509,6 +510,13 @@ void tb_set(void* p, int i, const int* o) {
     for (int q = 0; q < 2; q++) for (int t = 0; t < NT; t++) s.disc[q][t] = *o++;
     for (int q = 0; q < 2; q++) for (int t = 0; t < NT; t++) s.known[q][t] = *o++;
     for (int k = 0; k < MAXPLACED; k++) s.placed[k] = *o++;
+}
+void tb_set(void* p, int i, const int* o) { from_dump(((Pool*)p)->slots[i].game, o); }
+// The next searches of game i use these n states (dumps as in tb_get) as their deals; n = 0 goes back to random re-deals.
+void tb_preset(void* p, int i, const int* dumps, int n) {
+    Slot& t = ((Pool*)p)->slots[i];
+    t.preset.resize(n);
+    for (int k = 0; k < n; k++) from_dump(t.preset[k], dumps + (size_t)k * DUMP);
 }
 
 // One-move-ahead bot: win if possible, else the action that leaves the best medal balance, then the
