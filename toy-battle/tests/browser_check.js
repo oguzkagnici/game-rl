@@ -10,6 +10,7 @@ const { chromium } = require("playwright");
     const p = await browser.newPage({ viewport: { width, height }, colorScheme: scheme, deviceScaleFactor: 1 });
     p.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
     p.on("pageerror", (e) => errors.push(String(e)));
+    await p.addInitScript(() => { window.TB_FAST = true; });
     await p.goto("file://" + page_path);
     await p.selectOption("#level", "2x30");
     await p.selectOption("#side", side);

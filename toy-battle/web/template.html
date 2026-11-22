@@ -1,167 +1,203 @@
 <title>Toy Battle Sparring</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: the terrain is a tall play mat on the left; a rail on the right reads top to bottom as
-   the table does: opponent, what to do now, your rack, then settings and the move record. */
+/* Layout: the terrain is a painted play mat on the left, with the latest event captioned on it.
+   The rail on the right reads like the table: opponent, coach line + actions, your rack,
+   then set-up and the move record.  The mat keeps its own colours in both themes, like a
+   physical board; the page around it follows the viewer's theme. */
 :root {
-  --ground: #efece4; --surface: #faf8f3; --ink: #1d2030; --muted: #666a7c; --line: #d6d1c3;
-  --mat: #e3dfd2; --path: #a9a393; --base: #faf8f3; --base-edge: #8c8676;
-  --blue: #2c5fc9; --blue-ink: #ffffff; --red: #cf4631; --red-ink: #ffffff;
-  --gold: #e3a008; --gold-soft: rgba(227,160,8,.28); --region: rgba(29,32,48,.05);
+  --ground: #f1ede3; --surface: #fbf9f4; --ink: #1d2030; --muted: #666a7c; --line: #d9d3c4;
+  --blue: #2a5bc7; --blue-hi: #5d8bf0; --blue-lo: #1b3f91; --red: #cf4631; --red-hi: #f0775f; --red-lo: #94281a;
+  --gold: #e9a50b; --gold-lo: #a86f00; --gold-soft: rgba(233,165,11,.3);
   --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
   --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #14151c; --surface: #1c1e28; --ink: #ecebe6; --muted: #9a9cab; --line: #32354a;
-    --mat: #23252f; --path: #555869; --base: #2d303d; --base-edge: #747789;
-    --blue: #4f7fe6; --blue-ink: #ffffff; --red: #e05a44; --red-ink: #ffffff;
-    --gold: #f2b530; --gold-soft: rgba(242,181,48,.3); --region: rgba(236,235,230,.05); color-scheme: dark;
-  }
+  :root:not([data-theme="light"]) { --ground: #14151c; --surface: #1d1f2a; --ink: #ecebe6; --muted: #9c9eae; --line: #343850; color-scheme: dark; }
 }
-:root[data-theme="dark"] {
-  --ground: #14151c; --surface: #1c1e28; --ink: #ecebe6; --muted: #9a9cab; --line: #32354a;
-  --mat: #23252f; --path: #555869; --base: #2d303d; --base-edge: #747789;
-  --blue: #4f7fe6; --blue-ink: #ffffff; --red: #e05a44; --red-ink: #ffffff;
-  --gold: #f2b530; --gold-soft: rgba(242,181,48,.3); --region: rgba(236,235,230,.05); color-scheme: dark;
-}
+:root[data-theme="dark"] { --ground: #14151c; --surface: #1d1f2a; --ink: #ecebe6; --muted: #9c9eae; --line: #343850; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
-.page { max-width: 1040px; margin: 0 auto; padding-block: 26px 56px;
+.page { max-width: 1080px; margin: 0 auto; padding-block: 24px 56px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: flex; flex-direction: column; gap: 26px; }
+  display: flex; flex-direction: column; gap: 22px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
-h1 { font-family: var(--display); font-weight: 700; font-size: 2.3rem; line-height: 1; margin: 0; letter-spacing: -0.02em; }
+h1 { font-family: var(--display); font-weight: 800; font-size: 2.2rem; line-height: 1; margin: 0; letter-spacing: -0.02em; }
 header p { margin: 0; color: var(--muted); max-width: 56ch; }
-h2 { font-family: var(--display); font-weight: 700; font-size: 1.2rem; margin: 0 0 10px; text-wrap: balance; }
-.label { font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 1.15rem; margin: 0 0 8px; text-wrap: balance; }
+.label { font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 
-.table { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
-.mat { background: var(--mat); border-radius: 16px; padding: 8px; min-width: 0; }
-.mat svg { display: block; width: 100%; height: auto; max-height: 86vh; }
-.rail { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.seat { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.seat .who { font-weight: 600; display: flex; align-items: center; gap: 8px; }
-.dot { width: 14px; height: 14px; border-radius: 4px; flex: none; }
-.dot.p0, .tile.p0 { background: var(--blue); color: var(--blue-ink); }
-.dot.p1, .tile.p1 { background: var(--red); color: var(--red-ink); }
-.seat.turn .who::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
-.seat .nums { margin-left: auto; font-family: var(--mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
-.medals { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.table { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 22px; align-items: start; }
+.mat { position: relative; border-radius: 18px; overflow: hidden; min-width: 0; background: #2b2d3a;
+  box-shadow: 0 0 0 5px var(--surface), 0 0 0 6px var(--line), 0 18px 34px -20px rgba(0,0,0,.6); }
+.mat svg { display: block; width: 100%; height: auto; max-height: 88vh; margin: 0 auto; }
+#caption { margin: 0; padding: 8px 14px; min-height: 2.6em; background: #1b1c26; color: #fff; font-weight: 500; font-size: .92rem; text-align: center; }
+.rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.seat { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.seat .who { font: 700 1rem var(--display); display: flex; align-items: center; gap: 8px; }
+.flag { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.flag.p0 { background: var(--blue); } .flag.p1 { background: var(--red); }
+.seat .turnpill { font: 600 .68rem var(--body); letter-spacing: .06em; text-transform: uppercase; background: var(--gold); color: #2a1c00; border-radius: 20px; padding: 1px 8px; visibility: hidden; }
+.seat.turn .turnpill { visibility: visible; }
+.seat .nums { margin-left: auto; font-family: var(--mono); font-size: .76rem; color: var(--muted); white-space: nowrap; }
+.track { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.track i { width: 15px; height: 15px; border-radius: 50%; border: 1.5px dashed var(--line); display: block; }
+.track i.on { border: 0; background: radial-gradient(circle at 35% 30%, #ffe08a, var(--gold) 60%, var(--gold-lo)); }
+.track span { font-size: .78rem; color: var(--muted); margin-left: 4px; }
 
-.tiles { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; align-items: center; }
-.tile { border: 0; border-radius: 8px; min-width: 62px; padding: 5px 8px; font: 600 .82rem var(--body); text-align: left;
-  display: grid; grid-template-columns: auto 1fr; column-gap: 7px; align-items: center; line-height: 1.15; cursor: default; position: relative; }
-.tile b { font: 700 1.25rem var(--display); grid-row: span 2; }
-.tile small { font-weight: 400; font-size: .68rem; opacity: .9; }
-.tile:disabled { opacity: .45; }
-.tile.can { cursor: pointer; box-shadow: 0 0 0 2px var(--gold); opacity: 1; }
-.tile.sel { box-shadow: 0 0 0 3px var(--gold), 0 0 0 7px var(--gold-soft); }
-.tile.pinned::after { content: "pinned"; position: absolute; right: 4px; top: -8px; background: var(--ink); color: var(--ground);
-  font: 600 .6rem var(--body); padding: 1px 5px; border-radius: 6px; }
-.tile:focus-visible, .btn:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.tile.mini { min-width: 0; padding: 2px 7px; grid-template-columns: auto auto; cursor: default; }
-.tile.mini b { font-size: .95rem; grid-row: auto; }
-.tile.back { background: var(--line); color: var(--muted); min-width: 22px; width: 22px; height: 30px; padding: 0; }
-.none { color: var(--muted); font-size: .85rem; }
+.tiles { display: flex; flex-wrap: wrap; gap: 7px; min-height: 32px; align-items: center; }
+.tile { border: 0; border-radius: 10px; min-width: 104px; padding: 6px 10px 7px 8px; font: 600 .86rem var(--body); text-align: left; color: #fff;
+  display: grid; grid-template-columns: 30px 1fr; column-gap: 8px; align-items: center; line-height: 1.15; cursor: default; position: relative; }
+.tile.p0 { background: linear-gradient(var(--blue-hi), var(--blue) 30%); box-shadow: 0 3px 0 var(--blue-lo); }
+.tile.p1 { background: linear-gradient(var(--red-hi), var(--red) 30%); box-shadow: 0 3px 0 var(--red-lo); }
+.tile b { font: 800 1.5rem var(--display); grid-row: span 2; text-align: center; background: rgba(255,255,255,.2); border-radius: 7px; line-height: 30px; height: 30px; }
+.tile small { font-weight: 400; font-size: .7rem; opacity: .92; }
+.tile em { position: absolute; right: -5px; top: -7px; background: var(--ink); color: var(--ground); font: 600 .68rem var(--mono); font-style: normal; border-radius: 9px; padding: 0 6px; }
+.tile:disabled { filter: saturate(.55); opacity: .6; }
+.tile.can { cursor: pointer; }
+.tile.can:hover { transform: translateY(-2px); }
+.tile.sel { transform: translateY(-3px); outline: 3px solid var(--gold); outline-offset: 2px; }
+.tile.pinned::after { content: "pinned this turn"; position: absolute; left: 6px; bottom: -8px; background: var(--ink); color: var(--ground);
+  font: 600 .6rem var(--body); padding: 1px 6px; border-radius: 6px; }
+.tile:focus-visible, .btn:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.tile.mini { min-width: 0; padding: 3px 8px 4px 4px; grid-template-columns: 20px auto; column-gap: 6px; font-size: .78rem; border-radius: 8px; }
+.tile.mini b { font-size: 1rem; grid-row: auto; height: 20px; line-height: 20px; border-radius: 5px; }
+.tile.back { min-width: 26px; width: 26px; height: 34px; padding: 0; display: block; background: repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px), var(--surface); border: 1.5px solid var(--line); box-shadow: none; }
+.none { color: var(--muted); font-size: .84rem; }
 
-.status p { margin: 0; font-weight: 500; }
-.status .note { color: var(--muted); font-weight: 400; font-size: .86rem; }
+.coach p { margin: 0; }
+#status { font: 700 1.05rem var(--display); }
+#note { color: var(--muted); font-size: .88rem; min-height: 1.3em; }
+#note.warn { color: var(--ink); background: var(--gold-soft); border-radius: 8px; padding: 5px 9px; }
 .bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .bar > i { display: block; height: 100%; width: 0; background: var(--gold); }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 9px;
-  font: 600 .9rem var(--body); padding: 9px 10px; cursor: pointer; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px;
+  font: 600 .92rem var(--body); padding: 10px 10px; cursor: pointer; }
+.btn.go { background: var(--gold); border-color: var(--gold); color: #2a1c00; }
 .btn.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
-.btn:disabled { opacity: .4; cursor: default; }
+.btn:disabled { opacity: .35; cursor: default; background: var(--surface); color: var(--ink); border-color: var(--line); }
 .fields { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
 .fields label { font-size: .85rem; color: var(--muted); }
 select { font: 500 .9rem var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; width: 100%; }
-#log { margin: 0; padding: 0; list-style: none; max-height: 210px; overflow-y: auto; font-size: .84rem; display: flex; flex-direction: column; gap: 2px; }
+#log { margin: 0; padding: 0; list-style: none; max-height: 190px; overflow-y: auto; font-size: .84rem; display: flex; flex-direction: column; gap: 2px; }
 #log li { display: grid; grid-template-columns: 12px 1fr; gap: 7px; align-items: baseline; }
 #log li i { width: 9px; height: 9px; border-radius: 3px; display: block; }
 #log li.sys { color: var(--muted); }
 
+details.how { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+details.how summary { font: 700 1rem var(--display); cursor: pointer; }
+.steps { list-style: none; margin: 10px 0 2px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 18px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 8px; color: var(--muted); font-size: .9rem; }
+.steps li::before { content: counter(s); font: 800 .95rem var(--display); background: var(--ink); color: var(--ground); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; }
+.steps strong { color: var(--ink); font-weight: 600; }
 .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
 .notes > div { min-width: 0; }
-.notes p, .notes li { color: var(--muted); margin: 0 0 6px; }
-.notes ul { margin: 0; padding-left: 18px; }
-.notes strong { color: var(--ink); font-weight: 600; }
+.notes p { color: var(--muted); margin: 0 0 6px; }
 table.troops { border-collapse: collapse; width: 100%; font-size: .87rem; }
 table.troops td { padding: 3px 8px 3px 0; vertical-align: top; color: var(--muted); }
-table.troops td:first-child { font: 700 1rem var(--display); color: var(--ink); width: 1.6em; }
+table.troops td:first-child { font: 800 1rem var(--display); color: var(--ink); width: 1.6em; }
 table.troops td:nth-child(2) { color: var(--ink); font-weight: 600; white-space: nowrap; }
 footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: 14px; }
 
-/* board */
-.edge { stroke: var(--path); stroke-width: 1.1; stroke-linecap: round; }
-.region { fill: var(--region); }
-.medal circle { fill: var(--surface); stroke: var(--base-edge); stroke-width: .35; stroke-dasharray: 1 .7; }
-.medal text { font: 600 3.4px var(--mono); fill: var(--muted); }
-.medal.p0 circle { fill: var(--blue); stroke: none; } .medal.p1 circle { fill: var(--red); stroke: none; }
-.medal.p0 text, .medal.p1 text { fill: #fff; }
-.base > circle.pad { fill: var(--base); stroke: var(--base-edge); stroke-width: .5; }
-.base.special > circle.pad { stroke-width: 1.1; stroke-dasharray: 1.6 1; }
-.disc.p0 { fill: var(--blue); } .disc.p1 { fill: var(--red); }
-.disc.under { opacity: .55; }
-.base text.str { font: 700 6.2px var(--display); fill: #fff; }
-.base text.nm { font: 500 2.5px var(--body); fill: #fff; opacity: .92; }
-.base text.gate, .hq text.gate { font: 500 2.4px var(--mono); fill: var(--muted); }
-.base text.cnt { font: 600 2.6px var(--mono); fill: var(--ink); }
-.base .cntbg { fill: var(--surface); stroke: var(--base-edge); stroke-width: .25; }
-.hq.p0 rect.body { fill: var(--blue); } .hq.p1 rect.body { fill: var(--red); }
-.hq text.t { font: 700 3.6px var(--display); fill: #fff; }
-.target { cursor: pointer; }
-.target .ring { fill: none; stroke: var(--gold); stroke-width: 1.3; }
-.target:hover .ring, .target:focus-visible .ring { stroke-width: 2.2; }
-.target:focus-visible { outline: none; }
+/* the mat */
+.road-out { stroke: rgba(0,0,0,.28); stroke-width: 3.3; stroke-linecap: round; }
+.road { stroke-width: 2.3; stroke-linecap: round; }
+.road-dash { stroke: rgba(255,255,255,.55); stroke-width: .35; stroke-dasharray: 1.2 1.6; }
+.region { opacity: .22; }
+.region.p0 { fill: var(--blue); opacity: .55; } .region.p1 { fill: var(--red); opacity: .55; }
+.coin circle.c { fill: url(#coin); stroke: var(--gold-lo); stroke-width: .35; }
+.coin text { font: 800 3.6px var(--display); fill: #4a3100; }
+.coin.p0 circle.c { fill: var(--blue); stroke: #fff; stroke-width: .5; } .coin.p1 circle.c { fill: var(--red); stroke: #fff; stroke-width: .5; }
+.coin.p0 text, .coin.p1 text { fill: #fff; }
+.pad { stroke: rgba(0,0,0,.45); stroke-width: .5; }
+.pad-in { fill: rgba(0,0,0,.14); }
+.sp { fill: none; stroke: var(--gold); stroke-width: 1; stroke-dasharray: 2.2 1.3; }
+.spi circle { fill: var(--gold); stroke: var(--gold-lo); stroke-width: .25; } .spi text { font: 800 2.9px var(--display); fill: #3b2700; }
+.bname { font: 500 2.2px var(--mono); fill: rgba(255,255,255,.8); paint-order: stroke; stroke: rgba(0,0,0,.45); stroke-width: .5; }
+.tok.p0 .f { fill: var(--blue); } .tok.p0 .e { fill: var(--blue-lo); } .tok.p0 .t { fill: var(--blue-hi); }
+.tok.p1 .f { fill: var(--red); } .tok.p1 .e { fill: var(--red-lo); } .tok.p1 .t { fill: var(--red-hi); }
+.tok text.str { font: 800 6.4px var(--display); fill: #fff; }
+.tok text.nm { font: 600 2.3px var(--body); fill: #fff; }
+.tok.under { opacity: .9; }
+.cnt circle { fill: #fff; stroke: rgba(0,0,0,.5); stroke-width: .3; } .cnt text { font: 700 2.7px var(--mono); fill: #1d2030; }
+.gate rect { fill: rgba(20,21,30,.75); } .gate text { font: 600 2.3px var(--mono); fill: #fff; }
+.hq .w { stroke: rgba(0,0,0,.4); stroke-width: .4; }
+.hq.p0 .w { fill: var(--blue); } .hq.p1 .w { fill: var(--red); }
+.hq.p0 .d { fill: var(--blue-lo); } .hq.p1 .d { fill: var(--red-lo); }
+.hq text { font: 800 2.7px var(--display); fill: #fff; letter-spacing: .05em; }
 .ring { fill: none; stroke: none; }
-.last .ring { stroke: var(--ink); stroke-width: .5; stroke-dasharray: 1 1; }
-.src .ring { stroke: var(--gold); stroke-width: .8; stroke-dasharray: 2 1; }
+.target { cursor: pointer; }
+.target .ring { stroke: #fff; stroke-width: 1.5; filter: drop-shadow(0 0 1.2px var(--gold)); animation: pulse 1.1s ease-in-out infinite; }
+.target .halo { fill: var(--gold); opacity: .38; }
+.target:hover .halo, .target:focus-visible .halo { opacity: .7; }
+.target:focus-visible { outline: none; }
+.halo { fill: none; }
+.info { cursor: help; }
+.last .ring { stroke: #fff; stroke-width: .7; stroke-dasharray: 1.2 1; }
+.src .ring { stroke: var(--gold); stroke-width: 1; stroke-dasharray: 2 1; }
+.pop .tok.top { animation: pop .45s cubic-bezier(.2,1.6,.4,1); transform-box: fill-box; transform-origin: center; }
+.dim .tok, .dim .pad { opacity: .55; }
+@keyframes pulse { 50% { stroke-width: 2.4; } }
+@keyframes pop { from { transform: translateY(-9px) scale(1.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .target .ring, .pop .tok.top { animation: none; } .tile.can:hover, .tile.sel { transform: none; } }
 
-@media (max-width: 860px) {
+@media (max-width: 880px) {
   .table { display: flex; flex-direction: column; gap: 12px; }
   .rail { display: contents; }
   .rail > .panel:nth-child(1) { order: 1; } .mat { order: 2; }
   .rail > .panel:nth-child(2) { order: 3; } .rail > .panel:nth-child(3) { order: 4; }
   .rail > .panel:nth-child(4) { order: 5; } .rail > .panel:nth-child(5) { order: 6; }
-  h1 { font-size: 1.9rem; }
-  .mat svg { max-height: 66vh; margin: 0 auto; }
+  h1 { font-size: 1.8rem; }
+  .mat svg { max-height: 64vh; }
+  .tile { min-width: 96px; }
 }
 </style>
 
 <div class="page">
   <header>
     <h1>Toy Battle Sparring</h1>
-    <p>Play the self-taught network on any of the 8 terrains. Unofficial fan-made test page, plain shapes only.</p>
+    <p>Play the self-taught network on any of the 8 terrains. Unofficial fan-made test page with its own drawings, not the game's artwork.</p>
   </header>
 
+  <details class="how" id="how" open>
+    <summary>How to play, in four steps</summary>
+    <ol class="steps">
+      <li><span><strong>Each turn do one thing:</strong> draw 2 troops, or place 1 troop from your rack.</span></li>
+      <li><span><strong>To place:</strong> click a troop, then one of the glowing bases. You can only build outward from your H.Q. along the roads, through bases you hold.</span></li>
+      <li><span><strong>Covering:</strong> you may place on an empty base, on your own troop, or on an enemy troop with a <strong>lower number</strong>. Only the top troop of a pile counts.</span></li>
+      <li><span><strong>Win</strong> by placing a troop on the enemy H.Q., or by collecting enough gold medals. Hold every base around a medal to take it for good.</span></li>
+    </ol>
+  </details>
+
   <div class="table">
-    <div class="mat"><svg id="board" viewBox="0 0 100 166" role="group" aria-label="Terrain"></svg></div>
+    <div class="mat"><svg id="board" viewBox="0 0 100 166" role="group" aria-label="Terrain"></svg><p id="caption" aria-live="polite"></p></div>
 
     <div class="rail">
       <div class="panel">
-        <div class="seat" id="seat-model"><span class="who"><span class="dot" id="dot-model"></span>Model</span><span class="nums" id="nums-model"></span></div>
+        <div class="seat" id="seat-model"><span class="who"><span class="flag" id="dot-model"></span>Model</span><span class="turnpill">thinking</span><span class="nums" id="nums-model"></span></div>
+        <div class="track" id="track-model"></div>
         <div class="tiles" id="rack-model"></div>
         <div class="tiles" id="disc-model"></div>
       </div>
 
-      <div class="panel status">
+      <div class="panel coach">
         <p id="status">Loading the network…</p>
-        <p class="note" id="note"></p>
+        <p id="note"></p>
         <div class="bar"><i id="progress"></i></div>
         <div class="row">
-          <button class="btn" id="draw" disabled>Draw 2</button>
+          <button class="btn" id="draw" disabled>Draw 2 troops</button>
           <button class="btn" id="skip" disabled>Skip effect</button>
         </div>
       </div>
 
       <div class="panel">
-        <div class="seat" id="seat-you"><span class="who"><span class="dot" id="dot-you"></span>You</span><span class="nums" id="nums-you"></span></div>
+        <div class="seat" id="seat-you"><span class="who"><span class="flag" id="dot-you"></span>You</span><span class="turnpill">your turn</span><span class="nums" id="nums-you"></span></div>
+        <div class="track" id="track-you"></div>
         <div class="tiles" id="rack-you"></div>
         <div class="tiles" id="disc-you"></div>
       </div>
@@ -189,12 +225,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line
       <h2 id="map-title">Terrain</h2>
       <p id="map-effect"></p>
       <p id="map-goal"></p>
-      <ul>
-        <li>On your turn: <strong>draw 2</strong> troops, or <strong>place 1</strong> (click a troop, then a ringed base).</li>
-        <li>You may place on an empty base, your own troop, or an enemy troop of lower strength. The base must be linked to your H.Q. through bases you hold.</li>
-        <li>Hold every base around a region to take its medals for good.</li>
-        <li>Win by placing a troop on the enemy H.Q. or by reaching the medal target.</li>
-      </ul>
+      <p>Tip: with a troop selected, click any base that is not glowing to see why you cannot place there. With nothing selected, click a base to see its whole pile.</p>
     </div>
     <div>
       <h2>Troops</h2>
@@ -207,7 +238,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line
       <p>House rulings where the rulebook leaves room: troop and base effects with a target can be skipped; Kwak passes every gate; Hook needs a normal link on Station Metal-X special bases; a game stops after 200 turns.</p>
     </div>
   </div>
-  <footer>Unofficial. Toy Battle is a game by Paolo Mori and Alessandro Zucchini, published by Repos Production. No game art is used here. Terrain graphs follow a third-party transcription; the medal counts of Volcanic Jungle and Caribbean Sea are unverified.</footer>
+  <footer>Unofficial. Toy Battle is a game by Paolo Mori and Alessandro Zucchini, published by Repos Production. None of the game's artwork is used here. Terrain graphs follow a third-party transcription; the medal counts of Volcanic Jungle and Caribbean Sea are unverified.</footer>
 </div>
 
 <script>
@@ -220,26 +251,32 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line
 const D = window.TB_DATA, $ = (id) => document.getElementById(id), NS = "http://www.w3.org/2000/svg";
 const NAMES = ["Kwak", "Skully", "Cap'n", "Jumbo", "Hook", "XB-42", "Star", "Roxy"];
 const GLYPH = ["K", "1", "2", "3", "4", "5", "6", "7"];
-const SHORT = ["joker", "draw 2", "place again", "remove next to it", "place anywhere", "foe discards 1", "draw 1", "no effect"];
-const LONG = ["Joker: goes on any troop, and any troop goes on it.", "Draw 2 troops.", "Place one more troop.",
-  "Send an adjacent enemy top troop to its discard.", "Can be placed on a base that is not linked to your H.Q.",
-  "The opponent discards one random troop from their rack.", "Draw 1 troop.", "No effect, strongest troop."];
+const SHORT = ["joker", "then draw 2", "then place again", "removes a neighbour", "goes anywhere", "foe discards 1", "then draw 1", "strongest"];
+const LONG = ["Joker: goes on any troop, and any troop goes on it.", "After placing it, draw 2 troops.", "After placing it, place one more troop.",
+  "After placing it, send an adjacent enemy top troop to its discard.", "Can be placed on a base that is not linked to your H.Q.",
+  "After placing it, the opponent discards one random troop from their rack.", "After placing it, draw 1 troop.", "No effect. Nothing but Kwak can cover it."];
 const EFFECT = {
-  recall: "Special bases (dashed): after placing there you may take the top troop of another base of yours back into your rack.",
-  gate: "Special bases (dashed) and some H.Q. only accept the strengths printed under them. Kwak passes everywhere.",
-  draw: "Special bases (dashed): placing there draws 1 troop.",
-  erupt: "Special bases (dashed): after placing there you may move an adjacent enemy top troop onto a base next to it.",
-  exhume: "Special bases (dashed): after placing there you may take one troop from your discard back into your rack.",
-  none: "No special bases. Blue has two H.Q., Red has one.",
-  shield: "Special bases (dashed): a troop placed there does not use its effect.",
-  sniper: "Special bases (dashed): placing there pins one random troop in the opponent's rack for their next turn.",
+  recall: "Gold-ringed bases: after placing there you may take the top troop of another base of yours back into your rack.",
+  gate: "Gold-ringed bases and some H.Q. only accept the strengths shown on their label. Kwak passes everywhere.",
+  draw: "Gold-ringed bases: placing there draws 1 troop.",
+  erupt: "Gold-ringed bases: after placing there you may move an adjacent enemy top troop onto a base next to it.",
+  exhume: "Gold-ringed bases: after placing there you may take one troop from your discard back into your rack.",
+  none: "No special bases here. Blue has two H.Q., Red has one.",
+  shield: "Gold-ringed bases: a troop placed there does not use its effect.",
+  sniper: "Gold-ringed bases: placing there pins one random troop in the opponent's rack for their next turn.",
 };
-const PHASE_TEXT = ["", "Cap'n: place one more troop, or skip.", "Jumbo: pick an adjacent enemy troop to remove, or skip.",
-  "Pick one of your troops to take back, or skip.", "Eruption: pick an adjacent enemy troop to move, or skip.",
-  "Eruption: pick where the troop lands.", "Cemetery: pick a troop from your discard, or skip."];
+const SPECIAL = { recall: ["↩", "take a troop back"], gate: ["≡", "restricted"], draw: ["+1", "draw 1"], erupt: ["↗", "move an enemy"], exhume: ["↑", "troop from discard"], shield: ["∅", "no troop effect"], sniper: ["⌖", "pin an enemy troop"] };
+// painted mats: [top, bottom, road, pad, speckle]
+const THEME = [["#7fb069", "#4f8a4b", "#e9dcb3", "#f4ecd2", "#3d6f3a"], ["#58c4c0", "#2b8f9e", "#f3e3b0", "#fbf1cf", "#d8fbf6"],
+  ["#a9c9f2", "#7f9fe0", "#ffffff", "#ffffff", "#ffffff"], ["#3f7d4c", "#2a4f3a", "#d98a3a", "#f1d8a8", "#e2622b"],
+  ["#6b6486", "#3b3852", "#b9b3c9", "#dedaea", "#22202f"], ["#3f8fd6", "#1f5fa8", "#f2dfae", "#fbf0cc", "#bfe3ff"],
+  ["#8a94a6", "#566074", "#d9dee8", "#eef1f6", "#39414f"], ["#b59a67", "#7d6a45", "#e7d9b6", "#f5ecd3", "#5b4b2c"]];
+const PHASE_TEXT = ["", "Cap'n: place one more troop, or skip.", "Jumbo: click a glowing enemy troop to remove it, or skip.",
+  "Click one of your glowing troops to take it back, or skip.", "Eruption: click a glowing enemy troop to move it, or skip.",
+  "Eruption: click the base where it lands.", "Cemetery: click a troop in your discard to take it back, or skip."];
 
 TB.setTerrains(D.terrains.map((t) => t.packed));
-let evaluate = null, S = null, human = 0, sel = -1, token = 0, busy = false, owners = {}, last = [], lastValue = null;
+let evaluate = null, S = null, human = 0, sel = -1, token = 0, busy = false, owners = {}, last = [], pop = -1, lastValue = null, warn = "", caption = "";
 const rand32 = () => (Math.random() * 4294967296) >>> 0;
 const who = (p) => (p === human ? "You" : "Model");
 const el = (tag, attrs, parent, text) => {
@@ -249,11 +286,11 @@ const el = (tag, attrs, parent, text) => {
   if (parent) parent.appendChild(e);
   return e;
 };
-const gateText = (g) => (g === 255 ? "" : [1, 2, 3, 4, 5, 6, 7].filter((t) => (g >> t) & 1).join("·"));
+const gateText = (g) => [1, 2, 3, 4, 5, 6, 7].filter((t) => (g >> t) & 1).join(" ");
 
 function log(text, p) {
   const li = document.createElement("li"), i = document.createElement("i"), span = document.createElement("span");
-  if (p === undefined) li.className = "sys"; else i.className = "dot p" + p;
+  if (p === undefined) li.className = "sys"; else i.className = "flag p" + p;
   span.textContent = text; li.append(i, span); $("log").appendChild(li);
   $("log").scrollTop = $("log").scrollHeight;
 }
@@ -262,11 +299,11 @@ function describe(s, a) {
   const T = D.terrains[s.ter], v = (w) => (s.turn === human ? w : w + "s");
   if (a === TB.A_DRAW) return "";
   if (a === TB.A_SKIP) return v("skip") + " the effect";
-  if (a < TB.A_BASE) { const t = Math.floor((a - 2) / 17), slot = (a - 2) % 17; return `${NAMES[t]} → ${slot >= 15 ? "enemy H.Q." : T.bases[slot].name}`; }
+  if (a < TB.A_BASE) { const t = Math.floor((a - 2) / 17), slot = (a - 2) % 17; return `${v("place")} ${NAMES[t]} on ${slot >= 15 ? "the enemy H.Q." : T.bases[slot].name}`; }
   if (a >= TB.A_TYPE) return `${v("take")} ${NAMES[a - TB.A_TYPE]} back from the discard`;
-  const b = a - TB.A_BASE, nm = T.bases[b].name;
-  return s.phase === TB.JUMBO ? `Jumbo removes the troop on ${nm}` : s.phase === TB.RECALL ? `${v("take")} the troop on ${nm} back`
-       : s.phase === TB.ERUPT_SRC ? `eruption: ${v("move")} the troop on ${nm}` : `… to ${nm}`;
+  const b = a - TB.A_BASE, nm = T.bases[b].name, tn = NAMES[TB.type(s, b)];
+  return s.phase === TB.JUMBO ? `Jumbo removes the ${tn} on ${nm}` : s.phase === TB.RECALL ? `${v("take")} the ${tn} on ${nm} back`
+       : s.phase === TB.ERUPT_SRC ? `eruption: ${v("pick")} the ${tn} on ${nm}` : `${v("move")} it to ${nm}`;
 }
 
 // Apply an action, attribute regions and write the move record.
@@ -283,7 +320,7 @@ function act(a) {
         const was = before.rack[p * 8 + t] - (p === me && t === placedType ? 1 : 0);
         for (let k = was; k < S.rack[p * 8 + t]; k++) names.push(NAMES[t]);
       }
-      extra.push(`${p === me && a !== TB.A_DRAW ? "" : who(p) + " "}${p === human ? "draw" : "draws"} ${names.length ? names.join(", ") : drawn}`.trim());
+      extra.push(`${p === me && a !== TB.A_DRAW ? "" : who(p) + " "}${p === human ? "draw" : "draws"} ${names.length ? names.join(" and ") : drawn + " troop" + (drawn > 1 ? "s" : "")}`.trim());
     }
     for (let t = 0; t < 8; t++) if (S.disc[p * 8 + t] > before.disc[p * 8 + t] && !(a >= TB.A_BASE && a < TB.A_TYPE))
       extra.push(`${who(p)} ${p === human ? "lose" : "loses"} ${NAMES[t]} from the rack`);
@@ -296,14 +333,18 @@ function act(a) {
     const holds = (p) => { let ok = true; for (let b = 0; b < Tt.nb; b++) if (((Tt.reg[r] >> b) & 1) && TB.owner(S, b) !== p) ok = false; return ok; };
     owners[r] = holds(me) ? me : 1 - me;
   }
-  log(text ? `${who(me)}: ${text}${extra.length ? " (" + extra.join("; ") + ")" : ""}` : extra.join("; "), me);
-  if (a >= 2 && a < TB.A_BASE && (a - 2) % 17 < 15) last = [(a - 2) % 17];
-  else if (a >= TB.A_BASE && a < TB.A_TYPE) last = [a - TB.A_BASE];
+  const line = text ? `${who(me)} ${text}${extra.length ? " (" + extra.join("; ") + ")" : ""}` : extra.join("; ");
+  log(line, me);
+  caption = line; warn = "";
+  pop = -1;
+  if (a >= 2 && a < TB.A_BASE && (a - 2) % 17 < 15) { last = [(a - 2) % 17]; pop = last[0]; }
+  else if (a >= TB.A_BASE && a < TB.A_TYPE) { last = [a - TB.A_BASE]; if (before.phase === TB.ERUPT_DST) pop = last[0]; }
   if (S.winner >= 0) {
     const T = D.terrains[S.ter], hq = a >= 2 && a < TB.A_BASE && (a - 2) % 17 >= 15;
-    const why = hq ? "a troop reached the enemy H.Q." : S.winner < 2 && S.medals[S.winner] >= T.objective ? `${T.objective} medals reached`
-      : S.nturn >= TB.MAXTURN ? "200-turn limit, most medals" : `${who(S.turn)} can neither draw nor place, most medals`;
-    log(S.winner === 2 ? `Draw (${why}).` : `${who(S.winner)} ${S.winner === human ? "win" : "wins"}: ${why}.`);
+    const why = hq ? "a troop reached the enemy H.Q" : S.winner < 2 && S.medals[S.winner] >= T.objective ? `${T.objective} medals reached`
+      : S.nturn >= TB.MAXTURN ? "200-turn limit, most medals" : `${who(S.turn).toLowerCase()} can neither draw nor place, most medals`;
+    caption = S.winner === 2 ? `Draw: ${why}.` : `${who(S.winner)} ${S.winner === human ? "win" : "wins"}: ${why}.`;
+    log(caption);
   }
 }
 
@@ -312,100 +353,151 @@ function tile(p, t, opts = {}) {
   b.className = `tile p${p}` + (opts.mini ? " mini" : "");
   b.type = "button";
   const g = document.createElement("b"); g.textContent = GLYPH[t];
-  const n = document.createElement("span"); n.textContent = NAMES[t] + (opts.count > 1 ? ` ×${opts.count}` : "");
+  const n = document.createElement("span"); n.textContent = NAMES[t];
   b.append(g, n);
   if (!opts.mini) { const sm = document.createElement("small"); sm.textContent = SHORT[t]; b.append(sm); }
-  b.title = `${NAMES[t]} (strength ${t === 0 ? "joker" : t}). ${LONG[t]}`;
+  if (opts.count > 1) { const c = document.createElement("em"); c.textContent = "×" + opts.count; b.append(c); }
+  b.title = `${NAMES[t]} (${t === 0 ? "joker" : "strength " + t}). ${LONG[t]}`;
   b.disabled = true;
   return b;
 }
 
+// Why the selected troop cannot go on base b, in plain words.
+function whyNot(t, b) {
+  const T = D.terrains[S.ter], Tt = TB.TER[S.ter], nm = NAMES[t];
+  if (!((Tt.gate[b] >> t) & 1)) return `This base only takes strengths ${gateText(Tt.gate[b])} (and Kwak).`;
+  if (TB.owner(S, b) === 1 - human && !(t === 0 || TB.type(S, b) === 0 || t > TB.type(S, b)))
+    return `${nm} (${t}) cannot cover the ${NAMES[TB.type(S, b)]} (${TB.type(S, b)}) there: you need a higher number, or Kwak.`;
+  if (S.h[b] >= TB.MAXH) return "That pile is full.";
+  if (t === 4) return "On this terrain Hook cannot jump onto a gold-ringed base.";
+  return "Not linked yet: this base is not next to your H.Q. or to a base you hold in an unbroken chain from your H.Q. Only Hook can jump there.";
+}
+function baseInfo(b) {
+  const T = D.terrains[S.ter], h = S.h[b];
+  if (!h) return `${T.bases[b].name}: empty base.`;
+  const names = []; for (let i = h - 1; i >= 0; i--) { const u = S.st[b * TB.MAXH + i]; names.push(`${u >> 3 === human ? "your" : "the model's"} ${NAMES[u & 7]}`); }
+  return `${T.bases[b].name}: ${names.join(", on top of ")}.`;
+}
+
 function render() {
   const T = D.terrains[S.ter], Tt = TB.TER[S.ter], svg = $("board"), legal = TB.legalActions(S), mine = S.turn === human && S.winner < 0 && !busy;
-  const fx = (x) => (human ? 100 - x : x), fy = (y) => (human ? 166 - y : y);
+  const fx = (x) => (human ? 100 - x : x), fy = (y) => (human ? 166 - y : y), th = THEME[S.ter];
   svg.replaceChildren();
-  // regions
+  svg.parentNode.style.background = `linear-gradient(${th[0]}, ${th[1]})`;
+  const defs = el("defs", {}, svg);
+  const bg = el("linearGradient", { id: "bg", x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  el("stop", { offset: 0, "stop-color": th[0] }, bg); el("stop", { offset: 1, "stop-color": th[1] }, bg);
+  const coin = el("radialGradient", { id: "coin", cx: .35, cy: .3, r: .8 }, defs);
+  el("stop", { offset: 0, "stop-color": "#fff0b0" }, coin); el("stop", { offset: .6, "stop-color": "#f0b429" }, coin); el("stop", { offset: 1, "stop-color": "#b97a00" }, coin);
+  el("rect", { x: 0, y: 0, width: 100, height: 166, fill: "url(#bg)" }, svg);
+  let seed = 7 + S.ter * 131;                       // speckles: the same on every redraw
+  const rr = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  for (let i = 0; i < 70; i++) el("circle", { cx: rr() * 100, cy: rr() * 166, r: 0.5 + rr() * 1.6, fill: th[4], opacity: 0.1 + rr() * 0.12 }, svg);
+
+  // regions and their medals
+  const coins = [];
   T.regions.forEach((r, i) => {
     const pts = r.bases.map((b) => [fx(T.bases[b].x), fy(T.bases[b].y)]);
     const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
     pts.sort((a, b) => Math.atan2(a[1] - cy, a[0] - cx) - Math.atan2(b[1] - cy, b[0] - cx));
-    el("polygon", { class: "region", points: pts.map((p) => `${cx + (p[0] - cx) * 0.8},${cy + (p[1] - cy) * 0.8}`).join(" ") }, svg);
-    const taken = (S.taken >> i) & 1, g = el("g", { class: "medal" + (taken ? " p" + owners[i] : "") }, svg);
-    el("title", {}, g, `${r.medals} medal${r.medals > 1 ? "s" : ""}` + (taken ? `, taken by ${who(owners[i]).toLowerCase()}` : ""));
-    el("circle", { cx, cy, r: 3 }, g);
-    el("text", { x: cx, y: cy + 1.2, "text-anchor": "middle" }, g, r.medals);
+    const taken = (S.taken >> i) & 1;
+    el("polygon", { class: "region" + (taken ? " p" + owners[i] : ""), fill: "#fff", points: pts.map((p) => `${cx + (p[0] - cx) * 0.86},${cy + (p[1] - cy) * 0.86}`).join(" ") }, svg);
+    coins.push([cx, cy, r.medals, taken, i]);
   });
-  for (const e of T.edges) el("line", { class: "edge", x1: fx(e[0]), y1: fy(e[1]), x2: fx(e[2]), y2: fy(e[3]) }, svg);
-  const target = (g, action, label) => {
-    g.classList.add("target"); g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); g.setAttribute("aria-label", label);
-    const go = () => humanAct(action);
-    g.addEventListener("click", go);
-    g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
+  for (const e of T.edges) el("line", { class: "road-out", x1: fx(e[0]), y1: fy(e[1]), x2: fx(e[2]), y2: fy(e[3]) }, svg);
+  for (const e of T.edges) el("line", { class: "road", stroke: th[2], x1: fx(e[0]), y1: fy(e[1]), x2: fx(e[2]), y2: fy(e[3]) }, svg);
+  for (const [cx, cy, n, taken, i] of coins) {
+    const g = el("g", { class: "coin" + (taken ? " p" + owners[i] : "") }, svg);
+    el("title", {}, g, `${n} medal${n > 1 ? "s" : ""}` + (taken ? `, taken by ${who(owners[i]).toLowerCase()}` : ": hold every base around it"));
+    el("circle", { class: "c", cx, cy, r: 3.3 }, g);
+    el("text", { x: cx, y: cy + 1.3, "text-anchor": "middle" }, g, n);
+  }
+  const clickable = (g, label, fn) => {
+    g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); g.setAttribute("aria-label", label);
+    g.addEventListener("click", fn);
+    g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); fn(); } });
   };
-  // H.Q.
+  const say = (text) => { warn = text; render(); };
+  const token2 = (g, u, x, y, top) => {            // a troop tile on the mat
+    const t = el("g", { class: `tok p${u >> 3}` + (top ? " top" : " under") }, g);
+    el("rect", { class: "e", x: x - 5.4, y: y - 4.6, width: 10.8, height: 10.8, rx: 2.4 }, t);
+    el("rect", { class: "f", x: x - 5.4, y: y - 5.4, width: 10.8, height: 10.8, rx: 2.4 }, t);
+    if (top) {
+      el("rect", { class: "t", x: x - 4.3, y: y - 4.7, width: 8.6, height: 1.2, rx: .6 }, t);
+      el("text", { class: "str", x, y: y + 1.6, "text-anchor": "middle" }, t, GLYPH[u & 7]);
+      el("text", { class: "nm", x, y: y + 4.2, "text-anchor": "middle" }, t, NAMES[u & 7]);
+    }
+  };
+  // H.Q.: a small fort
   for (const p of [0, 1]) T.hqs[p].forEach((h, k) => {
     const g = el("g", { class: `hq p${p}` }, svg), x = fx(h.x), y = fy(h.y);
-    el("rect", { class: "body", x: x - 7, y: y - 5, width: 14, height: 10, rx: 2.2 }, g);
-    el("text", { class: "t", x, y: y + 1.3, "text-anchor": "middle" }, g, "H.Q.");
-    el("rect", { class: "ring", x: x - 8.2, y: y - 6.2, width: 16.4, height: 12.4, rx: 3 }, g);
-    if (h.gate !== 255) el("text", { class: "gate", x, y: y + (y < 83 ? -6.6 : 8.6), "text-anchor": "middle" }, g, "only " + gateText(h.gate));
+    el("rect", { class: "halo", x: x - 9.5, y: y - 8, width: 19, height: 15.5, rx: 3.5 }, g);
+    el("path", { class: "w", d: `M${x - 8},${y + 6} V${y - 5.5} h3.2 v2.2 h3.2 v-2.2 h3.2 v2.2 h3.2 v-2.2 H${x + 8} V${y + 6} Z` }, g);
+    el("path", { class: "d", d: `M${x - 2},${y + 6} v-3.4 a2,2 0 0 1 4,0 v3.4 Z` }, g);
+    el("text", { x, y: y + 0.6, "text-anchor": "middle" }, g, p === human ? "YOUR H.Q." : "ENEMY H.Q.");
+    el("rect", { class: "ring", x: x - 9.5, y: y - 8, width: 19, height: 15.5, rx: 3.5 }, g);
+    if (h.gate !== 255) { const gg = el("g", { class: "gate" }, g), yy = y + (y < 83 ? -10.5 : 8); el("rect", { x: x - 8, y: yy, width: 16, height: 3.4, rx: 1.7 }, gg); el("text", { x, y: yy + 2.5, "text-anchor": "middle" }, gg, "only " + gateText(h.gate)); }
     const a = 2 + sel * 17 + 15 + k;
-    if (mine && p !== human && sel >= 0 && legal.includes(a)) target(g, a, `Place ${NAMES[sel]} on the enemy H.Q.`);
+    if (mine && p !== human && sel >= 0 && legal.includes(a)) { g.classList.add("target"); clickable(g, `Place ${NAMES[sel]} on the enemy H.Q. and win`, () => humanAct(a)); }
+    else if (mine && p !== human && sel >= 0) { g.classList.add("info"); clickable(g, "Enemy H.Q.", () => say(((h.gate >> sel) & 1) ? "To take the enemy H.Q. you need a troop of yours, linked to your own H.Q., on a base right next to it." : `This H.Q. only falls to strengths ${gateText(h.gate)} (or Kwak).`)); }
   });
   // bases
-  const pickPhase = S.phase >= TB.JUMBO && S.phase <= TB.ERUPT_DST;
+  const pickPhase = S.phase >= TB.JUMBO && S.phase <= TB.ERUPT_DST, choosing = mine && (pickPhase || sel >= 0);
   T.bases.forEach((bs, b) => {
     const x = fx(bs.x), y = fy(bs.y), h = S.h[b];
-    const g = el("g", { class: "base" + (bs.special ? " special" : "") + (last.includes(b) ? " last" : "") + (S.phase !== TB.MAIN && S.phase !== TB.EXHUME && S.src === b && S.winner < 0 ? " src" : "") }, svg);
-    const stack = []; for (let i = 0; i < h; i++) stack.push(S.st[b * TB.MAXH + i]);
-    el("title", {}, g, `${bs.name}${bs.special ? " (special)" : ""}: ` + (h ? stack.map((u) => `${u >> 3 === human ? "your" : "model's"} ${NAMES[u & 7]}`).reverse().join(" on ") : "empty"));
-    el("circle", { class: "pad", cx: x, cy: y, r: 6.6 }, g);
-    const under = stack.slice(Math.max(0, h - 4), Math.max(0, h - 1));
-    under.forEach((u, i) => el("circle", { class: `disc under p${u >> 3}`, cx: x, cy: y + (under.length - i) * 1.5, r: 5.4 }, g));
-    if (h) {
-      const u = stack[h - 1];
-      el("circle", { class: `disc p${u >> 3}`, cx: x, cy: y, r: 5.4, stroke: "var(--mat)", "stroke-width": 0.5 }, g);
-      el("text", { class: "str", x, y: y + 1.3, "text-anchor": "middle" }, g, GLYPH[u & 7]);
-      el("text", { class: "nm", x, y: y + 4.1, "text-anchor": "middle" }, g, NAMES[u & 7]);
-      if (h > 1) { el("circle", { class: "cntbg", cx: x + 5.6, cy: y - 4.6, r: 2.3 }, g); el("text", { class: "cnt", x: x + 5.6, y: y - 3.7, "text-anchor": "middle" }, g, h); }
-    }
-    if (bs.gate !== 255) el("text", { class: "gate", x, y: y + 10.2, "text-anchor": "middle" }, g, "only " + gateText(bs.gate));
-    el("circle", { class: "ring", cx: x, cy: y, r: 7.6 }, g);
-    if (!mine) return;
-    if (pickPhase && legal.includes(TB.A_BASE + b)) target(g, TB.A_BASE + b, `Pick ${bs.name}`);
-    else if (!pickPhase && sel >= 0 && legal.includes(2 + sel * 17 + b)) target(g, 2 + sel * 17 + b, `Place ${NAMES[sel]} on ${bs.name}`);
+    const isTarget = mine && (pickPhase ? legal.includes(TB.A_BASE + b) : sel >= 0 && legal.includes(2 + sel * 17 + b));
+    const g = el("g", { class: "base" + (last.includes(b) ? " last" : "") + (pop === b ? " pop" : "") + (choosing && !isTarget ? " dim" : "")
+      + (S.phase !== TB.MAIN && S.phase !== TB.EXHUME && S.src === b && S.winner < 0 ? " src" : "") }, svg);
+    el("circle", { class: "halo", cx: x, cy: y, r: 9.2 }, g);
+    el("circle", { class: "pad", cx: x, cy: y, r: 6.9, fill: th[3] }, g);
+    el("circle", { class: "pad-in", cx: x, cy: y, r: 5 }, g);
+    if (bs.special) el("circle", { class: "sp", cx: x, cy: y, r: 8 }, g);
+    el("text", { class: "bname", x: x - 7.6, y: y - 6.4, "text-anchor": "end" }, g, bs.name);
+    const from = Math.max(0, h - 3);
+    for (let i = from; i < h; i++) token2(g, S.st[b * TB.MAXH + i], x, y + (h - 1 - i) * 1.7, i === h - 1);
+    if (h > 1) { const c = el("g", { class: "cnt" }, g); el("circle", { cx: x + 5.6, cy: y - 5.4, r: 2.4 }, c); el("text", { x: x + 5.6, y: y - 4.4, "text-anchor": "middle" }, c, h); }
+    if (bs.special && SPECIAL[T.effect]) { const sp = el("g", { class: "spi" }, g); el("title", {}, sp, SPECIAL[T.effect][1]); el("circle", { cx: x + 6.3, cy: y + 6.3, r: 2.4 }, sp); el("text", { x: x + 6.3, y: y + 7.3, "text-anchor": "middle" }, sp, SPECIAL[T.effect][0]); }
+    if (bs.gate !== 255) { const gg = el("g", { class: "gate" }, g); el("rect", { x: x - 7, y: y + 8.4, width: 14, height: 3.4, rx: 1.7 }, gg); el("text", { x, y: y + 10.9, "text-anchor": "middle" }, gg, "only " + gateText(bs.gate)); }
+    el("circle", { class: "ring", cx: x, cy: y, r: 8.6 }, g);
+    if (isTarget) { g.classList.add("target"); const a = pickPhase ? TB.A_BASE + b : 2 + sel * 17 + b; clickable(g, pickPhase ? `Pick ${bs.name}` : `Place ${NAMES[sel]} on ${bs.name}`, () => humanAct(a)); }
+    else { g.classList.add("info"); clickable(g, baseInfo(b), () => say(mine && sel >= 0 && !pickPhase ? whyNot(sel, b) : baseInfo(b))); }
   });
 
   // seats
   const model = 1 - human;
-  $("dot-you").className = "dot p" + human; $("dot-model").className = "dot p" + model;
+  $("dot-you").className = "flag p" + human; $("dot-model").className = "flag p" + model;
   $("seat-you").classList.toggle("turn", S.turn === human && S.winner < 0);
   $("seat-model").classList.toggle("turn", S.turn === model && S.winner < 0);
-  const nums = (p) => `medals ${S.medals[p]}/${T.objective} · rack ${TB.total(S.rack, p)} · reserve ${S.reserve[p]}`;
-  $("nums-you").textContent = nums(human); $("nums-model").textContent = nums(model);
+  for (const [p, id] of [[human, "you"], [model, "model"]]) {
+    $("nums-" + id).textContent = `rack ${TB.total(S.rack, p)}/8 · reserve ${S.reserve[p]}`;
+    const tr = $("track-" + id); tr.replaceChildren();
+    for (let i = 0; i < T.objective; i++) { const c = document.createElement("i"); if (i < S.medals[p]) c.className = "on"; tr.appendChild(c); }
+    const sp = document.createElement("span"); sp.textContent = `${S.medals[p]} of ${T.objective} medals`; tr.appendChild(sp);
+  }
   // my rack
   const rack = $("rack-you"); rack.replaceChildren();
-  const placeable = (t) => legal.some((a) => a >= 2 && a < TB.A_BASE && Math.floor((a - 2) / 17) === t);
+  const spots = (t) => legal.filter((a) => a >= 2 && a < TB.A_BASE && Math.floor((a - 2) / 17) === t).length;
+  const options = [];
   for (let t = 0; t < 8; t++) {
     const n = S.rack[human * 8 + t]; if (!n) continue;
-    const b = tile(human, t, { count: n });
+    const b = tile(human, t, { count: n }), k = spots(t);
     if (S.pin[human] === t + 1) b.classList.add("pinned");
-    if (mine && (S.phase === TB.MAIN || S.phase === TB.EXTRA) && placeable(t)) {
+    if (mine && (S.phase === TB.MAIN || S.phase === TB.EXTRA) && k) {
+      options.push(t);
       b.disabled = false; b.classList.add("can"); if (sel === t) b.classList.add("sel");
       b.setAttribute("aria-pressed", sel === t);
-      b.addEventListener("click", () => { sel = sel === t ? -1 : t; render(); });
+      b.addEventListener("click", () => { sel = sel === t ? -1 : t; warn = ""; render(); });
     }
     rack.appendChild(b);
   }
-  if (!rack.children.length) rack.innerHTML = '<span class="none">Your rack is empty.</span>';
+  if (!rack.children.length) rack.innerHTML = '<span class="none">Your rack is empty: draw troops.</span>';
   // model rack: face down, except tiles everyone saw it take back
   const mr = $("rack-model"); mr.replaceChildren();
-  let hidden = TB.total(S.rack, model);
-  for (let t = 0; t < 8; t++) for (let k = 0; k < S.known[model * 8 + t]; k++) { mr.appendChild(tile(model, t, { mini: true })); hidden--; }
-  for (let k = 0; k < hidden; k++) { const b = document.createElement("span"); b.className = "tile back"; b.title = "hidden troop"; mr.appendChild(b); }
-  if (S.winner >= 0 && hidden > 0) {          // show what it held once the game is over
-    mr.replaceChildren();
-    for (let t = 0; t < 8; t++) if (S.rack[model * 8 + t]) mr.appendChild(tile(model, t, { mini: true, count: S.rack[model * 8 + t] }));
+  if (S.winner >= 0) { for (let t = 0; t < 8; t++) if (S.rack[model * 8 + t]) mr.appendChild(tile(model, t, { mini: true, count: S.rack[model * 8 + t] })); }
+  else {
+    let hidden = TB.total(S.rack, model);
+    for (let t = 0; t < 8; t++) for (let k = 0; k < S.known[model * 8 + t]; k++) { mr.appendChild(tile(model, t, { mini: true })); hidden--; }
+    for (let k = 0; k < hidden; k++) { const b = document.createElement("span"); b.className = "tile back"; b.title = "hidden troop"; mr.appendChild(b); }
   }
   if (!mr.children.length) mr.innerHTML = '<span class="none">Rack empty.</span>';
   // discards
@@ -417,31 +509,43 @@ function render() {
       const n = S.disc[p * 8 + t]; if (!n) continue; any = true;
       const b = tile(p, t, { mini: true, count: n });
       if (mine && p === human && S.phase === TB.EXHUME && legal.includes(TB.A_TYPE + t)) {
-        b.disabled = false; b.classList.add("can"); b.style.cursor = "pointer";
+        b.disabled = false; b.classList.add("can", "sel");
         b.addEventListener("click", () => humanAct(TB.A_TYPE + t));
       }
       box.appendChild(b);
     }
-    if (!any) { const s = document.createElement("span"); s.className = "none"; s.textContent = "none"; box.appendChild(s); }
+    if (!any) { const s = document.createElement("span"); s.className = "none"; s.textContent = "empty"; box.appendChild(s); }
   }
-  // status
-  $("draw").disabled = !(mine && legal.includes(TB.A_DRAW));
-  $("skip").disabled = !(mine && legal.includes(TB.A_SKIP));
+  // coach line
+  const canDraw = mine && legal.includes(TB.A_DRAW), canSkip = mine && legal.includes(TB.A_SKIP);
+  $("draw").disabled = !canDraw; $("skip").disabled = !canSkip;
+  $("draw").classList.toggle("go", canDraw && !options.length);
   let status, note = "";
   if (S.winner >= 0) {
-    status = S.winner === 2 ? "Draw." : S.winner === human ? "You win." : "The model wins.";
-    note = "Its last rack is shown above. Start a new game below.";
-  } else if (S.turn !== human) status = "The model is thinking…";
-  else if (S.phase !== TB.MAIN) status = PHASE_TEXT[S.phase];
-  else if (sel >= 0) status = `Place ${NAMES[sel]}: click a ringed base.`;
-  else status = legal.includes(TB.A_DRAW) ? "Your turn: draw 2, or click a troop to place." : "Your turn: click a troop to place.";
-  if (S.winner < 0 && lastValue !== null) note = `The model rates its own chances at ${Math.round(50 * (lastValue + 1))}%.`;
-  $("status").textContent = status; $("note").textContent = note;
+    status = S.winner === 2 ? "Draw." : S.winner === human ? "You win!" : "The model wins.";
+    note = "The model's last rack is shown above. Press New game to play again.";
+  } else if (S.turn !== human) { status = "The model is thinking…"; if (lastValue !== null) note = `It rates its own chances at ${Math.round(50 * (lastValue + 1))}%.`; }
+  else if (S.phase !== TB.MAIN && S.phase !== TB.EXTRA) status = PHASE_TEXT[S.phase];
+  else if (sel >= 0) { status = `Now click a glowing base for ${NAMES[sel]}.`; note = LONG[sel]; }
+  else {
+    status = S.phase === TB.EXTRA ? "Cap'n: place one more troop, or skip." : "Your turn.";
+    const parts = [];
+    if (canDraw) parts.push("draw 2 troops");
+    if (options.length) parts.push("click a troop in your rack to place it");
+    note = parts.length ? "You can " + parts.join(", or ") + "." : "";
+    if (!options.length && canDraw && TB.total(S.rack, human)) note = "None of your troops can be placed right now, so draw 2 troops.";
+    if (!canDraw && S.phase === TB.MAIN) note += TB.total(S.rack, human) >= 8 ? " Your rack is full, so you cannot draw." : S.reserve[human] === 0 ? " Your reserve is empty, so you cannot draw." : "";
+  }
+  $("status").textContent = status;
+  $("note").textContent = warn || note; $("note").classList.toggle("warn", !!warn);
+  $("caption").textContent = caption;
+  pop = -1;
 }
 
 function humanAct(a) {
   if (busy || S.winner >= 0 || S.turn !== human || !TB.legalActions(S).includes(a)) return;
   act(a); sel = -1;
+  // nothing to choose: pick the only placeable troop for the player
   render();
   if (S.winner < 0 && S.turn !== human) modelTurn();
 }
@@ -449,10 +553,12 @@ function humanAct(a) {
 async function modelTurn() {
   const my = ++token, sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   busy = true; render();
-  const [deals, sims] = $("level").value.split("x").map(Number);
+  const [deals, sims] = $("level").value.split("x").map(Number), pace = window.TB_FAST ? 0 : 1;
   while (S.winner < 0 && S.turn !== human && my === token) {
     const legal = TB.legalActions(S);
     let a = legal[0];
+    await sleep(500 * pace);
+    if (my !== token) return;
     if (legal.length > 1) {
       const search = TB.makeSearch(S, evaluate, sims, deals, rand32);
       for (;;) {
@@ -465,23 +571,23 @@ async function modelTurn() {
       }
       a = search.best(); lastValue = search.value();
     }
-    await sleep(350);
-    if (my !== token) return;
     act(a);
     $("progress").style.width = "0";
     busy = S.winner < 0 && S.turn !== human;
     render();
+    if (busy) await sleep(650 * pace);
   }
   busy = false; render();
 }
 
 function newGame() {
-  token++; busy = false; sel = -1; owners = {}; last = []; lastValue = null;
+  token++; busy = false; sel = -1; owners = {}; last = []; pop = -1; lastValue = null; warn = "";
   human = +$("side").value;
   const f = $("first").value, first = f === "you" ? human : f === "model" ? 1 - human : (rand32() & 1);
   S = TB.newGame(+$("map").value, first, rand32());
   const T = D.terrains[S.ter];
   $("log").replaceChildren();
+  caption = `${T.name}: first to ${T.objective} medals, or to the enemy H.Q.`;
   log(`${T.name}. ${who(first)} ${first === human ? "start" : "starts"} with 3 troops, ${who(1 - first).toLowerCase()} with 4.`);
   $("map-title").textContent = T.name;
   $("map-effect").textContent = EFFECT[T.effect];
@@ -501,8 +607,12 @@ $("about").textContent = D.about;
 $("draw").addEventListener("click", () => humanAct(TB.A_DRAW));
 $("skip").addEventListener("click", () => humanAct(TB.A_SKIP));
 $("new-game").addEventListener("click", newGame);
-try { const m = localStorage.getItem("tb-map"); if (m !== null && D.terrains[+m]) $("map").value = m; } catch (e) {}
+try {
+  const m = localStorage.getItem("tb-map"); if (m !== null && D.terrains[+m]) $("map").value = m;
+  if (localStorage.getItem("tb-how") === "closed") $("how").open = false;
+} catch (e) {}
 $("map").addEventListener("change", () => { try { localStorage.setItem("tb-map", $("map").value); } catch (e) {} });
+$("how").addEventListener("toggle", () => { try { localStorage.setItem("tb-how", $("how").open ? "open" : "closed"); } catch (e) {} });
 
 (async function start() {
   try {

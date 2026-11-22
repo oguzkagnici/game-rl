@@ -4,7 +4,8 @@ const { chromium } = require("playwright");
 (async () => {
   const browser = await chromium.launch(), p = await browser.newPage(), errors = [];
   p.on("pageerror", (e) => errors.push(String(e)));
-  await p.goto("file://" + process.argv[2]);
+  await p.addInitScript(() => { window.TB_FAST = true; });
+    await p.goto("file://" + process.argv[2]);
   const setup = async (map, fn) => {
     await p.selectOption("#map", String(map)); await p.selectOption("#first", "you"); await p.click("#new-game");
     await p.evaluate(fn); await p.evaluate(() => TB_PAGE.render());
