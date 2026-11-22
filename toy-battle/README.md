@@ -148,3 +148,49 @@ match to match and no terrain is consistently weak.
 In self-play the first player wins about 50% of games and Blue about 50%.
 
 Not measured: strength against human players or against any outside Toy Battle program.
+
+## Experiments after the first model
+
+All matches: 256 games spread over the 8 terrains, both sides searching 4 deals × 40 simulations unless
+stated; about ±6 points of noise. "Current model" is `runs/main/latest.pt` (96×4 network, round 128).
+Raw results are in `runs/league.jsonl`, `runs/main/search_test.jsonl` and `runs/main/belief_test.jsonl`.
+
+### More search (`search_test.py`)
+
+| Stronger side searches | Score vs 4 × 40 (128 games) |
+|---|---|
+| 4 deals × 160 simulations | 52% |
+| 16 deals × 40 simulations | 55% |
+
+Four times the search buys almost nothing, so search depth is not the limit.
+
+### Hidden information (`toybattle/belief.py`, `match.py --a-belief / --a-oracle`)
+
+The plain search re-deals the opponent's rack uniformly at random.  Two alternatives, same network:
+
+| Deals come from | Score vs plain search | Tiles wrong per guess |
+|---|---|---|
+| uniform re-deals (plain) | 50% | 2.3 |
+| belief, 64 particles, 10% uniform, temperature 2 | 60% | 1.3 |
+| belief, 128 particles, 5% uniform, temperature 2 | 64% | 1.1 |
+| belief, 128 particles, 0% uniform, temperature 3 | 64% | 0.9 |
+| the opponent's true rack (oracle: a cheat, the ceiling) | 67% | 0 |
+
+The belief is a particle filter: after each opponent action every particle (a possible rack) is weighted by
+the policy network's probability of that action from that rack, follows the action with its hidden draws
+sampled, and the set is resampled.  No retraining is needed.  It recovers most of what perfect knowledge of
+the rack would give.
+
+### Larger network (`runs/big`, 128×6, 864k parameters)
+
+Warm-started on the current model's replay buffer, then its own self-play.
+
+| Round | Hours | Score vs current model |
+|---|---|---|
+| 10 | 1.5 | 38% |
+| 18 | 3.1 | 46% |
+| 28 | 4.5 | 44% |
+| 40 | 6.3 | 49% |
+
+With belief tracking on both sides, round 40 scores 48% against the current model.  At equal training time
+the larger network is level with the smaller one, not ahead.
