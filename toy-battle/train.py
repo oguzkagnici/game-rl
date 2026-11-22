@@ -175,6 +175,8 @@ def main():
     ap.add_argument("--capacity", type=int, default=400000)
     ap.add_argument("--dim", type=int, default=96)
     ap.add_argument("--layers", type=int, default=4)
+    ap.add_argument("--warm-from", default="", help="replay buffer of another run: a new network first learns from it")
+    ap.add_argument("--warm-steps", type=int, default=3000)
     ap.add_argument("--eval-every", type=int, default=3)
     ap.add_argument("--eval-games", type=int, default=64)
     ap.add_argument("--eval-sims", type=int, default=40)
@@ -199,6 +201,12 @@ def main():
         opt.load_state_dict(ck["opt"])
         for g in opt.param_groups:               # the command line decides the learning rate
             g["lr"] = cfg.lr
+    if not ck and cfg.warm_from:                 # head start: imitate the searches of an earlier run
+        replay.load(cfg.warm_from)
+        t0 = time.time()
+        p_loss, v_loss = train_steps(net, opt, replay, cfg.warm_steps, cfg, rng)
+        print(f"warm start: {cfg.warm_steps} steps on {replay.size} positions, p_loss {p_loss:.3f}, v_loss {v_loss:.3f}, "
+              f"{time.time() - t0:.0f}s", flush=True)
     evaluator = M.NetEvaluator(net)
     sp = SelfPlay(cfg.games, cfg, seed=int(time.time()) % 100000)
     deadline = time.time() + cfg.hours * 3600
