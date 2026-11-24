@@ -192,11 +192,11 @@ function firstStep(a, ctx) {
     else if (/can draw \d? ?Troops?/.test(title))     // Skully / Star / City of Clouds: the engine always draws
       step = ["actButton", ["btn_draw_2", "btn_draw_1", "btn_yes", "btn_continue"].find((b) => buttons.includes(b)) || buttons[0]];
     else if (/cannot (draw|place back)/.test(title)) step = ["actButton", ["btn_continue", "btn_pass", "btn_yes"].find((b) => buttons.includes(b)) || buttons[0]];
-    else if (/point a Troop/.test(title) || /lay down/.test(title)) {
+    else if (/point a Troop/.test(title) || /lay down/.test(title) || /discard a Troop from .*rack/.test(title)) {
       // Battlefield: the troop is pointed at blind, so a uniformly random choice is what the engine assumes
       const opts = sel.filter((x) => /troop/.test(x));
       step = opts.length ? ["actSelect", opts[Math.floor(Math.random() * opts.length)]] : ["actButton", buttons[0]];
-      note = "battlefield pin, random";
+      note = "blind pick from the rack (XB-42 / Battlefield), random";
     } else if (/choose a Troop to place/.test(title) && mem.placePending != null) {
       const st = firstStep(mem.placePending, c);
       if (st && st[0] === "actSelect") { step = st; note = "troop for the planned placement"; }
