@@ -152,7 +152,7 @@ function firstStep(a, ctx) {
   const page = ctx.pages()[0] || (await ctx.newPage());
   await login(page);
   const url = `https://boardgamearena.com/1/toybattle?table=${TABLE}`;
-  const mem = { told: false, next: null, place: null, known: [] };
+  const mem = { told: false, next: null, place: args["resume-place"] !== undefined ? +args["resume-place"] : null, known: [] };   // --resume-place: finish a placement cut off by a restart
   let M = null, lastKey = "", stuck = 0;
   say(`table ${TABLE}: search ${DEALS} deals x ${SIMS} simulations${DRY ? " (dry run)" : ""}`);
 
@@ -201,7 +201,7 @@ function firstStep(a, ctx) {
       const st = firstStep(mem.placePending, c);
       if (st && st[0] === "actSelect") { step = st; note = "troop for the planned placement"; }
       mem.placePending = null;
-    } else if (/choose a base or change Troop/.test(title) && mem.place !== null) {
+    } else if (/must choose a base( or change Troop)?\s*$/.test(title.replace(/<[^>]+>/g, "")) && mem.place !== null) {
       const bid = slotBgaId(M, me, mem.place);
       const id = pickSelectable(sel, baseIds(gd, bid), bid);
       if (id) { step = ["actSelect", id]; note = `base for placement (slot ${mem.place})`; mem.place = null; }
@@ -215,6 +215,14 @@ function firstStep(a, ctx) {
         s.placed = mem.next.placed.slice();
       }
       if (/destination base/.test(title)) s.phase = TB.ERUPT_DST;
+      if (!atStart && !mem.next && /discard an adjacent/.test(title)) {
+        // after a restart: Jumbo's step. Its source is our Jumbo next to an offered target.
+        const T = M.T, targets = sel.map((x) => { const m = x.match(/_(\d+)$/); return m ? M.idxOf[+m[1]] : undefined; })
+          .concat(sel.map((x) => { const tr = Object.values(gd.board_troops).find((t) => `troop_${t.id}` === x); return tr ? M.idxOf[+tr.location_arg] : undefined; }))
+          .filter((b) => b !== undefined);
+        const src = T.bases.findIndex((b, i) => TB.owner(s, i) === s.turn && TB.type(s, i) === 3 && targets.some((t) => b.adj.includes(t)));
+        if (src >= 0) { s.phase = TB.JUMBO; s.src = src; say(`  (after restart: Jumbo step from base ${src})`); }
+      }
       const t0 = Date.now(), res = search(s);
       let chosen = null;
       for (const r of res.ranked) { const st = firstStep(r.a, c); if (st) { chosen = r; step = st; break; } }
