@@ -122,7 +122,7 @@ function slotBgaId(M, me, slot) { return slot >= 15 ? M.hqIds[1 - me][slot - 15]
 function firstStep(a, ctx) {
   const { gd, M, me, sel, buttons } = ctx;
   if (a === TB.A_DRAW) {
-    if (buttons.includes("btn_draw_2")) return ["actButton", "btn_draw_2"];
+    for (const b of ["btn_draw_2", "btn_draw_1"]) if (buttons.includes(b)) return ["actButton", b];
     const d = sel.find((x) => /_deck$/.test(x)); return d ? ["actSelect", d] : null;
   }
   if (a === TB.A_SKIP) {
