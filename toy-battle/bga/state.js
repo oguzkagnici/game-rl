@@ -51,7 +51,8 @@ function normalise(pts) {
 // Match BGA's board (gamedatas.bases / regions) to our terrain by position, then check that paths,
 // H.Q.s, regions and medals agree.  Returns the mapping; `problems` lists every disagreement.
 function matchTerrain(gd) {
-  const bid = +gd.board_id, problems = [];
+  // BGA's "Christmas" board (9) has Castle Field's effect; accept it only if its graph is Castle Field's
+  const bid = +gd.board_id === 9 ? 1 : +gd.board_id, problems = [];
   if (!(bid >= 1 && bid <= 8)) return { ok: false, problems: [`board ${gd.board_name} (${bid}) is not one of the 8 trained terrains`] };
   const ter = bid - 1, T = TERR[ter];
   const ours = [];

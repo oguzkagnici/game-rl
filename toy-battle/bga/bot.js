@@ -74,10 +74,14 @@ async function perform(f, kind, id) {
   await f.evaluate(([k, x]) => window.gameui.bgaPerformAction(k, { arg1: x }), [kind, id]);
 }
 async function postChat(page, text) {
-  for (const f of page.frames()) {
-    const el = await f.$(`[id^="chatbarinput_table_"][id$="_input"], textarea[id*="chatbarinput_table"]`).catch(() => null);
-    if (el) { await el.fill(text); await el.press("Enter"); return true; }
-  }
+  try {                                               // the table chat starts collapsed: open it, then type
+    const bar = page.getByText("Chat at this table").first();
+    if (await bar.count()) { await bar.click({ timeout: 3000 }).catch(() => {}); await sleep(1000); }
+    for (const f of page.frames()) {
+      const el = await f.$(`[id^="chatbarinput_table_"][id$="_input"]:visible, textarea[id*="chatbarinput_table"]:visible`).catch(() => null);
+      if (el) { await el.fill(text, { timeout: 4000 }); await el.press("Enter"); return true; }
+    }
+  } catch (e) { say("chat:", e.message.split("\n")[0]); }
   return false;
 }
 async function login(page) {
@@ -164,7 +168,7 @@ function firstStep(a, ctx) {
       if (!M.ok) { say(`terrain ${gd.board_name} does not match ours:`, M.problems.join("; ")); break; }
       say(`terrain ${M.T.name} matched; playing ${myColour(gd, snap.me) === 0 ? "Blue" : "Red"}`);
     }
-    if (!mem.told && !DRY) { mem.told = await postChat(page, DISCLOSURE); say(mem.told ? "posted the bot notice in the chat" : "could not find the table chat"); }
+    if (!mem.told && !DRY && !mem.triedChat) { mem.triedChat = true; mem.told = await postChat(page, DISCLOSURE); say(mem.told ? "posted the bot notice in the chat" : "could not find the table chat"); }
     const gs = gd.gamestate;
     if (gs.name === "gameEnd" || +gs.id === 99) { say("game over"); log({ kind: "end", players: gd.players }); break; }
     if (!snap.active) {                               // wait for our turn without reloading
