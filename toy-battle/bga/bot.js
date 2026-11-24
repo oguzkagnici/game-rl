@@ -189,7 +189,8 @@ function firstStep(a, ctx) {
 
     let step = null, note = "";
     if (/must confirm/.test(title)) step = ["actButton", ["btn_yes", "btn_continue"].find((b) => buttons.includes(b)) || buttons[0]];
-    else if (/can draw 1 Troop/.test(title)) step = ["actButton", ["btn_draw_1", "btn_yes", "btn_continue"].find((b) => buttons.includes(b)) || buttons[0]];
+    else if (/can draw \d? ?Troops?/.test(title))     // Skully / Star / City of Clouds: the engine always draws
+      step = ["actButton", ["btn_draw_2", "btn_draw_1", "btn_yes", "btn_continue"].find((b) => buttons.includes(b)) || buttons[0]];
     else if (/cannot (draw|place back)/.test(title)) step = ["actButton", ["btn_continue", "btn_pass", "btn_yes"].find((b) => buttons.includes(b)) || buttons[0]];
     else if (/point a Troop/.test(title) || /lay down/.test(title)) {
       // Battlefield: the troop is pointed at blind, so a uniformly random choice is what the engine assumes
@@ -208,7 +209,7 @@ function firstStep(a, ctx) {
 
     if (!step) {                                      // a decision for the network
       const s = buildState(gd, M, snap.me, mem);
-      const atStart = /must choose an action/.test(title) || buttons.includes("btn_draw_2");
+      const atStart = /must choose an action/.test(title);
       if (!atStart && mem.next) {                     // inside our turn: the phase our engine expects
         Object.assign(s, { phase: mem.next.phase, src: mem.next.src, nplaced: mem.next.nplaced, qi: mem.next.qi });
         s.placed = mem.next.placed.slice();
