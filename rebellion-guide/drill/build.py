@@ -14,10 +14,9 @@ for key, name in [("ENGINE", "engine.js"), ("BOTS", "bots.js"), ("LESSONS", "les
     page = page.replace("/*@%s@*/" % key, src)
 assert "/*@" not in page
 
-# The artifact is published on its own, so the relative link to the Field Manual would not resolve there.
-link = '      <a href="index.html" id="guideLink">Field Manual</a>\n'
-assert link in page
-(here.parent / "sparring-artifact.html").write_text(page.replace(link, ""))
+# The artifact is published on its own, so relative links to sibling pages would not resolve there.
+import re
+(here.parent / "sparring-artifact.html").write_text(re.sub(r'\s*<a href="[^"]+" data-local="1">[^<]*</a>', "", page))
 
 head, body = page.split("</style>", 1)
 skeleton = (

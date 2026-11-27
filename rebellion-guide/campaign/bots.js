@@ -145,8 +145,10 @@
       var team = [pool[0].id], sum = pool[0][Mi.skill];
       if (sum < Mi.need && pool[1]) { team.push(pool[1].id); sum += pool[1][Mi.skill]; }
       if (sum < Mi.need) continue;
+      var total0 = C.leadersOf(g, side, "pool").length;
+      if (total0 - used.length - team.length < 1) continue;   // always keep one leader in reserve
       // a second leader adds dice to important opposed missions
-      if (team.length === 1 && Mi.opp && opts[i].v > 2.5 && pool[1] && C.leadersOf(g, side, "pool").length - used.length - 1 > nMis) { team.push(pool[1].id); }
+      if (team.length === 1 && Mi.opp && opts[i].v > 2.5 && pool[1] && total0 - used.length - 2 >= Math.max(1, nMis - list.length)) { team.push(pool[1].id); }
       team.forEach(function (id) { used.push(id); });
       seenId[c.id] = 1;
       list.push({ card: c.uid, leaders: team });

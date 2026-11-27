@@ -7,6 +7,7 @@ Everything is a self-contained page with no build step to view it.
 | --- | --- |
 | `index.html` | The Field Manual: the clock, the shape of a round, leaders as actions, playbooks, a decision trainer, a first-game companion and common rules mistakes. |
 | `sparring.html` | The Sparring Drill: play a short coached match against a bot, as either side. |
+| `campaign.html` | The Campaign Trainer: a full-scale coached game against a bot, as either side. |
 
 ## Field Manual
 
@@ -67,6 +68,30 @@ drill/selfplay.js  bot-vs-bot balance runs
 ```
 
 After editing anything under `drill/`, run `python3 drill/build.py`.
+
+## Campaign Trainer
+
+The full-scale follow-up to the drill: an original hidden-base game with the same rule structures as
+Rebellion at full size, and an invented map, names and cards.
+
+- 30 systems in 9 regions; shipyard and barracks icons give build points.
+- Six unit types per side plus a superweapon; capital ships carry fighters and ground units.
+- A build queue: cheap units arrive this Refresh, bigger ones one or two rounds later.
+- Space and ground battles in rounds, light and heavy dice, tactic cards drawn by leader tactics, retreat with a leader.
+- Mission hands: standing cards plus a deck, each card needing one or two skill icons (Influence, Intel, Operations, Logistics) from one or two leaders.
+- Capture, Breakout and Interrogate; Regional Scan; Decree; Redeploy Base (two Logistics icons, not two rounds in a row).
+- Twelve objectives in three stages, one per round; the superweapon project, its plans, and firing it.
+
+The coach has 20 lessons, previews every battle and warns about leaks and capacity. It can also fill in
+assignments, builds and battle choices the way a veteran would. Bot-against-bot (veteran) runs land at
+roughly 50–58% Insurgent wins, in games of 6–11 rounds.
+
+```
+node campaign/selfplay.js 300                  # balance run
+python3 campaign/build.py                      # writes campaign.html and campaign-artifact.html
+```
+
+Files mirror the drill: `campaign/engine.js`, `bots.js`, `lessons.js`, `app.js`, `page.html`, `build.py`, `selfplay.js`.
 
 Rules follow the Learn to Play booklet by Fantasy Flight Games. Star Wars: Rebellion is © Fantasy
 Flight Games and Lucasfilm Ltd.; this project is not affiliated with either.

@@ -811,7 +811,7 @@
       for (k = 0; k < p.dice; k++) if (d6(g.r) >= CFG.hitOn) a++;
       for (k = 0; k < od; k++) if (d6(g.r) >= CFG.hitOn) b++;
       ok = a > b;
-      log(g, O.side, "oppose", O.name + " opposes with " + od + " " + SKILLS[M.skill] + " dice. Attempt: " + a + " success" + (a === 1 ? "" : "es") + " on " + p.dice + " dice; opposition: " + b + ". " + (ok ? "The mission succeeds." : "The mission fails (ties go to the opposer)."), { opposer: O.id, ok: ok, sys: p.sys });
+      log(g, O.side, "oppose", O.name + " opposes with " + od + " " + SKILLS[M.skill] + (od === 1 ? " die" : " dice") + ". Attempt: " + a + " success" + (a === 1 ? "" : "es") + " on " + p.dice + (p.dice === 1 ? " die" : " dice") + "; opposition: " + b + ". " + (ok ? "The mission succeeds." : "The mission fails (ties go to the opposer)."), { opposer: O.id, ok: ok, sys: p.sys });
     } else if (M.opp) log(g, p.side, "mission", "Unopposed: " + M.name + " succeeds.");
     if (ok) applyMission(g, p);
     // the card returns to hand (standing) or goes to the discard pile
