@@ -1,0 +1,2382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Rebellion Sparring Drill</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Play a coached sparring match against a bot to practise the core decisions of Star Wars: Rebellion.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a plotting table. The star map is the board on the left; the rail on the right reads top to bottom
+   like a turn: clock, coach, what you can do now. Records (leaders, objectives, log) sit under the map.
+   Same tokens as the Rebellion Field Manual so the two pages read as one guide. */
+:root {
+  --paper: #eceff3; --surface: #f8f9fb; --sunk: #e1e6ec; --ink: #17202a; --muted: #566372; --line: #c6ced8;
+  --rebel: #b4441c; --rebel-soft: #f6e1d8; --empire: #2f5679; --empire-soft: #dbe5ef;
+  --clock: #a86d0c; --clock-soft: #f4e6c8; --good: #23784a; --good-soft: #d9efe2; --bad: #b3261e; --bad-soft: #f7dcda;
+  --map: #e4e9ef; --edge: #b4bfcc; --on-accent: #ffffff;
+  --font-display: "Chakra Petch", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10151b; --surface: #171e26; --sunk: #0c1015; --ink: #e5eaf0; --muted: #97a3b1; --line: #2a3541;
+    --rebel: #ee7a4c; --rebel-soft: #3a2118; --empire: #8db4dc; --empire-soft: #1c2a38;
+    --clock: #e2ae4f; --clock-soft: #3a2e15; --good: #5cc28a; --good-soft: #15301f; --bad: #f2776c; --bad-soft: #3a1917;
+    --map: #0d1218; --edge: #2c3846; --on-accent: #10151b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10151b; --surface: #171e26; --sunk: #0c1015; --ink: #e5eaf0; --muted: #97a3b1; --line: #2a3541;
+  --rebel: #ee7a4c; --rebel-soft: #3a2118; --empire: #8db4dc; --empire-soft: #1c2a38;
+  --clock: #e2ae4f; --clock-soft: #3a2e15; --good: #5cc28a; --good-soft: #15301f; --bad: #f2776c; --bad-soft: #3a1917;
+  --map: #0d1218; --edge: #2c3846; --on-accent: #10151b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: var(--empire); text-underline-offset: 2px; }
+button, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--clock); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.wrap { max-width: 82rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.reb { color: var(--rebel); } .imp { color: var(--empire); }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; gap: 1rem; padding-block: 0.55rem; justify-content: space-between; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+.brand svg { width: 1.3rem; height: 1.3rem; }
+.topnav { display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.topnav a { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); text-decoration: none; padding: 0.3rem 0.55rem; border-radius: 4px; white-space: nowrap; }
+.topnav a:hover { color: var(--ink); background: var(--sunk); }
+
+header.intro { padding-block: 1.6rem 1.2rem; }
+header.intro .wrap { display: grid; gap: 0.5rem; }
+header.intro h1 { font-size: clamp(1.8rem, 4.5vw, 2.6rem); font-weight: 700; }
+header.intro p { color: var(--muted); max-width: 52rem; }
+
+/* the table */
+.table { display: grid; grid-template-columns: minmax(0, 1fr) 23.5rem; gap: 1.1rem; align-items: start; padding-bottom: 1.25rem; }
+.col { display: grid; gap: 1rem; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; min-width: 0; display: grid; gap: 0.75rem; }
+.panel h2 { font-size: 1.15rem; font-weight: 600; }
+.panel h3 { font-size: 1rem; font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.between { justify-content: space-between; }
+.small { font-size: 0.85rem; color: var(--muted); }
+
+/* map */
+.mapbox { background: var(--map); border: 1px solid var(--line); border-radius: var(--radius); position: relative; overflow: hidden; }
+.mapscroll { overflow-x: auto; }
+.mapbar { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; justify-content: space-between; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, var(--map)); }
+.mapbar .phase { font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+.toggle { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; }
+.toggle input { accent-color: var(--clock); width: 1rem; height: 1rem; }
+svg.map { display: block; width: 100%; min-width: 600px; height: auto; user-select: none; }
+svg.map text { font-family: var(--font-body); }
+.edge { stroke: var(--edge); stroke-width: 2; }
+.sys .body { fill: var(--surface); stroke: var(--muted); stroke-width: 2; }
+.sys.remote .body { fill: var(--map); stroke-dasharray: 4 3; }
+.sys.loy-I .body { fill: var(--rebel-soft); stroke: var(--rebel); stroke-width: 3; }
+.sys.loy-D .body { fill: var(--empire-soft); stroke: var(--empire); stroke-width: 3; }
+.sys .core-ring { fill: none; stroke: var(--empire); stroke-width: 1.5; }
+.sys .star { fill: var(--empire); }
+.sys .nm { font-size: 15px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+.sys .why { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); text-anchor: middle; letter-spacing: 0.04em; }
+.sys .cand { fill: none; stroke: var(--clock); stroke-width: 2.5; stroke-dasharray: 6 5; animation: spin 14s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.sys.out .nm { fill: var(--muted); }
+.sys .pickring { fill: none; stroke: var(--ink); stroke-width: 3; }
+.sys.pick { cursor: pointer; }
+.sys.pick:hover .pickring, .sys.pick:focus .pickring { stroke: var(--clock); stroke-width: 4; }
+.sys.dim { opacity: 0.38; }
+.sys.sel .pickring { stroke: var(--clock); stroke-width: 5; }
+.chip-I rect { fill: var(--rebel); } .chip-D rect { fill: var(--empire); }
+.chip text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; fill: var(--on-accent); }
+.chip .ico { fill: var(--on-accent); }
+.ldr circle { stroke: var(--surface); stroke-width: 2; }
+.ldr-I circle { fill: var(--rebel); } .ldr-D circle { fill: var(--empire); }
+.ldr text { font-family: var(--font-mono); font-size: 10px; font-weight: 600; fill: var(--on-accent); text-anchor: middle; }
+.sab circle { fill: var(--bad); } .sab text { font-family: var(--font-mono); font-size: 10px; font-weight: 700; fill: var(--on-accent); text-anchor: middle; }
+.basemark { fill: var(--rebel); }
+.basemark-old { fill: none; stroke: var(--rebel); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; padding: 0.55rem 0.8rem; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.sw { width: 0.85rem; height: 0.85rem; border-radius: 50%; display: inline-block; border: 2px solid; }
+
+/* clock */
+.track { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 2px; }
+.cell { position: relative; aspect-ratio: 1 / 1.5; background: var(--sunk); border-radius: 3px; font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); display: grid; justify-items: center; align-content: start; padding-top: 1px; }
+.cell.gap { background: var(--clock-soft); }
+.tok { position: absolute; left: 50%; transform: translateX(-50%); width: 80%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 0.7rem; color: var(--on-accent); }
+.tok.t { bottom: 42%; background: var(--clock); } .tok.r { bottom: 6%; background: var(--rebel); }
+.clockread { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.85rem; align-items: center; }
+.bignum { font-family: var(--font-display); font-weight: 700; font-size: 2.6rem; line-height: 1; color: var(--clock); font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; }
+
+/* coach */
+.coach { border-left: 4px solid var(--clock); }
+.coach .lesson h3 { font-size: 1.1rem; }
+.coach .lesson { display: grid; gap: 0.5rem; }
+.coach .lesson p { font-size: 0.95rem; }
+.table-note { font-size: 0.88rem; background: var(--sunk); border-radius: 4px; padding: 0.5rem 0.65rem; color: var(--ink); }
+.table-note b { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.1rem; font-weight: 500; }
+.suggest { background: var(--clock-soft); border-radius: 4px; padding: 0.6rem 0.7rem; font-size: 0.92rem; display: grid; gap: 0.5rem; }
+.warn { background: var(--bad-soft); border-radius: 4px; padding: 0.5rem 0.65rem; font-size: 0.88rem; color: var(--ink); }
+.warn b { color: var(--bad); }
+.okay { background: var(--good-soft); border-radius: 4px; padding: 0.5rem 0.65rem; font-size: 0.88rem; }
+
+/* buttons */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 0.5rem 0.8rem; cursor: pointer; font-size: 0.9rem; font-weight: 500; line-height: 1.2; text-align: left; }
+.btn:hover:not([disabled]) { border-color: var(--muted); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.reb { border-color: var(--rebel); color: var(--rebel); }
+.btn.imp { border-color: var(--empire); color: var(--empire); }
+.btn.ghost { background: transparent; }
+.btn.block { width: 100%; }
+.btn .sub { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 400; margin-top: 0.15rem; }
+.btn.primary .sub { color: color-mix(in srgb, var(--paper) 75%, transparent); }
+.btnlist { display: grid; gap: 0.45rem; }
+
+/* side picker */
+.sides { display: grid; gap: 0.6rem; }
+.sidecard { text-align: left; border: 1px solid var(--line); border-top: 4px solid var(--c); background: var(--surface); border-radius: var(--radius); padding: 0.75rem 0.85rem; cursor: pointer; display: grid; gap: 0.25rem; }
+.sidecard[aria-pressed="true"] { outline: 2px solid var(--c); outline-offset: 1px; }
+.sidecard h3 { color: var(--c); font-size: 1.05rem; }
+.sidecard p { font-size: 0.88rem; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+/* assignment */
+.arow { display: grid; gap: 0.35rem; padding: 0.55rem 0; border-top: 1px solid var(--line); }
+.arow:first-child { border-top: 0; padding-top: 0; }
+.aname { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+.aname b { font-weight: 600; }
+.stats { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.opts { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.opts button { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.82rem; cursor: pointer; }
+.opts button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.opts button[disabled] { opacity: 0.4; cursor: default; }
+
+/* moves */
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.4rem 0.6rem; align-items: center; padding: 0.4rem 0; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.step { display: inline-flex; align-items: center; gap: 0.2rem; font-family: var(--font-mono); font-size: 0.85rem; }
+.step button { width: 1.7rem; height: 1.7rem; border: 1px solid var(--line); background: var(--surface); border-radius: 4px; cursor: pointer; padding: 0; }
+.step output { min-width: 3.4ch; text-align: center; }
+select.lsel { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; padding: 0.3rem 0.4rem; max-width: 100%; }
+
+/* records */
+.records { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; align-items: start; }
+.lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.6rem; padding: 0.35rem 0; border-top: 1px solid var(--line); font-size: 0.88rem; align-items: baseline; }
+.lrow:first-of-type { border-top: 0; }
+.pill { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em; padding: 0.1rem 0.45rem; border-radius: 3px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.pill.go { background: var(--good-soft); color: var(--good); }
+.pill.hid { background: var(--clock-soft); color: var(--clock); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.obj { border: 1px solid var(--line); border-radius: 5px; padding: 0.5rem 0.65rem; display: grid; gap: 0.15rem; font-size: 0.88rem; }
+.obj.ready { border-color: var(--good); background: var(--good-soft); }
+.obj .t { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
+.logbox { max-height: 22rem; overflow-y: auto; display: grid; gap: 0.1rem; font-size: 0.86rem; align-content: start; }
+.le { padding: 0.25rem 0 0.25rem 0.6rem; border-left: 3px solid var(--line); }
+.le.I { border-left-color: var(--rebel); } .le.D { border-left-color: var(--empire); }
+.le.why { font-style: italic; color: var(--muted); border-left-style: dotted; }
+.le.phase { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--muted); border-left-color: transparent; padding-top: 0.55rem; }
+.le.key { font-weight: 600; }
+.notes { display: grid; gap: 0.3rem; }
+.notes button { text-align: left; border: 0; background: none; padding: 0.2rem 0; cursor: pointer; color: var(--empire); text-decoration: underline; text-underline-offset: 2px; font-size: 0.88rem; }
+
+/* reference sections */
+section.ref { padding-block: 2rem; border-top: 1px solid var(--line); }
+section.ref .wrap { display: grid; gap: 1rem; }
+section.ref h2 { font-size: 1.6rem; }
+.prose { max-width: 46rem; display: grid; gap: 0.75rem; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+.ref table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.ref th, .ref td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ref th { font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+ul.tight, ol.tight { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+footer { padding-block: 2rem 3rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); }
+footer .wrap { display: grid; gap: 0.5rem; }
+
+@media (max-width: 980px) { .table { grid-template-columns: minmax(0, 1fr); } .rail { order: -1; } }
+@media (max-width: 520px) { .bignum { font-size: 2rem; } .cell { font-size: 0.5rem; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="currentColor" stroke-width="2"/></svg>
+      Sparring Drill
+    </div>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#play">Play</a>
+      <a href="#rules">Drill rules</a>
+      <a href="#mapping">Rebellion mapping</a>
+      <a href="index.html" id="guideLink">Field Manual</a>
+    </nav>
+  </div>
+</div>
+
+<header class="intro">
+  <div class="wrap">
+    <span class="eyebrow">Rebellion Field Manual · Practice</span>
+    <h1>Spar with a bot, with a coach at your shoulder</h1>
+    <p>An original mini-game built to train the decisions that decide <i>Star Wars: Rebellion</i>: hiding or hunting a base, reading the clock, spending leaders as actions, opposing missions, and choosing when to relocate. The map, names and rules are simplified and invented. The coach explains each idea as it comes up in play and tells you how it carries over to the real game. A match takes about 15 minutes.</p>
+  </div>
+</header>
+
+<main id="play">
+  <div class="wrap table">
+    <div class="col">
+      <div class="mapbox">
+        <div class="mapbar">
+          <span class="phase" id="phaseLabel">New match</span>
+          <label class="toggle"><input type="checkbox" id="overlay" checked> <span id="overlayLabel">Show what the hunter knows</span></label>
+        </div>
+        <div class="mapscroll"><svg class="map" id="map" viewBox="0 0 1000 650" role="img" aria-label="Star map"></svg></div>
+        <div class="legend" id="legend">
+          <span><i class="sw" style="border-color:var(--rebel);background:var(--rebel-soft)"></i>Insurgent-loyal</span>
+          <span><i class="sw" style="border-color:var(--empire);background:var(--empire-soft)"></i>Dominion-loyal</span>
+          <span><i class="sw" style="border-color:var(--muted);background:var(--surface)"></i>Populous, neutral</span>
+          <span><i class="sw" style="border-color:var(--muted);border-style:dashed;background:var(--map)"></i>Remote (no loyalty, no production)</span>
+          <span><i class="sw" style="border-color:var(--clock);border-style:dashed;background:transparent"></i>Base could still be here</span>
+          <span class="mono">▲ ships · ■ troops</span>
+        </div>
+      </div>
+      <div class="records">
+        <div class="panel" id="leadersPanel"></div>
+        <div class="panel" id="objPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="row between"><h2>Battle log</h2><span class="small">Bot reasoning in italics</span></div>
+        <div class="logbox" id="log" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <aside class="col rail">
+      <div class="panel" id="clockPanel">
+        <div class="row between"><h2>The clock</h2><span class="small mono" id="roundLabel">Round 1</span></div>
+        <div class="track" id="track"></div>
+        <div class="clockread"><div class="bignum" id="gapNum">13</div><p class="small" id="gapText">rounds left for the Dominion if the Insurgents never score.</p></div>
+      </div>
+      <div class="panel coach" id="coachPanel"></div>
+      <div class="panel" id="actPanel"></div>
+    </aside>
+  </div>
+</main>
+
+<section class="ref" id="rules">
+  <div class="wrap">
+    <span class="eyebrow">Reference</span>
+    <h2>Drill rules on one screen</h2>
+    <div class="cols">
+      <div class="prose">
+        <h3>Winning</h3>
+        <p><b class="imp">Dominion</b> wins by landing troops in the hidden base's system and leaving no Insurgent troops alive there.</p>
+        <p><b class="reb">Insurgents</b> win when the time marker reaches the reputation marker. Time starts at 1 and moves up one space every round. Reputation starts at 14 and moves down when the Insurgents complete objectives (at most one per round, checked at the end of the round).</p>
+        <h3>A round</h3>
+        <ol class="tight">
+          <li><b>Assignment.</b> Both sides secretly send leaders on missions or keep them in reserve.</li>
+          <li><b>Command.</b> Players alternate, Insurgents first. On your turn, either reveal a mission and pick its target, or use a reserve leader to <b>activate</b> a system, or pass. The phase ends when both pass in a row.</li>
+          <li><b>Refresh.</b> Objectives are checked, the Dominion draws a probe card, every loyal system builds a unit, leaders return, time advances.</li>
+        </ol>
+      </div>
+      <div class="prose">
+        <h3>Activation and pinning</h3>
+        <p>Put a reserve leader in a system. Your units in adjacent systems may move in; each ship carries two troops. If enemy units are there, a battle follows: every unit rolls a die and hits on 4+, ships against ships, troops against troops, and the leaders present add their tactics as extra dice.</p>
+        <p><b>Pinning:</b> units in a system that holds one of your leaders cannot move out for the rest of the round. That includes leaders sent there to attempt or oppose a mission.</p>
+        <h3>The hidden base</h3>
+        <p>The base's units sit off the map. They can move out to the base system or next to it, which tells the Dominion roughly where the base is. Dominion troops or Dominion loyalty in the base system reveal it. Revealed base defenders hit on 3+.</p>
+      </div>
+      <div class="prose">
+        <h3>Missions</h3>
+        <ul class="tight" id="missionList"></ul>
+        <p class="small">Missions succeed automatically unless the other side opposes with a reserve leader. Then each rolls intrigue dice (4+ succeeds) and the attempt must roll more successes. Ties go to the opposer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ref" id="mapping">
+  <div class="wrap">
+    <span class="eyebrow">Carry-over</span>
+    <h2>What the drill teaches about the real game</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>In the drill</th><th>At the Rebellion table</th><th>Same lesson?</th></tr></thead>
+        <tbody>
+          <tr><td>Insurgents / Dominion</td><td>Rebel Alliance / Galactic Empire</td><td>Yes: one side hides and runs the clock, the other hunts against it.</td></tr>
+          <tr><td>Time 1, reputation 14, objectives move reputation</td><td>The same starting markers on the time track; Rebel objective cards move reputation</td><td>Yes. Every objective is one round taken from the Empire.</td></tr>
+          <tr><td>Leaders: missions or reserve, one action each</td><td>Leaders on mission cards or in the leader pool</td><td>Yes, including opposing, pinning and the "last word" when one side runs out.</td></tr>
+          <tr><td>Hidden base and base units off the map</td><td>The Rebel base and the Rebel Base space</td><td>Yes. Moving units in or out of the base leaks its location.</td></tr>
+          <tr><td>Probe cards, troop searches, Decree</td><td>Probe cards, Imperial ground units, Imperial loyalty</td><td>Yes. Ships alone never find a base.</td></tr>
+          <tr><td>Relocate</td><td>Rapid Mobilization</td><td>Yes in spirit: move before contact, the new site comes from systems the Empire has not ruled out, units at the old site get stranded.</td></tr>
+          <tr><td>Sway, Sabotage, Hunt</td><td>Diplomacy-style missions, sabotage, capture missions</td><td>Yes in spirit. Real cards are more varied and need matching skill icons.</td></tr>
+          <tr><td>Intrigue / tactics</td><td>Skill icons / space and ground tactic values</td><td>Simplified to two numbers.</td></tr>
+          <tr><td>Ships carry two troops</td><td>Transport capacity on capital ships</td><td>Yes. Plan fleets around what they can carry.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cols">
+      <div class="prose">
+        <h3>Left out on purpose</h3>
+        <p>The Death Star and Imperial projects, action cards, tactic cards, unit types and their costs, the build queue, retreat, rescue missions and the combat dice system. Learn those from the Field Manual and the rulebook. The drill exists to make the strategic shape of the game feel familiar before your first real session.</p>
+      </div>
+      <div class="prose">
+        <h3>About the bots</h3>
+        <p>Both bots are scripted. They score each option with the same ideas the coach teaches and show their reasoning in the log. The Insurgent bot never mentions where its base is. Their numbers were tuned with 500 bot-against-bot games: the Insurgents win about 58% at Veteran level, and games last 7 to 9 rounds. "Recruit" makes noisier choices and opposes less often.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Unofficial study aid. <i>Star Wars: Rebellion</i> is a game by Fantasy Flight Games, © Lucasfilm Ltd. This drill is an original simplified game with its own map, names and rules, and contains no game components; you need the real game to play Rebellion.</p>
+    <p>Strategy sources: the Field Manual's playbooks, the FFG forum archive threads <a href="https://ffg-forum-archive.entropicdreams.com/topic/217680-general-rebel-strategy">General Rebel Strategy</a> and <a href="https://ffg-forum-archive.entropicdreams.com/topic/217790-i-need-a-better-strategy-with-the-empire">I need a better strategy with the Empire</a>, and the <a href="https://www.orderofgamers.com/downloads/StarWarsRebellion_v2.5.pdf">Esoteric Order of Gamers rules summary</a>.</p>
+  </div>
+</footer>
+
+<script>
+/* Sparring drill for the Rebellion Field Manual: rules engine.
+ *
+ * An original, deliberately small two-player game built to practise the core decisions of
+ * Star Wars: Rebellion (a hidden base, a time/reputation clock, leaders as actions, opposed
+ * missions, pinning, probes, objectives, relocation). It is not a copy of Rebellion: the map,
+ * names, units, missions and objectives are invented and much simpler.
+ *
+ * Sides: "I" = Insurgents (the hiding side, plays like the Rebels)
+ *        "D" = Dominion  (the hunting side, plays like the Empire)
+ *
+ * Works in the browser (window.Drill) and in Node (module.exports) for self-play tests.
+ */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.Drill = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  // ---------------------------------------------------------------- tunables
+  var CFG = {
+    startRep: 14,          // reputation marker start; time starts at 1
+    objPerRound: 1,        // objectives the Insurgents may complete per round
+    probesPerRound: 1,     // probe cards the Dominion draws each refresh
+    probeMissionDraw: 2,   // extra cards from a successful Probe mission
+    hitOn: 4,              // d6 value needed to hit / succeed
+    baseHitOn: 3,          // Insurgent troops defending a revealed base
+    captureRounds: 2,      // refreshes a captured leader sits out
+    carry: 2               // troops each ship can carry
+  };
+
+  // ---------------------------------------------------------------- map
+  // p = populous (can hold loyalty, produces units); core = Dominion home systems.
+  var SYS = [
+    { n: "Aurex",   x: 70,  y: 320, p: 1, core: 1, throne: 1 },
+    { n: "Brannoc", x: 175, y: 160, p: 1, core: 1 },
+    { n: "Cindra",  x: 185, y: 480, p: 1, core: 1 },
+    { n: "Dovan",   x: 265, y: 320, p: 1, core: 1 },
+    { n: "Elsk",    x: 320, y: 80,  p: 0 },
+    { n: "Farrow",  x: 385, y: 225, p: 1 },
+    { n: "Gethis",  x: 400, y: 415, p: 1 },
+    { n: "Hallon",  x: 320, y: 565, p: 0 },
+    { n: "Jorun",   x: 505, y: 115, p: 1 },
+    { n: "Kesh",    x: 525, y: 320, p: 1 },
+    { n: "Lirra",   x: 515, y: 520, p: 1 },
+    { n: "Mavik",   x: 645, y: 210, p: 0 },
+    { n: "Nolle",   x: 660, y: 425, p: 1 },
+    { n: "Orrin",   x: 705, y: 70,  p: 1 },
+    { n: "Pyrax",   x: 675, y: 585, p: 0 },
+    { n: "Quessa",  x: 795, y: 300, p: 1 },
+    { n: "Rhune",   x: 820, y: 490, p: 1 },
+    { n: "Saltis",  x: 865, y: 130, p: 0 },
+    { n: "Tovan",   x: 935, y: 315, p: 0 },
+    { n: "Wend",    x: 935, y: 560, p: 1 }
+  ];
+  var EDGES = [
+    "Aurex-Brannoc", "Aurex-Cindra", "Aurex-Dovan", "Brannoc-Dovan", "Brannoc-Elsk", "Brannoc-Farrow",
+    "Cindra-Dovan", "Cindra-Gethis", "Cindra-Hallon", "Dovan-Farrow", "Dovan-Gethis", "Elsk-Farrow",
+    "Elsk-Jorun", "Farrow-Jorun", "Farrow-Kesh", "Gethis-Kesh", "Gethis-Lirra", "Gethis-Hallon",
+    "Hallon-Lirra", "Jorun-Mavik", "Jorun-Orrin", "Kesh-Mavik", "Kesh-Nolle", "Lirra-Nolle", "Lirra-Pyrax",
+    "Mavik-Orrin", "Mavik-Quessa", "Nolle-Quessa", "Nolle-Rhune", "Nolle-Pyrax", "Orrin-Saltis",
+    "Pyrax-Wend", "Quessa-Saltis", "Quessa-Tovan", "Quessa-Rhune", "Rhune-Wend", "Rhune-Tovan",
+    "Saltis-Tovan", "Tovan-Wend"
+  ];
+  var N = SYS.length;
+  var IDX = {};
+  SYS.forEach(function (s, i) { s.id = i; s.adj = []; IDX[s.n] = i; });
+  EDGES.forEach(function (e) {
+    var ab = e.split("-"), a = IDX[ab[0]], b = IDX[ab[1]];
+    SYS[a].adj.push(b); SYS[b].adj.push(a);
+  });
+  // all-pairs distances (BFS)
+  var DIST = [];
+  for (var i = 0; i < N; i++) {
+    var d = new Array(N).fill(99); d[i] = 0; var q = [i];
+    while (q.length) { var u = q.shift(); SYS[u].adj.forEach(function (v) { if (d[v] > d[u] + 1) { d[v] = d[u] + 1; q.push(v); } }); }
+    DIST.push(d);
+  }
+  var CORE = SYS.filter(function (s) { return s.core; }).map(function (s) { return s.id; });
+  var NONCORE = SYS.filter(function (s) { return !s.core; }).map(function (s) { return s.id; });
+  var CORE_DIST = SYS.map(function (s) { return Math.min.apply(null, CORE.map(function (c) { return DIST[c][s.id]; })); });
+
+  // ---------------------------------------------------------------- leaders
+  // int = intrigue (mission dice), tac = tactics (bonus battle dice). from = round recruited.
+  var LEADERS = [
+    { id: "i1", side: "I", name: "Sera Vane",    int: 3, tac: 0, from: 1 },
+    { id: "i2", side: "I", name: "Odo Brask",    int: 1, tac: 2, from: 1 },
+    { id: "i3", side: "I", name: "Lin Tarro",    int: 2, tac: 1, from: 1 },
+    { id: "i4", side: "I", name: "Mira Quell",   int: 2, tac: 1, from: 4 },
+    { id: "d1", side: "D", name: "Marshal Dekk", int: 1, tac: 2, from: 1 },
+    { id: "d2", side: "D", name: "Adjutant Vos", int: 3, tac: 0, from: 1 },
+    { id: "d3", side: "D", name: "Prefect Halm", int: 2, tac: 1, from: 1 },
+    { id: "d4", side: "D", name: "Captain Rusk", int: 1, tac: 2, from: 3 },
+    { id: "d5", side: "D", name: "Agent Thale",  int: 2, tac: 1, from: 6 }
+  ];
+
+  // ---------------------------------------------------------------- missions
+  var MISSIONS = {
+    sway:     { side: "I", name: "Sway",     opp: true,  blurb: "Move a populous system one step toward Insurgent loyalty. Target must have no Dominion troops." },
+    sabotage: { side: "I", name: "Sabotage", opp: true,  blurb: "A Dominion-loyal system stops producing until the Dominion activates it." },
+    relocate: { side: "I", name: "Relocate", opp: false, blurb: "Move the base to a system the hunter has not ruled out. Needs intrigue 2+. Cannot be opposed. Units in the old base are left behind, exposed." },
+    probe:    { side: "D", name: "Probe",    opp: true,  blurb: "Draw two extra probe cards. Target: any system with Dominion units." },
+    decree:   { side: "D", name: "Decree",   opp: true,  blurb: "Move a populous system one step toward Dominion loyalty. Target must touch or hold Dominion units and have no Insurgent troops. Dominion loyalty in the base system reveals it." },
+    hunt:     { side: "D", name: "Hunt",     opp: true,  blurb: "Capture an Insurgent leader standing in a system that holds Dominion units. Captives sit out two rounds." }
+  };
+
+  // ---------------------------------------------------------------- objectives
+  // Checked automatically at the end of each round. Stage I cards are on top of the deck.
+  var OBJECTIVES = [
+    { id: "spark",   stage: 1, val: 1, name: "Spark of Defiance", text: "Hold 4 loyal systems.", test: function (s) { return countLoyal(s, "I") >= 4; } },
+    { id: "hitrun",  stage: 1, val: 1, name: "Hit and Run",       text: "Win a battle this round.", test: function (s) { return s.flags.iWins > 0; } },
+    { id: "lines",   stage: 1, val: 1, name: "Cut the Lines",     text: "Have 2 Dominion systems sabotaged at once.", test: function (s) { return countSab(s) >= 2; } },
+    { id: "raid",    stage: 1, val: 1, name: "Supply Raid",       text: "Destroy 2 or more Dominion troops in one battle this round.", test: function (s) { return s.flags.maxTroopKill >= 2; } },
+    { id: "uprise",  stage: 2, val: 2, name: "Uprising",          text: "Hold 6 loyal systems.", test: function (s) { return countLoyal(s, "I") >= 6; } },
+    { id: "liberty", stage: 2, val: 2, name: "Liberation",        text: "Retake a Dominion-loyal system with your troops this round.", test: function (s) { return s.flags.liberated; } },
+    { id: "ambush",  stage: 2, val: 2, name: "Ambush",            text: "Destroy 3 or more Dominion ships this round.", test: function (s) { return s.flags.domShipsLost >= 3; } },
+    { id: "throne",  stage: 2, val: 2, name: "Strike the Core",   text: "Win a battle in a Dominion home system this round.", test: function (s) { return s.flags.coreWin; } }
+  ];
+  var OBJ = {}; OBJECTIVES.forEach(function (o) { OBJ[o.id] = o; });
+
+  function countLoyal(s, side) { var c = 0; for (var i = 0; i < N; i++) if (s.loy[i] === side) c++; return c; }
+  function countSab(s) { var c = 0; for (var i = 0; i < N; i++) if (s.sab[i] && s.loy[i] === "D") c++; return c; }
+
+  // ---------------------------------------------------------------- rng
+  function makeRng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // The dice live in the state (s.rs) so a saved game resumes with the same sequence.
+  function stateRng(s) {
+    return function () {
+      var a = (s.rs | 0); a = (a + 0x6D2B79F5) | 0; s.rs = a;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function restore(s) { return { s: s, r: stateRng(s), cfg: CFG }; }
+  function shuffle(arr, r) { for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; } return arr; }
+  function d6(r) { return 1 + Math.floor(r() * 6); }
+
+  // ---------------------------------------------------------------- state
+  function emptyUnits() { var u = []; for (var i = 0; i < N; i++) u.push({ Is: 0, It: 0, Ds: 0, Dt: 0 }); return u; }
+
+  function newGame(opts) {
+    opts = opts || {};
+    var seed = opts.seed != null ? opts.seed : Math.floor(Math.random() * 1e9);
+    var s = {
+      seed: seed, rs: seed >>> 0, round: 1, time: 1, rep: CFG.startRep, phase: "setup", winner: null, winReason: "",
+      u: emptyUnits(), loy: new Array(N).fill(null), sab: new Array(N).fill(false),
+      base: null, baseRevealed: false, baseBox: { s: 1, t: 3 }, relocations: 0, baseHistory: [],
+      probeDeck: [], probeHand: [],
+      know: { cleared: [], leaks: [], excluded: [] },  // public deductions since the last relocation
+      leaders: LEADERS.map(function (L) { return { id: L.id, side: L.side, name: L.name, int: L.int, tac: L.tac, from: L.from, status: L.from <= 1 ? "pool" : "future", loc: null, mission: null, capturedFor: 0 }; }),
+      objDeck: [], objHand: [], objScored: [],
+      assigned: { I: null, D: null },
+      turn: "I", passes: 0, pending: null,
+      flags: freshFlags(), lastBattle: null,
+      log: [], events: []
+    };
+    // Dominion home systems
+    CORE.forEach(function (c) { s.loy[c] = "D"; });
+    s.u[IDX.Aurex].Ds = 2; s.u[IDX.Aurex].Dt = 3;
+    s.u[IDX.Brannoc].Ds = 1; s.u[IDX.Brannoc].Dt = 2;
+    s.u[IDX.Cindra].Ds = 1; s.u[IDX.Cindra].Dt = 2;
+    s.u[IDX.Dovan].Ds = 2; s.u[IDX.Dovan].Dt = 2;
+    // Insurgent start
+    s.loy[IDX.Quessa] = "I"; s.loy[IDX.Wend] = "I";
+    s.u[IDX.Quessa].Is = 2; s.u[IDX.Quessa].It = 2;
+    var r = stateRng(s);
+    // decks
+    var st1 = OBJECTIVES.filter(function (o) { return o.stage === 1; }).map(function (o) { return o.id; });
+    var st2 = OBJECTIVES.filter(function (o) { return o.stage === 2; }).map(function (o) { return o.id; });
+    s.objDeck = shuffle(st1, r).concat(shuffle(st2, r));
+    s.objHand.push(s.objDeck.shift());
+    var g = restore(s);
+    log(g, null, "setup", "Round 1. Time 1, reputation " + s.rep + ". The Insurgents pick a secret base.");
+    return g;
+  }
+
+  function freshFlags() { return { iWins: 0, coreWin: false, coreMission: false, liberated: false, domShipsLost: 0, maxTroopKill: 0 }; }
+
+  function log(g, side, kind, text, data) {
+    var e = { round: g.s.round, side: side, kind: kind, text: text, data: data || null };
+    g.s.log.push(e); g.s.events.push(e);
+    return e;
+  }
+  function drainEvents(g) { var e = g.s.events; g.s.events = []; return e; }
+
+  function other(side) { return side === "I" ? "D" : "I"; }
+  function sideName(side) { return side === "I" ? "Insurgents" : "Dominion"; }
+  function leader(g, id) { for (var i = 0; i < g.s.leaders.length; i++) if (g.s.leaders[i].id === id) return g.s.leaders[i]; return null; }
+  function leadersOf(g, side, status) { return g.s.leaders.filter(function (L) { return L.side === side && (!status || L.status === status); }); }
+  function hasLeaderAt(g, side, sys) { return g.s.leaders.some(function (L) { return L.side === side && L.loc === sys && (L.status === "placed"); }); }
+  function unitsAt(g, sys, side) { var u = g.s.u[sys]; return side === "I" ? { s: u.Is, t: u.It } : { s: u.Ds, t: u.Dt }; }
+  function anyUnits(g, sys, side) { var x = unitsAt(g, sys, side); return x.s + x.t > 0; }
+
+  // ---------------------------------------------------------------- setup
+  function validBaseSites(g) {
+    return NONCORE.filter(function (i) {
+      if (anyUnits(g, i, "D") || anyUnits(g, i, "I")) return false;
+      return !SYS[i].adj.some(function (a) { return anyUnits(g, a, "D"); });
+    });
+  }
+  function placeBase(g, sys) {
+    var s = g.s;
+    if (s.phase !== "setup") throw new Error("not setup");
+    if (validBaseSites(g).indexOf(sys) < 0) throw new Error("invalid base site");
+    s.base = sys; s.baseHistory.push({ round: 1, sys: sys });
+    s.probeDeck = shuffle(NONCORE.filter(function (i) { return i !== sys; }), g.r);
+    // publicly known: the base did not start next to Dominion units or on any unit
+    s.know.excluded = NONCORE.filter(function (i) { return validBaseSites(g).indexOf(i) < 0; });
+    s.phase = "assign";
+    log(g, "I", "setup", "The Insurgent base is hidden. The Dominion knows only that it is not in or next to a Dominion system.");
+    return true;
+  }
+
+  // ---------------------------------------------------------------- knowledge
+  // What the Dominion can deduce from public information. The Insurgent side can compute the same.
+  function hunterCandidates(g) {
+    var s = g.s;
+    if (s.baseRevealed) return [s.base];
+    var k = s.know;
+    return NONCORE.filter(function (i) {
+      if (s.probeHand.indexOf(i) >= 0) return false;
+      if (k.cleared.indexOf(i) >= 0) return false;
+      if (k.excluded.indexOf(i) >= 0) return false;
+      for (var j = 0; j < k.leaks.length; j++) if (k.leaks[j].indexOf(i) < 0) return false;
+      return true;
+    });
+  }
+  function ruledOutReason(g, i) {
+    var s = g.s, k = s.know;
+    if (SYS[i].core) return "home";
+    if (s.probeHand.indexOf(i) >= 0) return "probe";
+    if (k.cleared.indexOf(i) >= 0) return "searched";
+    if (k.excluded.indexOf(i) >= 0) return "excluded";
+    for (var j = 0; j < k.leaks.length; j++) if (k.leaks[j].indexOf(i) < 0) return "movement";
+    return null;
+  }
+  function clearSystem(g, i) { if (g.s.know.cleared.indexOf(i) < 0) g.s.know.cleared.push(i); }
+
+  // ---------------------------------------------------------------- assignment
+  function missionTypes(side) { return Object.keys(MISSIONS).filter(function (k) { return MISSIONS[k].side === side; }); }
+
+  // list: [{leader: id, mission: type}] ; leaders not listed stay in the pool
+  function validateAssignment(g, side, list) {
+    var seen = {}, reloc = 0;
+    list.forEach(function (a) {
+      var L = leader(g, a.leader);
+      if (!L || L.side !== side || L.status !== "pool") throw new Error("leader not available: " + a.leader);
+      if (seen[a.leader]) throw new Error("leader twice");
+      seen[a.leader] = 1;
+      var M = MISSIONS[a.mission];
+      if (!M || M.side !== side) throw new Error("bad mission " + a.mission);
+      if (a.mission === "relocate") { reloc++; if (L.int < 2) throw new Error("Relocate needs intrigue 2+"); }
+    });
+    if (reloc > 1) throw new Error("only one Relocate per round");
+  }
+  function submitAssignment(g, side, list) {
+    var s = g.s;
+    if (s.phase !== "assign") throw new Error("not assignment phase");
+    validateAssignment(g, side, list);
+    s.assigned[side] = list.slice();
+    if (s.assigned.I && s.assigned.D) startCommand(g);
+  }
+  function startCommand(g) {
+    var s = g.s;
+    ["I", "D"].forEach(function (side) {
+      s.assigned[side].forEach(function (a) { var L = leader(g, a.leader); L.status = "mission"; L.mission = a.mission; });
+      var n = s.assigned[side].length, pool = leadersOf(g, side, "pool").length;
+      log(g, side, "assign", sideName(side) + " send " + n + " leader" + (n === 1 ? "" : "s") + " on missions (face down) and keep " + pool + " in reserve.");
+    });
+    s.assigned = { I: null, D: null };
+    s.phase = "command"; s.turn = "I"; s.passes = 0;
+    autoPass(g);
+  }
+
+  // ---------------------------------------------------------------- command: helpers
+  function canAct(g, side) {
+    return leadersOf(g, side, "pool").length > 0 || leadersOf(g, side, "mission").length > 0;
+  }
+  function activatable(g, side, sys) {
+    if (hasLeaderAt(g, side, sys)) return false;
+    return true;
+  }
+  // Units that could move into sys for side: [{from: id|'base', s, t}]
+  function origins(g, side, sys) {
+    var s = g.s, out = [];
+    SYS[sys].adj.forEach(function (o) {
+      if (hasLeaderAt(g, side, o)) return;
+      var x = unitsAt(g, o, side);
+      if (x.s > 0) out.push({ from: o, s: x.s, t: x.t });
+    });
+    if (side === "I" && !s.baseRevealed && s.base != null && (sys === s.base || SYS[s.base].adj.indexOf(sys) >= 0)) {
+      if (!baseBoxPinned(g) && s.baseBox.s > 0) out.push({ from: "base", s: s.baseBox.s, t: s.baseBox.t });
+    }
+    return out;
+  }
+  function baseBoxPinned(g) { return g.s.leaders.some(function (L) { return L.side === "I" && L.loc === "base" && L.status === "placed"; }); }
+  // Can units go INTO the base box? Only by activating the base system itself.
+  function canEnterBaseBox(g, sys) { return !g.s.baseRevealed && sys === g.s.base; }
+
+  function validateMoves(g, side, sys, moves) {
+    var avail = {};
+    origins(g, side, sys).forEach(function (o) { avail[o.from] = o; });
+    moves.forEach(function (m) {
+      var o = avail[m.from];
+      if (!o) throw new Error("cannot move from " + m.from);
+      if (m.s < 0 || m.t < 0 || m.s > o.s || m.t > o.t) throw new Error("bad counts");
+      if (m.t > m.s * CFG.carry) throw new Error("not enough ships to carry troops");
+    });
+  }
+
+  function missionTargets(g, side, type, leaderId) {
+    var s = g.s, out = [];
+    if (type === "sway") {
+      for (var i = 0; i < N; i++) if (SYS[i].p && s.loy[i] !== "I" && s.u[i].Dt === 0 && !SYS[i].throne) out.push(i);
+    } else if (type === "sabotage") {
+      for (var j = 0; j < N; j++) if (s.loy[j] === "D" && !s.sab[j]) out.push(j);
+    } else if (type === "relocate") {
+      out = s.probeDeck.filter(function (i) { return s.u[i].Ds + s.u[i].Dt === 0 && i !== s.base; });
+    } else if (type === "probe") {
+      for (var k = 0; k < N; k++) if (s.u[k].Ds + s.u[k].Dt > 0) out.push(k);
+    } else if (type === "decree") {
+      for (var m = 0; m < N; m++) {
+        if (!SYS[m].p || s.loy[m] === "D" || s.u[m].It > 0) continue;
+        var near = s.u[m].Ds + s.u[m].Dt > 0 || SYS[m].adj.some(function (a) { return s.u[a].Ds + s.u[a].Dt > 0; });
+        if (near) out.push(m);
+      }
+    } else if (type === "hunt") {
+      // targets are leaders, returned as {leader, sys}
+      s.leaders.forEach(function (L) {
+        if (L.side === "I" && L.status === "placed" && typeof L.loc === "number" && s.u[L.loc].Ds + s.u[L.loc].Dt > 0) out.push({ leader: L.id, sys: L.loc });
+      });
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- command: actions
+  function assertTurn(g, side) {
+    var s = g.s;
+    if (s.phase !== "command") throw new Error("not command phase");
+    if (s.pending) throw new Error("waiting for an opposition decision");
+    if (s.turn !== side) throw new Error("not your turn");
+  }
+
+  function activate(g, side, leaderId, sys, moves) {
+    var s = g.s; assertTurn(g, side);
+    var L = leader(g, leaderId);
+    if (!L || L.side !== side || L.status !== "pool") throw new Error("leader not in pool");
+    if (!activatable(g, side, sys)) throw new Error("you already have a leader there");
+    moves = (moves || []).filter(function (m) { return m.s + m.t > 0; });
+    validateMoves(g, side, sys, moves);
+    L.status = "placed"; L.loc = sys;
+    var ms = 0, mt = 0, fromBase = false, parts = [];
+    moves.forEach(function (m) {
+      if (m.from === "base") { s.baseBox.s -= m.s; s.baseBox.t -= m.t; fromBase = true; }
+      else { var o = s.u[m.from]; if (side === "I") { o.Is -= m.s; o.It -= m.t; } else { o.Ds -= m.s; o.Dt -= m.t; } }
+      ms += m.s; mt += m.t;
+      parts.push(unitStr(m.s, m.t) + " from " + (m.from === "base" ? "the base" : SYS[m.from].n));
+    });
+    var dst = s.u[sys];
+    if (side === "I") { dst.Is += ms; dst.It += mt; } else { dst.Ds += ms; dst.Dt += mt; }
+    log(g, side, "activate", L.name + " activates " + SYS[sys].n + (parts.length ? ": " + parts.join(", ") + "." : " (no units move)."), { leader: L.id, sys: sys, moves: moves, fromBase: fromBase });
+    if (side === "D" && s.sab[sys]) { s.sab[sys] = false; log(g, "D", "sabotage", "Activating " + SYS[sys].n + " clears its sabotage."); }
+    if (fromBase) {
+      var leak = [sys].concat(SYS[sys].adj).filter(function (i) { return !SYS[i].core; });
+      s.know.leaks.push(leak);
+      log(g, "I", "leak", "Units came out of the hidden base, so the base is in " + SYS[sys].n + " or a system next to it.", { sys: sys });
+    }
+    if (side === "D" && mt > 0) dominionTroopsArrive(g, sys);
+    if (s.winner) return;
+    if (anyUnits(g, sys, "I") && anyUnits(g, sys, "D")) battle(g, sys, side, L);
+    if (s.winner) return;
+    updateControl(g, sys, side);
+    checkBaseWin(g);
+    if (!s.winner) endAction(g, side);
+  }
+
+  // Insurgent-only: move units into the hidden base by activating the base system.
+  function reinforceBase(g, leaderId, moves) {
+    var s = g.s; assertTurn(g, "I");
+    if (s.baseRevealed) throw new Error("base is revealed; just activate the system");
+    var sys = s.base, L = leader(g, leaderId);
+    if (!L || L.side !== "I" || L.status !== "pool") throw new Error("leader not in pool");
+    if (!activatable(g, "I", sys)) throw new Error("leader already there");
+    moves = moves.filter(function (m) { return m.s + m.t > 0 && m.from !== "base"; });
+    validateMoves(g, "I", sys, moves);
+    L.status = "placed"; L.loc = sys;
+    var parts = [];
+    moves.forEach(function (m) { var o = s.u[m.from]; o.Is -= m.s; o.It -= m.t; s.baseBox.s += m.s; s.baseBox.t += m.t; parts.push(unitStr(m.s, m.t) + " from " + SYS[m.from].n); });
+    log(g, "I", "activate", L.name + " activates " + SYS[sys].n + " and moves units into the base: " + parts.join(", ") + ".", { leader: L.id, sys: sys, intoBase: true });
+    s.know.leaks.push([sys]);
+    log(g, "I", "leak", "Units moved into the hidden base by activating " + SYS[sys].n + ". The Dominion now knows the base is there.", { sys: sys });
+    endAction(g, "I");
+  }
+
+  function dominionTroopsArrive(g, sys) {
+    var s = g.s;
+    if (sys === s.base && !s.baseRevealed) revealBase(g, "Dominion troops landed in " + SYS[sys].n + ".");
+    else if (!SYS[sys].core && !s.baseRevealed) {
+      if (s.know.cleared.indexOf(sys) < 0) log(g, "D", "search", "Dominion troops search " + SYS[sys].n + ": no base there.", { sys: sys });
+      clearSystem(g, sys);
+    }
+  }
+
+  function revealBase(g, why) {
+    var s = g.s;
+    s.baseRevealed = true;
+    s.u[s.base].Is += s.baseBox.s; s.u[s.base].It += s.baseBox.t;
+    var bx = unitStr(s.baseBox.s, s.baseBox.t);
+    s.baseBox = { s: 0, t: 0 };
+    s.leaders.forEach(function (L) { if (L.side === "I" && L.loc === "base") L.loc = s.base; });
+    log(g, "I", "reveal", why + " The Insurgent base is revealed in " + SYS[s.base].n + " (" + bx + " there).", { sys: s.base });
+  }
+
+  function unitStr(sh, tr) {
+    var p = [];
+    if (sh) p.push(sh + " ship" + (sh === 1 ? "" : "s"));
+    if (tr) p.push(tr + " troop" + (tr === 1 ? "" : "s"));
+    return p.length ? p.join(" + ") : "nothing";
+  }
+
+  // ---------------------------------------------------------------- battle
+  function leaderTac(g, side, sys, activator) {
+    var best = 0;
+    g.s.leaders.forEach(function (L) { if (L.side === side && L.status === "placed" && L.loc === sys) best = Math.max(best, L.tac); });
+    if (activator && activator.side === side) best = Math.max(best, activator.tac);
+    return best;
+  }
+  // Pure battle simulator (used by the engine and by bots for estimates).
+  // a, b: {s, t}; returns survivors and kills. bonusA/B: extra dice per round. hitA/B: threshold.
+  function simBattle(a, b, bonusA, bonusB, hitA, hitB, r) {
+    a = { s: a.s, t: a.t }; b = { s: b.s, t: b.t };
+    var killedA = { s: 0, t: 0 }, killedB = { s: 0, t: 0 }, rounds = 0, rolls = [];
+    function contested() { return (a.s > 0 && b.s > 0) || (a.t > 0 && b.t > 0); }
+    while (contested() && rounds < 12) {
+      rounds++;
+      var space = a.s > 0 && b.s > 0, ground = a.t > 0 && b.t > 0;
+      // bonus dice go where the fight is on the ground first (that is where systems are won)
+      var aS = space ? a.s : 0, aG = ground ? a.t : 0, bS = space ? b.s : 0, bG = ground ? b.t : 0;
+      if (ground) { aG += bonusA; bG += bonusB; } else { aS += bonusA; bS += bonusB; }
+      var hAS = 0, hAG = 0, hBS = 0, hBG = 0, k;
+      for (k = 0; k < aS; k++) if (d6(r) >= CFG.hitOn) hAS++;
+      for (k = 0; k < aG; k++) if (d6(r) >= hitA) hAG++;
+      for (k = 0; k < bS; k++) if (d6(r) >= CFG.hitOn) hBS++;
+      for (k = 0; k < bG; k++) if (d6(r) >= hitB) hBG++;
+      var dbs = Math.min(b.s, hAS), dbt = Math.min(b.t, hAG), das = Math.min(a.s, hBS), dat = Math.min(a.t, hBG);
+      b.s -= dbs; b.t -= dbt; a.s -= das; a.t -= dat;
+      killedB.s += dbs; killedB.t += dbt; killedA.s += das; killedA.t += dat;
+      rolls.push({ aHits: hAS + hAG, bHits: hBS + hBG });
+    }
+    return { a: a, b: b, killedA: killedA, killedB: killedB, rounds: rounds, rolls: rolls };
+  }
+
+  function battle(g, sys, attacker, activatorLeader) {
+    var s = g.s, u = s.u[sys];
+    var I = { s: u.Is, t: u.It }, D = { s: u.Ds, t: u.Dt };
+    var atBase = s.baseRevealed && sys === s.base;
+    var bonusI = leaderTac(g, "I", sys, activatorLeader), bonusD = leaderTac(g, "D", sys, activatorLeader);
+    var res = simBattle(I, D, bonusI, bonusD, atBase ? CFG.baseHitOn : CFG.hitOn, CFG.hitOn, g.r);
+    u.Is = res.a.s; u.It = res.a.t; u.Ds = res.b.s; u.Dt = res.b.t;
+    s.flags.domShipsLost += res.killedB.s;
+    s.flags.maxTroopKill = Math.max(s.flags.maxTroopKill, res.killedB.t);
+    var iLeft = u.Is + u.It, dLeft = u.Ds + u.Dt, winner = null;
+    if (iLeft > 0 && dLeft === 0) winner = "I"; else if (dLeft > 0 && iLeft === 0) winner = "D";
+    var txt = "Battle at " + SYS[sys].n + " (" + res.rounds + " round" + (res.rounds === 1 ? "" : "s") + "). Insurgents lose " + unitStr(res.killedA.s, res.killedA.t) +
+      ", Dominion loses " + unitStr(res.killedB.s, res.killedB.t) + ". " +
+      (winner ? sideName(winner) + " win." : "Both sides still hold units there.");
+    if (winner === "I") { s.flags.iWins++; if (SYS[sys].core) s.flags.coreWin = true; }
+    s.lastBattle = { sys: sys, attacker: attacker, I0: I, D0: D, res: res, winner: winner, bonusI: bonusI, bonusD: bonusD, atBase: atBase };
+    log(g, attacker, "battle", txt, s.lastBattle);
+    // leaders with no units left in a lost battle stay put; they are now exposed to Hunt if Dominion units remain
+  }
+
+  function updateControl(g, sys, actor) {
+    var s = g.s, u = s.u[sys];
+    if (!SYS[sys].p) return;
+    if (u.Dt > 0 && u.It === 0 && s.loy[sys] !== "D") {
+      var was = s.loy[sys];
+      s.loy[sys] = "D";
+      log(g, "D", "control", SYS[sys].n + " is now under Dominion control" + (was === "I" ? " (the Insurgents lose a loyal system)." : "."), { sys: sys });
+      if (sys === s.base && !s.baseRevealed) revealBase(g, "Dominion control of " + SYS[sys].n + " exposes it.");
+    } else if (u.It > 0 && u.Dt === 0 && s.loy[sys] === "D" && actor === "I") {
+      s.loy[sys] = null; s.sab[sys] = false;
+      s.flags.liberated = true;
+      log(g, "I", "control", "Insurgent troops retake " + SYS[sys].n + ". It is no longer Dominion-loyal.", { sys: sys });
+    }
+  }
+
+  function checkBaseWin(g) {
+    var s = g.s;
+    if (!s.baseRevealed || s.winner) return;
+    var u = s.u[s.base];
+    if (u.Dt > 0 && u.It === 0) {
+      s.winner = "D"; s.phase = "over";
+      s.winReason = "Dominion troops hold " + SYS[s.base].n + ". The Insurgent base has fallen.";
+      log(g, "D", "win", s.winReason);
+    }
+  }
+
+  // ---------------------------------------------------------------- missions
+  function revealMission(g, side, leaderId, target) {
+    var s = g.s; assertTurn(g, side);
+    var L = leader(g, leaderId);
+    if (!L || L.side !== side || L.status !== "mission") throw new Error("leader not on a mission");
+    var type = L.mission, M = MISSIONS[type];
+    var targets = missionTargets(g, side, type, leaderId);
+    var sys, huntLeader = null;
+    if (type === "hunt") {
+      var t = targets.filter(function (x) { return x.leader === target; })[0];
+      if (!t) throw new Error("no such hunt target");
+      sys = t.sys; huntLeader = t.leader;
+    } else {
+      if (targets.indexOf(target) < 0) throw new Error("invalid target for " + M.name);
+      sys = target;
+    }
+    if (type === "relocate" && L.int < 2) throw new Error("Relocate needs intrigue 2+");
+    L.status = "placed"; L.loc = type === "relocate" ? "base" : sys; L.mission = null;
+    var tName = type === "hunt" ? leader(g, huntLeader).name + " in " + SYS[sys].n : (type === "relocate" ? "a new location" : SYS[sys].n);
+    log(g, side, "mission", L.name + " reveals " + M.name + (type === "relocate" ? "." : " targeting " + tName + "."), { leader: L.id, type: type, sys: type === "relocate" ? null : sys });
+    var pend = { side: side, leader: L.id, type: type, sys: sys, huntLeader: huntLeader };
+    if (M.opp && leadersOf(g, other(side), "pool").length > 0) {
+      s.pending = pend;   // the other side must now call oppose()
+      return pend;
+    }
+    resolveMission(g, pend, null);
+    return null;
+  }
+
+  function oppose(g, side, leaderId) {
+    var s = g.s, p = s.pending;
+    if (!p) throw new Error("nothing to oppose");
+    if (side !== other(p.side)) throw new Error("wrong side");
+    var O = null;
+    if (leaderId) {
+      O = leader(g, leaderId);
+      if (!O || O.side !== side || O.status !== "pool") throw new Error("opposer not in pool");
+      O.status = "placed"; O.loc = p.sys;
+    }
+    s.pending = null;
+    resolveMission(g, p, O);
+  }
+
+  // probability that `a` dice beat `b` dice (opposer wins ties)
+  function missionOdds(a, b) {
+    var p = 0;
+    for (var i = 0; i <= a; i++) for (var j = 0; j <= b; j++) if (i > j) p += binom(a, i) * binom(b, j);
+    return p / Math.pow(2, a + b);
+  }
+  function binom(n, k) { var r = 1; for (var i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+
+  function resolveMission(g, p, O) {
+    var s = g.s, L = leader(g, p.leader), ok = true, detail = "";
+    if (O) {
+      var a = 0, b = 0, k;
+      for (k = 0; k < L.int; k++) if (d6(g.r) >= CFG.hitOn) a++;
+      for (k = 0; k < O.int; k++) if (d6(g.r) >= CFG.hitOn) b++;
+      ok = a > b;
+      detail = O.name + " opposes. " + L.name + " rolls " + a + " success" + (a === 1 ? "" : "es") + " on " + L.int + " dice, " + O.name + " rolls " + b + " on " + O.int + ". " + (ok ? "The mission succeeds." : "The mission fails (the opposer wins ties).");
+      log(g, O.side, "oppose", detail, { opposer: O.id, leader: L.id, a: a, b: b, ok: ok, sys: p.sys });
+    } else if (MISSIONS[p.type].opp) {
+      log(g, p.side, "mission", "Unopposed: " + MISSIONS[p.type].name + " succeeds automatically.", { type: p.type });
+    }
+    if (ok) applyMission(g, p);
+    if (ok && p.side === "I" && SYS[p.sys] && SYS[p.sys].core && p.type !== "relocate") s.flags.coreMission = true;
+    checkBaseWin(g);
+    if (!s.winner) endAction(g, p.side);
+  }
+
+  function applyMission(g, p) {
+    var s = g.s, sys = p.sys;
+    if (p.type === "sway") {
+      var before = s.loy[sys];
+      s.loy[sys] = before === "D" ? null : "I";
+      if (before === "D") s.sab[sys] = false;
+      log(g, "I", "loyalty", SYS[sys].n + (before === "D" ? " breaks from the Dominion (now neutral)." : " becomes loyal to the Insurgents."), { sys: sys });
+    } else if (p.type === "sabotage") {
+      s.sab[sys] = true;
+      log(g, "I", "sabotage", SYS[sys].n + " is sabotaged: no Dominion production there until they activate it.", { sys: sys });
+    } else if (p.type === "relocate") {
+      relocateBase(g, p.sys);
+    } else if (p.type === "probe") {
+      drawProbes(g, CFG.probeMissionDraw, "Probe mission");
+    } else if (p.type === "decree") {
+      var b = s.loy[sys];
+      s.loy[sys] = b === "I" ? null : "D";
+      log(g, "D", "loyalty", SYS[sys].n + (b === "I" ? " drops its Insurgent loyalty (now neutral)." : " declares for the Dominion."), { sys: sys });
+      if (s.loy[sys] === "D") {
+        if (sys === s.base && !s.baseRevealed) revealBase(g, "Dominion loyalty in " + SYS[sys].n + " exposes it.");
+        else if (!s.baseRevealed) clearSystem(g, sys);
+      }
+    } else if (p.type === "hunt") {
+      var T = leader(g, p.huntLeader);
+      T.status = "captured"; T.loc = null; T.capturedFor = CFG.captureRounds;
+      log(g, "D", "capture", T.name + " is captured and will miss the next " + CFG.captureRounds + " rounds.", { leader: T.id });
+    }
+  }
+
+  function relocateBase(g, target) {
+    var s = g.s, old = s.base;
+    if (s.probeDeck.indexOf(target) < 0 || s.u[target].Ds + s.u[target].Dt > 0) throw new Error("bad relocation target");
+    if (!s.baseRevealed) {
+      s.u[old].Is += s.baseBox.s; s.u[old].It += s.baseBox.t;
+      log(g, "I", "relocate", "The base relocates. Its old site, " + SYS[old].n + ", is exposed" + (s.baseBox.s + s.baseBox.t ? " and " + unitStr(s.baseBox.s, s.baseBox.t) + (s.baseBox.s + s.baseBox.t === 1 ? " is" : " are") + " left there." : ".") , { old: old });
+    } else {
+      log(g, "I", "relocate", "The base escapes " + SYS[old].n + " to a new hidden location.", { old: old });
+    }
+    s.baseBox = { s: 0, t: 0 };
+    s.probeDeck.splice(s.probeDeck.indexOf(target), 1);
+    s.probeHand.push(old);
+    s.base = target; s.baseRevealed = false; s.relocations++;
+    s.baseHistory.push({ round: s.round, sys: target });
+    // what the hunter now knows: base is in a system whose probe card is still in the deck and had no Dominion units
+    var excl = [];
+    for (var i = 0; i < N; i++) if (!SYS[i].core && (s.u[i].Ds + s.u[i].Dt > 0)) excl.push(i);
+    s.know = { cleared: [], leaks: [], excluded: excl };
+  }
+
+  function drawProbes(g, n, why) {
+    var s = g.s, got = [];
+    for (var i = 0; i < n && s.probeDeck.length; i++) { var c = s.probeDeck.shift(); s.probeHand.push(c); got.push(c); }
+    if (got.length) log(g, "D", "probe", why + ": probe cards show no base in " + got.map(function (c) { return SYS[c].n; }).join(" and ") + ".", { cards: got });
+    return got;
+  }
+
+  function pass(g, side) {
+    var s = g.s; assertTurn(g, side);
+    log(g, side, "pass", sideName(side) + " pass.");
+    s.passes++;
+    nextTurn(g);
+  }
+
+  function endAction(g, side) {
+    g.s.passes = 0;
+    nextTurn(g);
+  }
+  function nextTurn(g) {
+    var s = g.s;
+    if (s.winner || s.phase !== "command") return;
+    if (s.passes >= 2) { endCommand(g); return; }
+    var o = other(s.turn);
+    if (canAct(g, o)) { s.turn = o; return; }
+    // the other side has nothing left: the current side keeps going (the "last word") unless it just passed
+    if (s.passes >= 1 || !canAct(g, s.turn)) endCommand(g);
+  }
+  // At the start of the phase, skip a side that has nothing to do.
+  function autoPass(g) {
+    var s = g.s;
+    if (s.phase !== "command" || s.pending) return;
+    if (!canAct(g, "I") && !canAct(g, "D")) { endCommand(g); return; }
+    if (!canAct(g, s.turn)) s.turn = other(s.turn);
+  }
+
+  // ---------------------------------------------------------------- refresh
+  function endCommand(g) {
+    var s = g.s;
+    // unrevealed missions are wasted
+    s.leaders.forEach(function (L) { if (L.status === "mission") { log(g, L.side, "waste", L.name + "'s mission was never revealed and is wasted."); L.status = "pool"; L.mission = null; } });
+    s.phase = "refresh";
+    refresh(g);
+  }
+
+  function refresh(g) {
+    var s = g.s;
+    log(g, null, "phase", "Refresh, end of round " + s.round + ".");
+    // 1. objectives
+    var keep = [], done = 0;
+    s.objHand.slice().sort(function (a, b) { return OBJ[b].val - OBJ[a].val; }).forEach(function (id) {
+      var o = OBJ[id];
+      if (done < CFG.objPerRound && o.test(s)) {
+        done++;
+        s.rep -= o.val; s.objScored.push(id);
+        log(g, "I", "objective", "Insurgents complete “" + o.name + "” (" + o.text + ") Reputation moves " + o.val + " closer: now " + s.rep + ".", { id: id });
+      } else keep.push(id);
+    });
+    s.objHand = keep;
+    if (s.rep <= s.time) return insurgentWin(g);
+    // 2. probes
+    drawProbes(g, CFG.probesPerRound, "Probe droids");
+    // 3. production
+    produce(g);
+    // 4. leaders
+    s.leaders.forEach(function (L) {
+      if (L.status === "placed") { L.status = "pool"; L.loc = null; }
+      if (L.status === "captured") { L.capturedFor--; if (L.capturedFor <= 0) { L.status = "pool"; log(g, L.side, "capture", L.name + " escapes captivity and rejoins the Insurgents."); } }
+    });
+    // 5. time
+    s.round++; s.time++;
+    s.leaders.forEach(function (L) { if (L.status === "future" && L.from <= s.round) { L.status = "pool"; log(g, L.side, "recruit", sideName(L.side) + " recruit " + L.name + " (intrigue " + L.int + ", tactics " + L.tac + ")."); } });
+    if (s.rep <= s.time) return insurgentWin(g);
+    // 6. objective draw
+    if (s.objDeck.length) s.objHand.push(s.objDeck.shift());
+    s.flags = freshFlags();
+    s.phase = "assign"; s.turn = "I"; s.passes = 0;
+    log(g, null, "phase", "Round " + s.round + ". Time " + s.time + ", reputation " + s.rep + ": the Dominion has " + (s.rep - s.time) + " round" + (s.rep - s.time === 1 ? "" : "s") + " left.");
+  }
+
+  function produce(g) {
+    var s = g.s, dom = [], ins = [];
+    for (var i = 0; i < N; i++) {
+      var u = s.u[i];
+      if (s.loy[i] === "D" && !s.sab[i] && u.It === 0) {
+        if (u.Dt >= u.Ds * CFG.carry) u.Ds++; else u.Dt++;
+        if (SYS[i].throne) u.Ds++;
+        dom.push(SYS[i].n);
+      } else if (s.loy[i] === "I" && u.Dt === 0) {
+        if (u.It >= u.Is * CFG.carry) u.Is++; else u.It++;
+        ins.push(SYS[i].n);
+      }
+    }
+    if (s.base != null && !s.baseRevealed) s.baseBox.t++;
+    log(g, null, "build", "Production: Dominion builds at " + (dom.join(", ") || "nowhere") + ". Insurgents build at " + (ins.join(", ") || "no loyal system") + (s.baseRevealed ? "." : " and add a troop at the hidden base."));
+  }
+
+  function insurgentWin(g) {
+    var s = g.s;
+    s.winner = "I"; s.phase = "over";
+    s.winReason = "Time and reputation meet. The Dominion ran out of time to find the base.";
+    log(g, "I", "win", s.winReason);
+  }
+
+  // ---------------------------------------------------------------- views
+  // Information a side may see. The UI only renders through this so the bot side's secrets stay hidden.
+  function view(g, side) {
+    var s = g.s;
+    return {
+      mine: side,
+      base: side === "I" || s.baseRevealed || s.phase === "over" ? s.base : null,
+      baseBox: side === "I" || s.phase === "over" ? s.baseBox : null,
+      objHand: side === "I" || s.phase === "over" ? s.objHand.slice() : s.objHand.length,
+      candidates: hunterCandidates(g)
+    };
+  }
+
+  return {
+    CFG: CFG, SYS: SYS, IDX: IDX, DIST: DIST, CORE: CORE, NONCORE: NONCORE, CORE_DIST: CORE_DIST,
+    LEADERS: LEADERS, MISSIONS: MISSIONS, OBJECTIVES: OBJECTIVES, OBJ: OBJ,
+    newGame: newGame, restore: restore, makeRng: makeRng, shuffle: shuffle,
+    validBaseSites: validBaseSites, placeBase: placeBase,
+    hunterCandidates: hunterCandidates, ruledOutReason: ruledOutReason,
+    missionTypes: missionTypes, submitAssignment: submitAssignment, validateAssignment: validateAssignment,
+    origins: origins, activatable: activatable, canEnterBaseBox: canEnterBaseBox, missionTargets: missionTargets,
+    activate: activate, reinforceBase: reinforceBase, revealMission: revealMission, oppose: oppose, pass: pass,
+    canAct: canAct, missionOdds: missionOdds, simBattle: simBattle, leaderTac: leaderTac,
+    leader: leader, leadersOf: leadersOf, hasLeaderAt: hasLeaderAt, unitsAt: unitsAt, anyUnits: anyUnits,
+    countLoyal: countLoyal, countSab: countSab, other: other, sideName: sideName, unitStr: unitStr,
+    drainEvents: drainEvents, view: view
+  };
+});
+
+</script>
+<script>
+/* Sparring drill: scripted opponents and the coach's suggestions.
+ *
+ * Each side's bot scores every option with a few strategic terms (the same ideas the guide
+ * teaches), picks the best one and returns a one-line reason. The coach uses the same
+ * functions to suggest a move for the player, so the reasons double as teaching text.
+ *
+ * Reasons are written only from public information plus the bot's own secrets, and the
+ * Insurgent bot never mentions its base location: the UI shows its reasons to the player.
+ */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory(require("./engine.js"));
+  else root.DrillBots = factory(root.Drill);
+})(typeof self !== "undefined" ? self : this, function (D) {
+  "use strict";
+  var SYS = D.SYS, DIST = D.DIST, N = SYS.length;
+  var est = D.makeRng(12345);   // private dice for battle estimates; never touches the game's dice
+
+  function nm(i) { return SYS[i].n; }
+  function noise(g, lvl) { return lvl === "recruit" ? (est() - 0.5) * 2.2 : (est() - 0.5) * 0.15; }
+
+  // ------------------------------------------------------------ estimates
+  function estBattle(a, b, bonusA, bonusB, hitA, hitB, n) {
+    n = n || 80;
+    var win = 0, lossA = 0, lossB = 0, bShips = 0, ship3 = 0, groundWin = 0;
+    for (var k = 0; k < n; k++) {
+      var r = D.simBattle(a, b, bonusA, bonusB, hitA, hitB, est);
+      if (r.a.s + r.a.t > 0 && r.b.s + r.b.t === 0) win++;
+      if (r.a.t > 0 && r.b.t === 0) groundWin++;
+      lossA += r.killedA.s + r.killedA.t; lossB += r.killedB.s + r.killedB.t;
+      bShips += r.killedB.s; if (r.killedB.s >= 3) ship3++;
+    }
+    return { pWin: win / n, pGround: groundWin / n, lossA: lossA / n, lossB: lossB / n, bShips: bShips / n, p3ships: ship3 / n };
+  }
+
+  // Probability weights over the hunter's candidate systems. Hiders favour remote, far-away systems.
+  function belief(g) {
+    var c = D.hunterCandidates(g), w = {}, tot = 0;
+    c.forEach(function (i) { var x = 1 + 0.35 * D.CORE_DIST[i] + (SYS[i].p ? 0 : 0.4); w[i] = x; tot += x; });
+    c.forEach(function (i) { w[i] /= tot; });
+    return { cands: c, p: w };
+  }
+
+  function sumUnits(g, side) { var s = 0, t = 0; for (var i = 0; i < N; i++) { var x = D.unitsAt(g, i, side); s += x.s; t += x.t; } return { s: s, t: t }; }
+  function minDistTo(i, pred) { var best = 99; for (var j = 0; j < N; j++) if (pred(j)) best = Math.min(best, DIST[i][j]); return best; }
+  function hiddenMissions(g, side) { return D.leadersOf(g, side, "mission").length; }
+
+  // Plan which units to send into `sys`: all ships, as many troops as they can carry, leaving
+  // one troop to hold productive systems of your own that the enemy could reach.
+  function planMoves(g, side, sys, opts) {
+    opts = opts || {};
+    var s = g.s, moves = [], S = 0, T = 0;
+    D.origins(g, side, sys).forEach(function (o) {
+      if (o.from === "base" && !opts.allowBase) return;
+      var keepT = 0;
+      if (o.from !== "base" && SYS[o.from].p && s.loy[o.from] === side && o.t >= 1) {
+        var threat = minDistTo(o.from, function (j) { return D.anyUnits(g, j, D.other(side)); });
+        if (SYS[o.from].throne || threat <= 2) keepT = 1;
+      }
+      var mt = Math.max(0, o.t - keepT), ms = o.s;
+      if (opts.troopsOnly && mt === 0) return;
+      mt = Math.min(mt, ms * D.CFG.carry);
+      if (ms + mt === 0) return;
+      moves.push({ from: o.from, s: ms, t: mt });
+      S += ms; T += mt;
+    });
+    return { moves: moves, s: S, t: T };
+  }
+
+  function bestLeader(g, side, key, exclude) {
+    var pool = D.leadersOf(g, side, "pool").filter(function (L) { return !exclude || exclude.indexOf(L.id) < 0; });
+    pool.sort(function (a, b) { return b[key] - a[key] || a.id.localeCompare(b.id); });
+    return pool[0] || null;
+  }
+  function worstLeader(g, side, key) {
+    var pool = D.leadersOf(g, side, "pool");
+    pool.sort(function (a, b) { return a[key] - b[key] || a.id.localeCompare(b.id); });
+    return pool[0] || null;
+  }
+
+  // ============================================================ DOMINION
+  var Dom = {};
+
+  Dom.assign = function (g, lvl) {
+    var s = g.s, pool = D.leadersOf(g, "D", "pool"), L = pool.length, b = belief(g);
+    var nMis = L >= 5 ? 2 : (L === 4 ? 2 : 1);
+    if (s.baseRevealed) nMis = 0;                       // everything into the assault
+    var opts = [];
+    if (s.probeDeck.length && b.cands.length > 2) opts.push({ m: "probe", v: 3 + b.cands.length * 0.1, key: "int", why: "probe cards rule out " + D.CFG.probeMissionDraw + " more systems" });
+    var dec = D.missionTargets(g, "D", "decree");
+    if (dec.length) {
+      var dv = 1 + Math.max.apply(null, dec.map(function (t) { return (b.p[t] || 0) * 6; }));
+      opts.push({ m: "decree", v: dv, key: "int", why: "a Decree gains production and checks a system without landing troops" });
+    }
+    if (L >= 4) opts.push({ m: "hunt", v: 1.0, key: "int", why: "Insurgent leaders who act near our fleets can be captured" });
+    opts.forEach(function (o) { o.v += noise(g, lvl); });
+    opts.sort(function (a, c) { return c.v - a.v; });
+    var list = [], used = [], notes = [];
+    for (var i = 0; i < opts.length && list.length < nMis; i++) {
+      var Ld = bestLeader(g, "D", "int", used.concat(pool.filter(function (x) { return x.tac >= 2 && x.int < 2; }).map(function (x) { return x.id; })));
+      if (!Ld) Ld = bestLeader(g, "D", "int", used);
+      if (!Ld) break;
+      used.push(Ld.id); list.push({ leader: Ld.id, mission: opts[i].m });
+      notes.push(Ld.name + " on " + D.MISSIONS[opts[i].m].name + ": " + opts[i].why + ".");
+    }
+    var reserve = L - list.length;
+    var why = "Keeps " + reserve + " of " + L + " leaders in reserve: the hunt is won by moving troops, and one spare leader can oppose a mission. " + notes.join(" ");
+    return { list: list, why: why };
+  };
+
+  function domActivationOptions(g, lvl) {
+    var s = g.s, b = belief(g), out = [];
+    var actor = bestLeader(g, "D", "tac");
+    if (!actor) return out;
+    var cheap = worstLeader(g, "D", "tac");
+    for (var T = 0; T < N; T++) {
+      if (!D.activatable(g, "D", T)) continue;
+      var plan = planMoves(g, "D", T);
+      var u = s.u[T], I = { s: u.Is, t: u.It };
+      var v = 0, why = [];
+      if (s.sab[T] && s.loy[T] === "D") { v += 1.0; why.push("clears the sabotage on " + nm(T) + " so it builds again"); }
+      if (plan.s + plan.t === 0 && v === 0) continue;
+      var atk = { s: u.Ds + plan.s, t: u.Dt + plan.t };
+      if (I.s + I.t > 0) {
+        var atBase = s.baseRevealed && T === s.base;
+        var e = estBattle(atk, I, actor.tac, D.leaderTac(g, "I", T, null), D.CFG.hitOn, atBase ? D.CFG.baseHitOn : D.CFG.hitOn, 60);
+        var bv = 0.8 * e.lossB - 0.55 * e.lossA;
+        if (atBase) { bv += 14 * e.pGround; why.push("assaults the revealed base (about " + Math.round(e.pGround * 100) + "% to take it)"); }
+        else if (e.pWin > 0.5) why.push("attacks " + D.unitStr(I.s, I.t) + " at " + nm(T) + " with good odds (" + Math.round(e.pWin * 100) + "%)");
+        else why.push("trades with the Insurgents at " + nm(T));
+        if (s.loy[T] === "I" && SYS[T].p) bv += 1.6 * e.pGround;
+        if (!atBase && e.pWin < 0.35) bv -= 1.5;
+        v += bv;
+      } else if (plan.t > 0) {
+        if (!s.baseRevealed && b.p[T] != null) { v += 0.5 + 7 * b.p[T]; why.push("lands troops on " + nm(T) + ", one of " + b.cands.length + " systems the base could be in"); }
+        if (SYS[T].p && s.loy[T] !== "D") { v += s.loy[T] === "I" ? 1.8 : 1.1; why.push("takes " + nm(T) + (s.loy[T] === "I" ? " away from the Insurgents" : " for Dominion production")); }
+      }
+      // positioning: move troops closer to where the base could be (or to the revealed base)
+      var tgt = s.baseRevealed ? (function () { var o = {}; o[s.base] = 1; return o; })() : b.p;
+      var pos = 0;
+      plan.moves.forEach(function (m) {
+        if (m.from === "base" || m.t === 0) return;
+        Object.keys(tgt).forEach(function (c) { pos += m.t * tgt[c] * (1 / (1 + DIST[T][c]) - 1 / (1 + DIST[m.from][c])); });
+      });
+      if (pos > 0.02) { v += pos * (s.baseRevealed ? 9 : 4); if (!why.length) why.push("moves troops toward the systems still in question"); }
+      // leaving a productive home undefended near Insurgent units is a risk
+      plan.moves.forEach(function (m) {
+        if (m.from !== "base" && s.loy[m.from] === "D" && s.u[m.from].Dt - m.t === 0 && minDistTo(m.from, function (j) { return s.u[j].It > 0; }) <= 1) v -= 0.6;
+      });
+      if (v <= 0) continue;
+      var who = I.s + I.t > 0 ? actor : cheap;
+      out.push({ type: "activate", leader: who.id, sys: T, moves: plan.moves, v: v + noise(g, lvl), why: who.name + " " + why.join("; ") + "." });
+    }
+    return out;
+  }
+
+  function domMissionOptions(g, lvl) {
+    var s = g.s, b = belief(g), out = [];
+    D.leadersOf(g, "D", "mission").forEach(function (L) {
+      var t = D.missionTargets(g, "D", L.mission);
+      if (!t.length) return;
+      if (L.mission === "probe") {
+        // prefer a target where an opposer pins nothing we need: a system whose units already moved or hold a leader
+        t.sort(function (a, c) { return (D.hasLeaderAt(g, "D", c) - D.hasLeaderAt(g, "D", a)) || ((s.u[a].Ds + s.u[a].Dt) - (s.u[c].Ds + s.u[c].Dt)); });
+        var pv = s.probeDeck.length ? (b.cands.length > 1 ? 3.2 : 0.2) : 0;
+        out.push({ type: "mission", leader: L.id, target: t[0], v: pv + noise(g, lvl), why: L.name + " runs a Probe from " + nm(t[0]) + ": two more systems ruled out, and it is done early so later moves use the new information." });
+      } else if (L.mission === "decree") {
+        var best = null, bv = -1;
+        t.forEach(function (x) { var v = (b.p[x] || 0) * 9 + (s.loy[x] === "I" ? 1.4 : 1.0); if (v > bv) { bv = v; best = x; } });
+        out.push({ type: "mission", leader: L.id, target: best, v: bv + noise(g, lvl), why: L.name + " issues a Decree on " + nm(best) + (b.p[best] ? ": if the base is there, Dominion loyalty exposes it; if not, it is ruled out and builds for us." : ": more production, and one less loyal system for the Insurgents.") });
+      } else if (L.mission === "hunt") {
+        var tg = t[0];
+        out.push({ type: "mission", leader: L.id, target: tg.leader, v: 3 + noise(g, lvl), why: L.name + " hunts " + D.leader(g, tg.leader).name + ", who is standing in " + nm(tg.sys) + " next to Dominion units. A captured leader is one less Insurgent action for two rounds." });
+      }
+    });
+    return out;
+  }
+
+  Dom.command = function (g, lvl) {
+    var s = g.s;
+    var opts = domMissionOptions(g, lvl).concat(domActivationOptions(g, lvl));
+    var pool = D.leadersOf(g, "D", "pool").length;
+    var keepForOpp = hiddenMissions(g, "I") > 0 && pool === 1 ? 1.6 : 0;
+    opts.forEach(function (o) { if (o.type === "activate") o.v -= keepForOpp; });
+    opts.sort(function (a, b) { return b.v - a.v; });
+    var best = opts[0];
+    if (best && best.v > 0.45) return best;
+    if (keepForOpp && opts.length) return { type: "pass", why: "Passes and keeps the last reserve leader to oppose the Insurgents' remaining mission." };
+    return { type: "pass", why: "Nothing worth a leader right now." };
+  };
+
+  Dom.oppose = function (g, lvl) {
+    var s = g.s, p = s.pending, A = D.leader(g, p.leader);
+    var pool = D.leadersOf(g, "D", "pool");
+    if (!pool.length) return { leader: null, why: "" };
+    var val = 0, what = "";
+    if (p.type === "sway") { val = s.loy[p.sys] === "D" ? 1.9 : 1.3; what = s.loy[p.sys] === "D" ? "it would cost us production at " + nm(p.sys) : "a loyal " + nm(p.sys) + " builds for the Insurgents every round"; }
+    else if (p.type === "sabotage") { val = 1.3 + (SYS[p.sys].core ? 0.7 : 0); what = "a sabotaged " + nm(p.sys) + " stops building until we spend an activation there"; }
+    var best = null, bv = -9;
+    pool.forEach(function (O) {
+      var stop = 1 - D.missionOdds(A.int, O.int);
+      var cost = 0.55 + (pool.length === 1 ? 0.5 : 0) + 0.25 * O.tac;
+      if (s.u[p.sys].Ds + s.u[p.sys].Dt > 0) cost += 0.3;   // the opposer pins our units there
+      var v = stop * val - cost;
+      if (v > bv) { bv = v; best = { O: O, stop: stop }; }
+    });
+    if (lvl === "recruit" && est() < 0.35) bv = -1;
+    if (best && bv > 0) return { leader: best.O.id, why: best.O.name + " opposes (" + Math.round(best.stop * 100) + "% to stop it): " + what + "." };
+    return { leader: null, why: "Lets it through: not worth a leader that could move troops instead." };
+  };
+
+  // ============================================================ INSURGENTS
+  var Ins = {};
+
+  Ins.placeBase = function (g, lvl) {
+    var sites = D.validBaseSites(g), tot = 0;
+    var w = sites.map(function (i) {
+      var x = Math.pow(D.CORE_DIST[i], 2) * (SYS[i].p ? 1 : 1.6);
+      if (g.s.u[i].Is + g.s.u[i].It > 0 || SYS[i].adj.some(function (a) { return g.s.u[a].Is > 0; })) x *= 0.6;   // away from our own fleet
+      tot += x; return x;
+    });
+    var r = est() * tot, k = 0;
+    for (; k < sites.length - 1; k++) { r -= w[k]; if (r <= 0) break; }
+    return { sys: sites[k], why: "Far from the Dominion home systems" + (SYS[sites[k]].p ? "" : ", in a remote system that nobody fights over") + ", and away from where your fleet will operate." };
+  };
+
+  // How close is the hunter? (Computed from public information plus our own base location.)
+  function danger(g) {
+    var s = g.s;
+    if (s.baseRevealed) return { lvl: 3, why: "the base is revealed" };
+    var c = D.hunterCandidates(g).length, b = s.base;
+    var near = 99;
+    for (var j = 0; j < N; j++) if (s.u[j].Dt > 0 && s.u[j].Ds > 0) near = Math.min(near, DIST[b][j]);
+    if (c <= 2) return { lvl: 3, why: "the Dominion has narrowed the search to " + c + " system" + (c === 1 ? "" : "s"), c: c, near: near };
+    if (near <= 1 && c <= 5) return { lvl: 3, why: "Dominion troop ships are one jump from the base and only " + c + " systems are still in question", c: c, near: near };
+    if (c <= 4 || near <= 1) return { lvl: 2, why: "the hunter is closing in (" + c + " systems still in question)", c: c, near: near };
+    return { lvl: c <= 6 ? 1 : 0, why: "", c: c, near: near };
+  }
+  Ins.danger = danger;
+
+  // After a relocation the hunter's candidates are the probe-deck systems with no Dominion units.
+  function candidatesAfterRelocation(g) {
+    var s = g.s;
+    return s.probeDeck.filter(function (i) { return i !== s.base && s.u[i].Ds + s.u[i].Dt === 0; }).length;
+  }
+  function relocationHelps(g, dg) {
+    var after = candidatesAfterRelocation(g);
+    if (!D.missionTargets(g, "I", "relocate").length) return false;
+    if (g.s.baseRevealed) return true;
+    return after > (dg.c || 0) + 1 || (dg.lvl >= 3 && after >= 2);
+  }
+  Ins.candidatesAfterRelocation = candidatesAfterRelocation;
+
+  function bestRelocation(g) {
+    var s = g.s, t = D.missionTargets(g, "I", "relocate"), best = null, bv = -99;
+    t.forEach(function (x) {
+      var dd = minDistTo(x, function (j) { return s.u[j].Dt > 0; });
+      var v = Math.min(dd, 4) * 1.2 + D.CORE_DIST[x] * 0.5 + (SYS[x].p ? 0 : 0.5) + est() * 0.8;
+      if (v > bv) { bv = v; best = x; }
+    });
+    return best;
+  }
+
+  function swayTargets(g) {
+    var s = g.s;
+    return D.missionTargets(g, "I", "sway").map(function (x) {
+      var dd = minDistTo(x, function (j) { return s.u[j].Dt > 0; });
+      var v = (s.loy[x] === "D" ? 1.1 : 1.5) + 0.35 * Math.min(dd, 3);
+      if (s.u[x].Ds > 0) v -= 0.6;                     // a leader there can be hunted
+      return { sys: x, v: v, dd: dd };
+    }).sort(function (a, b) { return b.v - a.v; });
+  }
+  function sabTargets(g) {
+    var s = g.s, hand = s.objHand;
+    return D.missionTargets(g, "I", "sabotage").map(function (x) {
+      var v = 1.0 + (hand.indexOf("lines") >= 0 ? 0.8 : 0) + (0) + (SYS[x].throne ? 0.4 : 0);
+      if (s.u[x].Ds + s.u[x].Dt > 0) v -= 0.35;      // leader exposed to Hunt there
+      return { sys: x, v: v };
+    }).sort(function (a, b) { return b.v - a.v; });
+  }
+
+  Ins.assign = function (g, lvl) {
+    var s = g.s, pool = D.leadersOf(g, "I", "pool"), L = pool.length, hand = s.objHand;
+    var list = [], used = [], notes = [];
+    var dg = danger(g);
+    if (dg.lvl >= 2 && relocationHelps(g, dg)) {
+      var cand = pool.filter(function (x) { return x.int >= 2; }).sort(function (a, b) { return a.int - b.int; })[0];
+      if (cand) { list.push({ leader: cand.id, mission: "relocate" }); used.push(cand.id); notes.push(cand.name + " stands ready to Relocate because " + dg.why + "."); }
+    }
+    var reserve = 1;
+    if (L >= 4) reserve = 2;
+    var free = L - list.length - reserve;
+    var wantSab = hand.indexOf("lines") >= 0;
+    var wantSway = hand.indexOf("spark") >= 0 || hand.indexOf("uprise") >= 0 || D.countLoyal(s, "I") < 3;
+    var sw = swayTargets(g), sb = sabTargets(g), nSway = 0, nSab = 0;
+    for (var k = 0; k < free; k++) {
+      var Ld = bestLeader(g, "I", "int", used.concat(["i2"]));
+      if (!Ld) break;
+      var m;
+      var swV = sw[nSway] ? sw[nSway].v + (wantSway ? 0.6 : 0) : -9, sbV = sb[nSab] ? sb[nSab].v + (wantSab ? 0.4 : 0) : -9;
+      swV += noise(g, lvl); sbV += noise(g, lvl);
+      if (swV < 0 && sbV < 0) break;
+      if (swV >= sbV) { m = "sway"; nSway++; } else { m = "sabotage"; nSab++; }
+      used.push(Ld.id); list.push({ leader: Ld.id, mission: m });
+      notes.push(Ld.name + " (intrigue " + Ld.int + ") on " + D.MISSIONS[m].name + (m === "sway" ? ": loyal systems build units and feed loyalty objectives." : ": denies Dominion production" + (wantSab ? " and works toward an objective." : ".")));
+    }
+    var res = L - list.length;
+    var why = "Keeps " + res + " in reserve (" + (res ? "to oppose a Dominion mission or strike when a fight pays" : "none") + "). " + notes.join(" ");
+    return { list: list, why: why };
+  };
+
+  function insActivationOptions(g, lvl) {
+    var s = g.s, out = [], hand = s.objHand;
+    var actor = bestLeader(g, "I", "tac");
+    if (!actor) return out;
+    for (var T = 0; T < N; T++) {
+      if (!D.activatable(g, "I", T)) continue;
+      var plan = planMoves(g, "I", T);
+      if (plan.s + plan.t === 0) continue;
+      var u = s.u[T], Dm = { s: u.Ds, t: u.Dt }, v = 0, why = [];
+      if (Dm.s + Dm.t > 0) {
+        var att = { s: u.Is + plan.s, t: u.It + plan.t };
+        var e = estBattle(att, Dm, actor.tac, D.leaderTac(g, "D", T, null), D.CFG.hitOn, D.CFG.hitOn, 60);
+        v = 0.7 * e.lossB - 0.9 * e.lossA;
+        if (hand.indexOf("hitrun") >= 0) { v += 1.6 * e.pWin; }
+        if (hand.indexOf("raid") >= 0 && Dm.t >= 2) { v += 1.4 * Math.min(1, e.lossB / Math.max(1, Dm.s + Dm.t)) ; }
+        if (hand.indexOf("ambush") >= 0) { v += 2.5 * e.p3ships; }
+        if (hand.indexOf("liberty") >= 0 && s.loy[T] === "D" && !SYS[T].throne) v += 2.4 * e.pGround;
+        if (hand.indexOf("throne") >= 0 && SYS[T].core) v += 2.4 * e.pWin;
+        if (s.loy[T] === "D" && SYS[T].p) v += 0.6 * e.pGround;
+        if (e.pWin < 0.45 && v < 1.2) v -= 1.0;
+        why.push("strikes " + D.unitStr(Dm.s, Dm.t) + " at " + nm(T) + " (about " + Math.round(e.pWin * 100) + "% to win)" + (v > 1 ? " because the win scores or the trade is cheap" : ""));
+      } else {
+        if (s.loy[T] === "D" && plan.t > 0 && !SYS[T].throne) { v += 1.4 + (hand.indexOf("liberty") >= 0 ? 2.2 : 0); why.push("walks into undefended " + nm(T) + " and takes it back from the Dominion"); }
+        // retreat from a stack we cannot hold
+        plan.moves.forEach(function (m) {
+          if (m.from === "base") return;
+          var threat = 0;
+          SYS[m.from].adj.forEach(function (a) { threat += s.u[a].Ds + s.u[a].Dt; });
+          var mine = s.u[m.from].Is + s.u[m.from].It;
+          var threatT = 0; SYS[T].adj.forEach(function (a) { threatT += s.u[a].Ds + s.u[a].Dt; });
+          if (threat > mine * 1.5 && threatT < threat * 0.5) { v += 0.7; why.push("pulls units out of reach of a bigger Dominion force"); }
+        });
+        if (s.loy[T] === "I" && SYS[T].adj.some(function (a) { return s.u[a].Dt > 0; }) && u.It === 0 && plan.t > 0) { v += 0.6; why.push("puts troops on loyal " + nm(T) + " so a landing has to fight for it"); }
+      }
+      if (s.baseRevealed && T === s.base && plan.t > 0) { v += 2 + plan.t * 0.5; why.push("reinforces the exposed base"); }
+      if (v <= 0) continue;
+      out.push({ type: "activate", leader: actor.id, sys: T, moves: plan.moves, v: v + noise(g, lvl), why: actor.name + " " + why.join("; ") + "." });
+    }
+    return out;
+  }
+
+  function insMissionOptions(g, lvl) {
+    var s = g.s, out = [], dg = danger(g);
+    D.leadersOf(g, "I", "mission").forEach(function (L) {
+      if (L.mission === "relocate") {
+        var t = bestRelocation(g);
+        if (t == null) return;
+        var v = !relocationHelps(g, dg) ? 0.1 : (dg.lvl >= 3 ? 10 : (dg.lvl === 2 ? 3 : 0.25));
+        out.push({ type: "mission", leader: L.id, target: t, v: v, why: L.name + " relocates the base" + (dg.why ? " because " + dg.why : "") + ". The old site will be exposed, so it is done before troops arrive, not after." });
+      } else if (L.mission === "sway") {
+        var sw = swayTargets(g)[0];
+        if (sw) out.push({ type: "mission", leader: L.id, target: sw.sys, v: sw.v + noise(g, lvl), why: L.name + " sways " + nm(sw.sys) + ", " + (sw.dd >= 2 ? sw.dd + " jumps from the nearest Dominion troops, so it is hard to take back" : "contested, but worth the production") + "." });
+      } else if (L.mission === "sabotage") {
+        var sb = sabTargets(g)[0];
+        if (sb) out.push({ type: "mission", leader: L.id, target: sb.sys, v: sb.v + noise(g, lvl), why: L.name + " sabotages " + nm(sb.sys) + ": the Dominion must spend an activation there or lose its production" + (SYS[sb.sys].core ? ", and it is a home system" : "") + "." });
+      }
+    });
+    return out;
+  }
+
+  Ins.command = function (g, lvl) {
+    var opts = insMissionOptions(g, lvl).concat(insActivationOptions(g, lvl));
+    var pool = D.leadersOf(g, "I", "pool").length;
+    var keep = hiddenMissions(g, "D") > 0 && pool === 1 ? 1.4 : 0;
+    opts.forEach(function (o) { if (o.type === "activate") o.v -= keep; });
+    opts.sort(function (a, b) { return b.v - a.v; });
+    var best = opts[0];
+    if (best && best.v > 0.45) return best;
+    if (keep && opts.length) return { type: "pass", why: "Passes and keeps the last reserve leader to oppose the Dominion's remaining mission." };
+    return { type: "pass", why: "Nothing worth a leader right now." };
+  };
+
+  Ins.oppose = function (g, lvl) {
+    var s = g.s, p = s.pending, A = D.leader(g, p.leader);
+    var pool = D.leadersOf(g, "I", "pool");
+    if (!pool.length) return { leader: null, why: "" };
+    var val = 0, what = "", c = D.hunterCandidates(g).length;
+    if (p.type === "hunt") { val = 3; what = "losing " + D.leader(g, p.huntLeader).name + " for two rounds costs two actions"; }
+    else if (p.type === "probe") { val = c <= 5 ? 2.4 : 0.9; what = c <= 5 ? "only " + c + " systems are still in question, every card matters" : "fewer probe cards means a slower search"; }
+    else if (p.type === "decree") {
+      // the reason text is the same in every case, so the choice to oppose does not point at the base
+      what = "a Decree gives the Dominion production and information";
+      if (p.sys === s.base && !s.baseRevealed) val = 12;
+      else if (s.loy[p.sys] === "I") val = 1.5;
+      else val = 0.7;
+      if (lvl !== "recruit" && val < 1 && est() < 0.4) val = 2;   // oppose decoys too, so opposition is not a tell
+    }
+    var best = null, bv = -9;
+    pool.forEach(function (O) {
+      var stop = 1 - D.missionOdds(A.int, O.int);
+      var cost = 0.5 + (pool.length === 1 && hiddenMissions(g, "D") > 0 ? 0.5 : 0) + 0.2 * O.tac;
+      if (s.u[p.sys].Ds + s.u[p.sys].Dt > 0 && hiddenMissions(g, "D") > 0) cost += 0.3;   // our opposer could be hunted there
+      var v = stop * val - cost;
+      if (v > bv) { bv = v; best = { O: O, stop: stop }; }
+    });
+    if (lvl === "recruit" && est() < 0.3) bv = -1;
+    if (best && bv > 0) return { leader: best.O.id, why: best.O.name + " opposes (" + Math.round(best.stop * 100) + "% to stop it): " + what + "." };
+    return { leader: null, why: "Lets it through and keeps the leader for something better." };
+  };
+
+  // ============================================================ driver
+  var BOT = { I: Ins, D: Dom };
+
+  function act(g, side, a) {
+    if (a.type === "activate") D.activate(g, side, a.leader, a.sys, a.moves);
+    else if (a.type === "mission") D.revealMission(g, side, a.leader, a.target);
+    else if (a.type === "pass") D.pass(g, side);
+    else throw new Error("unknown action " + a.type);
+  }
+
+  // Advance the game while it is the bot's decision. Returns the reasons it gave, in order.
+  function runBot(g, botSide, lvl) {
+    var s = g.s, notes = [], guard = 0;
+    while (!s.winner && guard++ < 200) {
+      if (s.phase === "setup") {
+        if (botSide !== "I") break;
+        var pb = Ins.placeBase(g, lvl); D.placeBase(g, pb.sys); notes.push({ side: "I", why: "Base placed." });
+      } else if (s.phase === "assign") {
+        if (s.assigned[botSide]) break;
+        var as = BOT[botSide].assign(g, lvl);
+        D.submitAssignment(g, botSide, as.list); notes.push({ side: botSide, kind: "assign", why: as.why, private: true });
+        break;   // the human assigns next (or both are done)
+      } else if (s.phase === "command") {
+        if (s.pending) {
+          if (D.other(s.pending.side) !== botSide) break;
+          var op = BOT[botSide].oppose(g, lvl); D.oppose(g, botSide, op.leader); if (op.why) notes.push({ side: botSide, kind: "oppose", why: op.why });
+          continue;
+        }
+        if (s.turn !== botSide) break;
+        var a = BOT[botSide].command(g, lvl);
+        act(g, botSide, a); notes.push({ side: botSide, kind: a.type, why: a.why });
+      } else break;
+    }
+    return notes;
+  }
+
+  return { Dom: Dom, Ins: Ins, BOT: BOT, act: act, runBot: runBot, belief: belief, estBattle: estBattle, danger: danger, planMoves: planMoves };
+});
+
+</script>
+<script>
+/* Coach lessons for the sparring drill. Each lesson fires once, when the situation first comes up.
+ * `when(ctx)` gets { g, s, user, ev } where ev are the log entries since the last check.
+ * `body(user)` returns HTML; `table` is how the idea carries over to Star Wars: Rebellion. */
+(function (root) {
+  "use strict";
+  var D = root.Drill;
+  function evOf(ctx, kind, side) { return ctx.ev.some(function (e) { return e.kind === kind && (!side || e.side === side); }); }
+  function gap(s) { return s.rep - s.time; }
+
+  var L = [
+    {
+      id: "clock", title: "The clock decides how long the hunt lasts",
+      when: function (c) { return c.s.phase === "setup" || (c.s.round === 1 && c.s.phase === "assign"); },
+      body: function (u) {
+        return "<p>Time is on 1 and reputation on 14, so the Dominion has <b>13 rounds</b> if the Insurgents never score. Each objective the Insurgents complete moves reputation one or two spaces closer. An Insurgent who scores every round closes the gap twice as fast.</p>" +
+          (u === "I" ? "<p><b>Your plan:</b> objectives are your real army. Every mission and fight should either move an objective forward or keep the base hidden one more round.</p>"
+                     : "<p><b>Your plan:</b> check the gap every round and ask whether your search can finish inside it. A plan that needs more rounds than the gap is not a plan.</p>");
+      },
+      table: "Identical: the time marker starts on 1, reputation on 14, and Rebel objective cards pull reputation toward time."
+    },
+    {
+      id: "base", title: "Hide where the hunt is expensive",
+      when: function (c) { return c.s.phase === "setup" && c.user === "I"; },
+      body: function () {
+        return "<p>Units move one jump per activation, and the leader you activate with pins those units for the rest of the round. So every jump between the Dominion and your base costs it a round of work with that fleet.</p>" +
+          "<ul class='tight'><li><b>Far</b> from the Dominion home systems on the left.</li><li><b>Remote</b> (dashed) systems have no loyalty and no production, so nobody has a reason to fly there.</li><li><b>Away from your fleet</b> at Quessa. The hunter watches your fleet and searches around it.</li></ul>";
+      },
+      table: "Same reasoning. In the first game you pick from 26 systems not next to Imperial units. Pick one far from Coruscant and away from where your fleet will fight."
+    },
+    {
+      id: "base-d", title: "Start by counting the candidates",
+      when: function (c) { return c.user === "D" && c.s.phase === "assign" && c.s.round === 1; },
+      body: function () {
+        return "<p>The base cannot start in or next to a system that holds your units, which leaves <b>" + D.hunterCandidates(window.__g).length + " candidates</b> (dashed gold rings). Two tools shrink that list:</p>" +
+          "<ul class='tight'><li><b>Probe cards</b>: certain, one per round for free, two more with a Probe mission.</li><li><b>Troops on the ground</b>: every system you land troops in is ruled out for good and, if populous, builds for you.</li></ul><p>Use both every round. Probes alone run out of time.</p>";
+      },
+      table: "Same two tools: probe cards (two per round) and Imperial ground units. Keep a written list of the systems still possible."
+    },
+    {
+      id: "assign", title: "Leaders are your actions",
+      when: function (c) { return c.s.phase === "assign"; },
+      body: function (u) {
+        return "<p>Each leader does exactly one thing per round. Send it on a <b>mission</b> now (face down), or keep it in <b>reserve</b> to activate a system or oppose an enemy mission later. You only have three to start, so the split is the most important decision of the round.</p>" +
+          (u === "I" ? "<p><b>Typical Insurgent split:</b> two on missions (they build loyalty and score objectives), one in reserve to oppose a Probe or a Hunt, or to strike a weak target.</p>"
+                     : "<p><b>Typical Dominion split:</b> one on a Probe mission, the rest in reserve. Troops find bases, and moving troops takes reserve leaders. Keep one spare to oppose a mission that hurts.</p>") +
+          "<p>Match the leader to the job: <b>intrigue</b> is mission dice, <b>tactics</b> is extra battle dice.</p>";
+      },
+      table: "The same economy. Leaders go on mission cards whose skill icons they match, or stay in the pool to move units and oppose."
+    },
+    {
+      id: "oppose", title: "Opposing: a dice duel the opposer wins on ties",
+      when: function (c) { return c.s.pending && D.other(c.s.pending.side) === c.user; },
+      body: function () {
+        return "<p>An unopposed mission succeeds automatically. If you oppose, both leaders roll their intrigue dice and the attempt needs <b>more</b> successes, so even one die gives you a real chance. The odds are shown on each button.</p>" +
+          "<p>The cost: your opposer is placed in the target system. It is spent for the round and <b>pins</b> your units there. Oppose missions that cost you something real, and let cheap ones go.</p>";
+      },
+      table: "Same rule: the opposing player wins ties, an unopposed mission just happens, and the opposing leader moves to that system."
+    },
+    {
+      id: "pin", title: "Pinned: a leader freezes its own units",
+      when: function (c) {
+        return c.ev.some(function (e) {
+          if ((e.kind !== "oppose" && e.kind !== "mission") || !e.data) return false;
+          var id = e.data.opposer || e.data.leader, Ld = id && D.leader(window.__g, id);
+          return Ld && Ld.side === c.user && typeof Ld.loc === "number" && D.anyUnits(window.__g, Ld.loc, c.user);
+        });
+      },
+      body: function () {
+        return "<p>Your leader just landed in a system that holds your own units. Those units cannot leave this round.</p><p><b>Use it as a weapon:</b> attempt missions in systems where the enemy fleet sits. If they oppose, their leader freezes their own fleet. If they don't, your mission succeeds for free.</p>";
+      },
+      table: "This is the real pinning rule, and the bait play is a standard tactic for both sides."
+    },
+    {
+      id: "probe", title: "Probe cards: certain information every round",
+      when: function (c) { return evOf(c, "probe"); },
+      body: function (u) {
+        return u === "D" ? "<p>Each card names a system the base is <b>not</b> in, and the map has greyed it out for you. Cards are certain but slow: one free card a round will not finish the job in time. Combine them with landings.</p><p>Draw cards early in the round, so later activations use what you learned.</p>"
+          : "<p>The Dominion just ruled out more systems. Turn on <b>Show what the hunter knows</b> to see its exact list of candidates; it uses the same public information you can see.</p><p>Watch that number. When it gets small, have a Relocate ready. The new site must come from systems whose probe card has not been drawn, so relocating late leaves few good places to go.</p>";
+      },
+      table: "The Empire draws two probe cards per round, and Rapid Mobilization picks the new base from the probe deck: the same squeeze."
+    },
+    {
+      id: "search", title: "Troops on the ground: the other half of the search",
+      when: function (c) { return evOf(c, "search"); },
+      body: function (u) {
+        return u === "D" ? "<p>Every landing rules a system out for good, and a populous system you hold builds for you every round. Your fleets move one jump per round, so plan two rounds ahead: which systems will these troops search next round?</p><p>Ships alone never reveal a base. Bring troops, and remember each ship carries only two.</p>"
+          : "<p>Dominion troops just searched a system. Ships alone cannot find you; only troops or Dominion loyalty can. Watch where its troop ships are and how far they are from your base.</p>";
+      },
+      table: "Same: only Imperial ground units (or Imperial loyalty) reveal the base, and TIE Fighters and troops need transport capacity."
+    },
+    {
+      id: "leak", title: "Moving units out of the base gives it away",
+      when: function (c) { return evOf(c, "leak"); },
+      body: function (u) {
+        return u === "I" ? "<p>Units left the hidden base, so the Dominion now knows the base is in that system or right next to it. The gold rings on the map just shrank.</p><p>Fight with a separate fleet and keep base units still unless the payoff is huge: an objective, or saving the base itself.</p>"
+          : "<p>Units came out of the hidden base. The base must be in the activated system or next to it, and your candidate list has shrunk to match. Send troops there now.</p>";
+      },
+      table: "The same leak: units moving to or from the Rebel Base space tell the Empire the base is in or next to that system."
+    },
+    {
+      id: "battle", title: "Fight only when the fight pays",
+      when: function (c) { return evOf(c, "battle"); },
+      body: function (u) {
+        return u === "I" ? "<p>You cannot out-trade the Dominion: it builds more every round. Take a battle when it scores an objective (Hit and Run, Supply Raid, Ambush, Liberation), retakes a system, or protects the base. Otherwise move away from big stacks.</p><p>Bring your best tactics leader to the fights you pick: each point is an extra die every battle round.</p>"
+          : "<p>Battles thin the Insurgents, but the clock matters more than the body count. A fight that costs you the troops you needed for next round's search is a loss even if you win it.</p><p>Watch for Insurgent strikes that score objectives: a small fleet sitting alone is an invitation for Hit and Run.</p>";
+      },
+      table: "Same priorities. In the real game you also choose tactic cards and can retreat if a leader is present, which makes picking your fights even more important."
+    },
+    {
+      id: "objective", title: "Every objective is a round taken from the hunter",
+      when: function (c) { return evOf(c, "objective"); },
+      body: function (u) {
+        return "<p>Reputation just moved. The gap is now <b>" + gap(c_s()) + "</b>.</p>" +
+          (u === "I" ? "<p>Plan the next one now: look at your hand and pick the objective you can finish soonest. Later cards (stage II) are worth 2.</p>"
+                     : "<p>You cannot see the Insurgents' hand, but you can see their opportunities. Undefended small stacks invite Hit and Run, unguarded home systems invite sabotage, and a string of loyal systems means a loyalty objective is close.</p>");
+      },
+      table: "The Rebels hold objective cards and draw more each round. Deck order is stage I, then II, then III, and the later cards are worth more."
+    },
+    {
+      id: "sabotage", title: "Sabotage makes the hunter spend actions at home",
+      when: function (c) { return evOf(c, "sabotage", "I"); },
+      body: function (u) {
+        return u === "I" ? "<p>A sabotaged system builds nothing until the Dominion activates it. Every leader it spends clearing sabotage is a leader that is not searching for you. Time it before the Refresh and aim at systems that make the troops it needs.</p>"
+          : "<p>A sabotaged system builds nothing until you activate it. Clearing it costs a leader, so weigh it: lost production every round versus one round of search.</p>";
+      },
+      table: "Sabotage stops a system from building. Forum veterans aim it at stormtrooper systems right before a build, because ground units are the Empire's bottleneck."
+    },
+    {
+      id: "exposed", title: "Your leader is standing next to the enemy",
+      when: function (c) {
+        if (c.user !== "I" || c.s.phase !== "command") return false;
+        var g = window.__g;
+        return D.leadersOf(g, "D", "mission").length > 0 && g.s.leaders.some(function (L) { return L.side === "I" && L.status === "placed" && typeof L.loc === "number" && D.anyUnits(g, L.loc, "D"); });
+      },
+      body: function () {
+        return "<p>One of your leaders is in a system with Dominion units, and the Dominion still has a hidden mission. If it is a Hunt, that leader can be captured and miss two rounds. Keep a reserve leader with good intrigue to oppose it.</p>";
+      },
+      table: "Capture missions in the real game target Rebel leaders in systems with Imperial units, so know where your mission leaders end up."
+    },
+    {
+      id: "net-i", title: "The net is closing: relocate before contact",
+      when: function (c) { return c.user === "I" && !c.s.baseRevealed && c.s.phase !== "setup" && D.hunterCandidates(window.__g).length <= 4; },
+      body: function () {
+        var g = window.__g, after = window.DrillBots.Ins.candidatesAfterRelocation(g);
+        return "<p>The Dominion is down to <b>" + D.hunterCandidates(g).length + "</b> possible systems. Relocate must be assigned during Assignment, so decide now.</p>" +
+          "<ul class='tight'><li>After a relocation it would have about <b>" + after + "</b> candidates again: every undrawn probe card without Dominion units.</li><li>Units in the old base are left there and exposed, and the new base starts empty.</li><li>Move <b>before</b> its troops are one jump away. Moving with them at the door is often too late.</li></ul>";
+      },
+      table: "Rapid Mobilization works the same way: the new site comes from the probe deck, and units in the base space are stranded at the old location."
+    },
+    {
+      id: "net-d", title: "Close the net",
+      when: function (c) { return c.user === "D" && !c.s.baseRevealed && c.s.phase !== "setup" && D.hunterCandidates(window.__g).length <= 4; },
+      body: function () {
+        return "<p>Only <b>" + D.hunterCandidates(window.__g).length + "</b> systems remain. Two things matter now:</p><ul class='tight'><li>Get troops next to every remaining candidate, so one activation can land on any of them.</li><li>Relocation can only go to systems with no Dominion units and an undrawn probe card. Parking units on those systems blocks the escape routes.</li></ul>";
+      },
+      table: "Experienced Imperial players spread small forces onto likely relocation targets right before the Rebels can move."
+    },
+    {
+      id: "decree", title: "A Decree searches without landing troops",
+      when: function (c) { return evOf(c, "loyalty", "D"); },
+      body: function (u) {
+        return u === "D" ? "<p>Dominion loyalty in the base system reveals the base, so a successful Decree on a candidate either finds the base or rules the system out, and it adds production either way.</p>"
+          : "<p>Dominion loyalty in your base system would reveal it. Oppose Decrees aimed at your base, but oppose some others too: if you only ever oppose one system, that is a tell.</p>";
+      },
+      table: "Same rule: Imperial loyalty in the base's system forces the Rebels to reveal it."
+    },
+    {
+      id: "recruit", title: "The Dominion gets more actions as the game goes on",
+      when: function (c) { return evOf(c, "recruit", "D"); },
+      body: function (u) {
+        return u === "I" ? "<p>The Dominion just gained a leader: one more activation or opposition every round from now on. Your best rounds for scoring are the early ones, when it is short of actions.</p>"
+          : "<p>A new leader means one more search every round. Use the extra action to search, not to chase small Insurgent fleets.</p>";
+      },
+      table: "New leaders join both sides as the game goes on, and the Empire's action count usually grows faster."
+    },
+    {
+      id: "tempo", title: "The last word",
+      when: function (c) {
+        if (c.s.phase !== "command" || c.s.pending) return false;
+        var g = window.__g; return !D.canAct(g, D.other(c.user)) && D.canAct(g, c.user);
+      },
+      body: function () {
+        return "<p>Your opponent has no leaders left this round. Everything you do now happens with full information and no chance of a reply. Keeping one more leader in reserve than your opponent buys you this moment.</p>";
+      },
+      table: "Same: when one player runs out of leaders, the other takes all remaining actions in a row."
+    },
+    {
+      id: "reveal", title: "The base is revealed",
+      when: function (c) { return evOf(c, "reveal"); },
+      body: function (u) {
+        return u === "I" ? "<p>Every Insurgent troop in that system now defends it, and they hit on 3+. Your options: reinforce from next door, or Relocate next round if a leader with intrigue 2+ is free. Each round you survive is still a round off the clock.</p>"
+          : "<p>The base is found. Bring every troop that can reach it, and bring a high-tactics leader. Defenders hit on 3+, so attack with a clear majority. If you wait, a Relocate can take it away again.</p>";
+      },
+      table: "The units in the Rebel Base space move onto the board in that system and fight there; the base also has its own defenses."
+    },
+    {
+      id: "endgame", title: "Endgame: three rounds or fewer",
+      when: function (c) { return c.s.phase === "assign" && gap(c.s) <= 3 && !c.s.winner; },
+      body: function (u) {
+        return u === "I" ? "<p>Survive. Keep leaders in reserve to oppose Probes and Decrees, keep the base still, and only score if it is safe. You no longer need to win anything else.</p>"
+          : "<p>All in. Any mission that cannot find the base this round is wasted. Every reserve leader should move troops onto a candidate.</p>";
+      },
+      table: "The late game in Rebellion has the same shape: the Rebels turtle and the Empire throws everything at its best guesses."
+    }
+  ];
+
+  function c_s() { return window.__g.s; }
+  root.DrillLessons = L;
+})(typeof self !== "undefined" ? self : this);
+
+</script>
+<script>
+/* Sparring drill: page controller. Renders the map, rail and records, drives the bot, runs the coach. */
+(function () {
+  "use strict";
+  var D = window.Drill, B = window.DrillBots, LESSONS = window.DrillLessons, SYS = D.SYS, N = SYS.length;
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem("rsd:" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem("rsd:" + k, JSON.stringify(v)); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem("rsd:" + k); } catch (e) {} }
+  };
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function nm(i) { return SYS[i].n; }
+  function pct(p) { return Math.round(p * 100) + "%"; }
+  var SIDE = { I: "Insurgents", D: "Dominion" };
+  var MIS = D.MISSIONS;
+
+  // ------------------------------------------------------------------ app state
+  var A = {
+    g: null, user: "I", bot: "D", lvl: "veteran",
+    pickSide: "I", pickLvl: "veteran",
+    ui: { mode: "idle" }, seen: {}, queue: [], shown: null, suggestion: null, busy: false, overlay: true
+  };
+
+  function bootPreview() {
+    // A board at rest before any match: the starting position.
+    A.g = D.newGame({ seed: 1 }); window.__g = A.g; A.preview = true;
+  }
+
+  function startMatch(side, lvl) {
+    A.user = side; A.bot = D.other(side); A.lvl = lvl;
+    A.g = D.newGame({}); window.__g = A.g; A.preview = false;
+    A.ui = { mode: "idle" }; A.seen = {}; A.queue = []; A.shown = null; A.suggestion = null;
+    D.drainEvents(A.g);
+    after();
+    pump();
+  }
+
+  function save() {
+    if (!A.g || A.preview) return;
+    store.set("save", { s: A.g.s, user: A.user, lvl: A.lvl, seen: A.seen });
+  }
+  function resume() {
+    var sv = store.get("save", null);
+    if (!sv) return false;
+    A.g = D.restore(sv.s); window.__g = A.g; A.preview = false;
+    A.user = sv.user; A.bot = D.other(sv.user); A.lvl = sv.lvl; A.seen = sv.seen || {};
+    A.ui = { mode: "idle" }; A.queue = []; A.shown = null; A.suggestion = null;
+    render(); pump();
+    return true;
+  }
+
+  // ------------------------------------------------------------------ bot pump
+  function botDue() {
+    var s = A.g.s, b = A.bot;
+    if (A.preview || s.winner) return false;
+    if (s.phase === "setup") return b === "I";
+    if (s.phase === "assign") return !s.assigned[b];
+    if (s.phase === "command") {
+      if (s.pending) return D.other(s.pending.side) === b;
+      return s.turn === b;
+    }
+    return false;
+  }
+  function addWhy(at, side, text) {
+    if (!text) return;
+    A.g.s.log.splice(at, 0, { round: A.g.s.round, side: side, kind: "why", text: text });
+  }
+  function botStep() {
+    var g = A.g, s = g.s, b = A.bot, lvl = A.lvl, at = s.log.length;
+    if (s.phase === "setup") { var pb = B.Ins.placeBase(g, lvl); D.placeBase(g, pb.sys); return; }
+    if (s.phase === "assign") { D.submitAssignment(g, b, B.BOT[b].assign(g, lvl).list); return; }
+    if (s.pending) { var op = B.BOT[b].oppose(g, lvl); D.oppose(g, b, op.leader); if (op.leader) addWhy(at + 1, b, op.why); return; }
+    var a = B.BOT[b].command(g, lvl);
+    B.act(g, b, a);
+    if (a.type !== "pass") addWhy(at, b, a.why);
+  }
+  function pump() {
+    if (A.busy || !botDue()) return;
+    A.busy = true; render();
+    var s = A.g.s, delay = s.phase === "command" ? 750 : 250;
+    setTimeout(function () {
+      try { botStep(); } catch (e) { console.error(e); }
+      A.busy = false;
+      after();
+      pump();
+    }, delay);
+  }
+
+  // After any state change: coach checks, save, render.
+  function after() {
+    var ev = D.drainEvents(A.g);
+    if (!A.preview) checkLessons(ev);
+    A.suggestion = null;
+    var s = A.g.s;
+    if (A.ui.mode === "assign" && s.phase !== "assign") A.ui = { mode: "idle" };
+    if (A.ui.mode !== "idle" && A.ui.mode !== "assign" && !(s.phase === "command" && s.turn === A.user && !s.pending)) A.ui = { mode: "idle" };
+    save();
+    render();
+  }
+
+  function userDo(fn) {
+    try { fn(); } catch (e) { flash(e.message); return; }
+    A.ui = { mode: "idle" };
+    after(); pump();
+  }
+  var flashMsg = null;
+  function flash(t) { flashMsg = t; render(); setTimeout(function () { flashMsg = null; render(); }, 3500); }
+
+  // ------------------------------------------------------------------ coach
+  function checkLessons(ev) {
+    var ctx = { g: A.g, s: A.g.s, user: A.user, ev: ev };
+    LESSONS.forEach(function (L) {
+      if (A.seen[L.id]) return;
+      var hit = false;
+      try { hit = L.when(ctx); } catch (e) { hit = false; }
+      if (hit) {
+        A.seen[L.id] = { round: A.g.s.round, html: L.body(A.user) };
+        A.queue.push(L.id);
+      }
+    });
+    if (!A.shown && A.queue.length) A.shown = A.queue.shift();
+  }
+  function lessonById(id) { for (var i = 0; i < LESSONS.length; i++) if (LESSONS[i].id === id) return LESSONS[i]; return null; }
+
+  function suggest() {
+    var g = A.g, s = g.s, u = A.user, BOT = B.BOT[u];
+    if (s.phase === "setup" && u === "I") {
+      var pb = B.Ins.placeBase(g, "veteran");
+      A.suggestion = { text: "Hide the base at <b>" + nm(pb.sys) + "</b>. " + esc(pb.why), apply: function () { userDo(function () { D.placeBase(g, pb.sys); }); }, label: "Hide it at " + nm(pb.sys) };
+    } else if (s.phase === "assign") {
+      var as = BOT.assign(g, "veteran"), ch = {};
+      as.list.forEach(function (a) { ch[a.leader] = a.mission; });
+      A.suggestion = { text: esc(as.why), apply: function () { A.ui = { mode: "assign", choice: ch }; A.suggestion = null; render(); }, label: "Fill in this split" };
+    } else if (s.phase === "command" && s.pending && D.other(s.pending.side) === u) {
+      var op = BOT.oppose(g, "veteran");
+      A.suggestion = { text: esc(op.why || "Let it through."), apply: function () { userDo(function () { D.oppose(g, u, op.leader); }); }, label: op.leader ? "Oppose with " + D.leader(g, op.leader).name : "Let it through" };
+    } else if (s.phase === "command" && s.turn === u) {
+      var a = BOT.command(g, "veteran");
+      A.suggestion = { text: esc(a.why), apply: function () { userDo(function () { B.act(g, u, a); }); }, label: a.type === "pass" ? "Pass" : "Do it" };
+    }
+    render();
+  }
+
+  // ------------------------------------------------------------------ rendering: map
+  var EDGE_LIST = [];
+  SYS.forEach(function (a) { a.adj.forEach(function (b) { if (a.id < b) EDGE_LIST.push([a.id, b]); }); });
+
+  function pickTargets() {
+    var g = A.g, s = g.s, ui = A.ui, out = {};
+    if (A.preview) return null;
+    if (s.phase === "setup" && A.user === "I") { D.validBaseSites(g).forEach(function (i) { out[i] = 1; }); return out; }
+    if (ui.mode === "pickActivate") { activationTargets().forEach(function (i) { out[i] = 1; }); return out; }
+    if (ui.mode === "pickMission") { ui.targets.forEach(function (t) { out[typeof t === "number" ? t : t.sys] = 1; }); return out; }
+    return null;
+  }
+  function activationTargets() {
+    var g = A.g, s = g.s, u = A.user, out = [];
+    for (var i = 0; i < N; i++) {
+      if (!D.activatable(g, u, i)) continue;
+      if (D.origins(g, u, i).length || (u === "D" && s.sab[i] && s.loy[i] === "D")) out.push(i);
+    }
+    return out;
+  }
+
+  function chip(side, sh, tr, x, y) {
+    if (!sh && !tr) return "";
+    var w = 6 + (sh ? 26 : 0) + (tr ? 26 : 0), h = "", cx = x + 4;
+    h += "<g class='chip chip-" + side + "'><rect x='" + x + "' y='" + (y - 9) + "' width='" + w + "' height='18' rx='4'/>";
+    if (sh) { h += "<path class='ico' d='M" + (cx + 1) + " " + (y + 4) + " L" + (cx + 5) + " " + (y - 5) + " L" + (cx + 9) + " " + (y + 4) + "Z'/><text x='" + (cx + 11) + "' y='" + (y + 4.5) + "'>" + sh + "</text>"; cx += 26; }
+    if (tr) { h += "<rect class='ico' x='" + (cx + 1) + "' y='" + (y - 4) + "' width='8' height='8' style='fill:var(--on-accent)'/><text x='" + (cx + 11) + "' y='" + (y + 4.5) + "'>" + tr + "</text>"; }
+    return h + "</g>";
+  }
+  function chipW(sh, tr) { return (sh || tr) ? 6 + (sh ? 26 : 0) + (tr ? 26 : 0) : 0; }
+
+  function renderMap() {
+    var g = A.g, s = g.s, v = D.view(g, A.user), tg = pickTargets(), h = "";
+    var showOverlay = A.overlay && !A.preview && s.phase !== "setup" && s.phase !== "over" && !s.baseRevealed;
+    var cands = {}; if (showOverlay) v.candidates.forEach(function (i) { cands[i] = 1; });
+    EDGE_LIST.forEach(function (e) { var a = SYS[e[0]], b = SYS[e[1]]; h += "<line class='edge' x1='" + a.x + "' y1='" + a.y + "' x2='" + b.x + "' y2='" + b.y + "'/>"; });
+    var oldBases = {};
+    if (A.user === "I" || s.phase === "over") s.baseHistory.forEach(function (b) { if (b.sys !== s.base) oldBases[b.sys] = 1; });
+    else s.log.forEach(function (e) { if (e.kind === "relocate" && e.data) oldBases[e.data.old] = 1; });
+    SYS.forEach(function (sy) {
+      var i = sy.id, u = s.u[i], cls = ["sys"];
+      if (!sy.p) cls.push("remote");
+      if (s.loy[i] === "I") cls.push("loy-I"); else if (s.loy[i] === "D") cls.push("loy-D");
+      if (tg) cls.push(tg[i] ? "pick" : "dim");
+      if (A.ui.mode === "moves" && A.ui.sys === i) cls.push("sel");
+      var reason = showOverlay && !sy.core ? D.ruledOutReason(g, i) : null;
+      if (reason) cls.push("out");
+      var label = sy.n + (sy.p ? ", populous" : ", remote") + (s.loy[i] ? ", " + SIDE[s.loy[i]] + "-loyal" : "");
+      h += "<g class='" + cls.join(" ") + "' data-sys='" + i + "' transform='translate(" + sy.x + "," + sy.y + ")'" + (tg && tg[i] ? " tabindex='0' role='button' aria-label='" + esc(label) + "'" : "") + ">";
+      if (cands[i]) h += "<circle class='cand' r='26'/>";
+      if (tg && tg[i]) h += "<circle class='pickring' r='29'/>";
+      if (sy.core) h += "<circle class='core-ring' r='25'/>";
+      h += "<circle class='body' r='" + (sy.p ? 20 : 15) + "'/>";
+      if (sy.throne) h += "<path class='star' d='M0 -9 L2.6 -2.8 L9 -2.8 L3.9 1.2 L5.8 7.6 L0 3.8 L-5.8 7.6 L-3.9 1.2 L-9 -2.8 L-2.6 -2.8Z'/>";
+      if (v.base === i) h += "<path class='basemark' d='M-8 7 L-8 -1 L0 -8 L8 -1 L8 7Z'/>";
+      else if (oldBases[i]) h += "<path class='basemark-old' d='M-7 6 L-7 -1 L0 -7 L7 -1 L7 6Z'/>";
+      if (s.sab[i]) h += "<g class='sab' transform='translate(16,14)'><circle r='8'/><text y='3.5'>S</text></g>";
+      h += "<text class='nm' y='" + (sy.p ? 44 : 39) + "'>" + sy.n + "</text>";
+      if (reason) h += "<text class='why' y='" + (sy.p ? 57 : 52) + "'>" + ({ probe: "probe card", searched: "searched", excluded: "start rule", movement: "movement" }[reason] || reason) + "</text>";
+      else if (cands[i]) h += "<text class='why' y='" + (sy.p ? 57 : 52) + "' style='fill:var(--clock)'>possible</text>";
+      var wI = chipW(u.Is, u.It), wD = chipW(u.Ds, u.Dt);
+      if (wI && wD) { h += chip("I", u.Is, u.It, -wI - 2, -33); h += chip("D", u.Ds, u.Dt, 2, -33); }
+      else if (wI) h += chip("I", u.Is, u.It, -wI / 2, -33);
+      else if (wD) h += chip("D", u.Ds, u.Dt, -wD / 2, -33);
+      // leaders standing here
+      var li = 0, ld = 0;
+      s.leaders.forEach(function (L) {
+        if (L.status !== "placed" || L.loc !== i) return;
+        var x = L.side === "I" ? -31 : 31, y = 2 + (L.side === "I" ? li++ : ld++) * 16;
+        h += "<g class='ldr ldr-" + L.side + "' transform='translate(" + x + "," + y + ")'><title>" + esc(L.name) + "</title><circle r='8'/><text y='3.5'>" + L.name.split(" ").map(function (w) { return w[0]; }).join("") + "</text></g>";
+      });
+      h += "</g>";
+    });
+    $("map").innerHTML = h;
+    var lab = $("overlayLabel");
+    lab.textContent = A.user === "D" ? "Show where the base could be" : "Show what the hunter knows";
+  }
+
+  // ------------------------------------------------------------------ rendering: clock
+  function renderClock() {
+    var s = A.g.s, h = "";
+    for (var i = 1; i <= 16; i++) {
+      h += "<div class='cell" + (i > s.time && i < s.rep ? " gap" : "") + "'>" + i;
+      if (i === s.time) h += "<span class='tok t' title='Time'>T</span>";
+      if (i === s.rep) h += "<span class='tok r' title='Reputation'>R</span>";
+      h += "</div>";
+    }
+    $("track").innerHTML = h;
+    var gp = Math.max(0, s.rep - s.time);
+    $("gapNum").textContent = gp;
+    $("gapText").textContent = (gp === 1 ? "round" : "rounds") + " left for the Dominion if the Insurgents never score again. Each objective takes one or two more.";
+    $("roundLabel").textContent = A.preview ? "Starting position" : "Round " + s.round;
+  }
+
+  // ------------------------------------------------------------------ rendering: coach
+  function renderCoach() {
+    var h = "<div class='row between'><h2>Coach</h2>";
+    var canSuggest = !A.preview && !A.g.s.winner && !A.busy && userDecision();
+    h += canSuggest ? "<button class='btn' data-act='suggest'>What would a veteran do?</button>" : "";
+    h += "</div>";
+    if (A.suggestion) {
+      h += "<div class='suggest'><div>" + A.suggestion.text + "</div><div class='row'><button class='btn primary' data-act='applySug'>" + esc(A.suggestion.label) + "</button><button class='btn ghost' data-act='dropSug'>Dismiss</button></div></div>";
+    }
+    if (A.preview) {
+      h += "<div class='lesson'><h3>Pick a side to begin</h3><p>New to Rebellion? Start as the <b class='reb'>Insurgents</b>: hiding, scoring and timing a relocation teach the most about how the clock works. Then switch sides and hunt.</p><p>The coach will step in each time a new idea comes up, and the button above shows what an experienced player would do in your position, with the reason.</p></div>";
+    } else if (A.shown) {
+      var L = lessonById(A.shown), seen = A.seen[A.shown];
+      h += "<div class='lesson'><span class='eyebrow'>Lesson · round " + seen.round + "</span><h3>" + esc(L.title) + "</h3>" + seen.html +
+        "<div class='table-note'><b>At the Rebellion table</b>" + esc(L.table) + "</div>";
+      h += "<div class='row'><button class='btn' data-act='nextLesson'>" + (A.queue.length ? "Next lesson (" + A.queue.length + " more)" : "Got it") + "</button></div></div>";
+    } else {
+      h += "<p class='small'>" + esc(statusLine()) + "</p>";
+    }
+    var ids = Object.keys(A.seen);
+    if (ids.length && !A.preview) {
+      h += "<details><summary class='small'>Field notes (" + ids.length + " lessons)</summary><div class='notes'>" +
+        ids.map(function (id) { return "<button data-act='showLesson' data-id='" + id + "'>" + esc(lessonById(id).title) + "</button>"; }).join("") + "</div></details>";
+    }
+    $("coachPanel").innerHTML = h;
+  }
+  function userDecision() {
+    var s = A.g.s, u = A.user;
+    if (s.phase === "setup") return u === "I";
+    if (s.phase === "assign") return !s.assigned[u];
+    if (s.phase === "command") return s.pending ? D.other(s.pending.side) === u : s.turn === u;
+    return false;
+  }
+  function statusLine() {
+    var s = A.g.s, g = A.g;
+    if (s.winner) return "Match over. See the debrief below.";
+    var c = D.hunterCandidates(g).length;
+    if (A.user === "I") return "The Dominion has " + c + " candidate system" + (c === 1 ? "" : "s") + " for your base. Gap: " + (s.rep - s.time) + " rounds.";
+    return "Your base search: " + c + " candidate system" + (c === 1 ? "" : "s") + " left. Gap: " + (s.rep - s.time) + " rounds.";
+  }
+
+  // ------------------------------------------------------------------ rendering: action panel
+  function renderAct() {
+    var g = A.g, s = g.s, u = A.user, h = "";
+    if (A.preview) h = startPanel();
+    else if (s.winner) h = debrief();
+    else if (A.busy || botDue()) h = "<h2>" + SIDE[A.bot] + " are moving</h2><p class='small'>Watch the map and the log. Its reasoning appears in italics.</p>";
+    else if (s.phase === "setup") h = "<h2>Hide your base</h2><p>Click a highlighted system on the map, or pick one here. Your base cannot start in or next to a system with units.</p><div class='opts'>" +
+      D.validBaseSites(g).map(function (i) { return "<button data-act='base' data-sys='" + i + "'>" + nm(i) + (SYS[i].p ? "" : " (remote)") + "</button>"; }).join("") + "</div>";
+    else if (s.phase === "assign") h = assignPanel();
+    else if (s.phase === "command" && s.pending && D.other(s.pending.side) === u) h = opposePanel();
+    else if (s.phase === "command" && s.turn === u) h = commandPanel();
+    else h = "<p class='small'>Waiting.</p>";
+    if (flashMsg) h = "<div class='warn'><b>Not allowed:</b> " + esc(flashMsg) + "</div>" + h;
+    $("actPanel").innerHTML = h;
+    $("phaseLabel").textContent = A.preview ? "Starting position" : s.winner ? "Match over" : ({ setup: "Setup", assign: "Assignment phase", command: "Command phase", refresh: "Refresh" }[s.phase] || s.phase) + " · you are the " + SIDE[u];
+  }
+
+  function startPanel() {
+    var sv = store.get("save", null), h = "<h2>New sparring match</h2>";
+    if (sv && sv.s && !sv.s.winner) h += "<button class='btn block primary' data-act='resume'>Continue your match<span class='sub'>Round " + sv.s.round + " as the " + SIDE[sv.user] + "</span></button>";
+    h += "<div class='sides'>" +
+      "<button class='sidecard' style='--c:var(--rebel)' data-act='pickSide' data-side='I' aria-pressed='" + (A.pickSide === "I") + "'><h3>Insurgents</h3><p>Plays like the Rebels. Hide a base, score objectives, and relocate before the net closes.</p></button>" +
+      "<button class='sidecard' style='--c:var(--empire)' data-act='pickSide' data-side='D' aria-pressed='" + (A.pickSide === "D") + "'><h3>Dominion</h3><p>Plays like the Empire. Combine probe cards and troop landings to find the base before time runs out.</p></button></div>";
+    h += "<div class='row between'><span class='small'>Opponent</span><span class='seg'>" +
+      ["recruit", "veteran"].map(function (l) { return "<button data-act='pickLvl' data-lvl='" + l + "' aria-pressed='" + (A.pickLvl === l) + "'>" + (l === "recruit" ? "Recruit" : "Veteran") + "</button>"; }).join("") + "</span></div>";
+    h += "<button class='btn primary block' data-act='start'>Start as the " + SIDE[A.pickSide] + "</button>";
+    return h;
+  }
+
+  function poolOf(side, st) { return D.leadersOf(A.g, side, st); }
+
+  function assignPanel() {
+    var g = A.g, u = A.user, pool = poolOf(u, "pool");
+    if (A.ui.mode !== "assign") A.ui = { mode: "assign", choice: {} };
+    var ch = A.ui.choice, types = D.missionTypes(u), h = "<h2>Assign your leaders</h2><p class='small'>Missions are face down until you reveal them in the Command phase. Reserve leaders can activate a system or oppose.</p><div>";
+    pool.forEach(function (L) {
+      var cur = ch[L.id] || "reserve";
+      h += "<div class='arow'><div class='aname'><b>" + esc(L.name) + "</b><span class='stats'>intrigue " + L.int + " · tactics " + L.tac + "</span></div><div class='opts'>";
+      h += "<button data-act='choose' data-l='" + L.id + "' data-m='reserve' aria-pressed='" + (cur === "reserve") + "'>Reserve</button>";
+      types.forEach(function (t) {
+        var dis = t === "relocate" && (L.int < 2 || Object.keys(ch).some(function (k) { return k !== L.id && ch[k] === "relocate"; }));
+        h += "<button data-act='choose' data-l='" + L.id + "' data-m='" + t + "' aria-pressed='" + (cur === t) + "'" + (dis ? " disabled title='Needs intrigue 2+, one per round'" : "") + ">" + MIS[t].name + "</button>";
+      });
+      h += "</div></div>";
+    });
+    h += "</div>";
+    // live advice
+    var nMis = pool.filter(function (L) { return ch[L.id] && ch[L.id] !== "reserve"; }).length, res = pool.length - nMis;
+    var w = [];
+    if (res === 0) w.push("<b>No reserve.</b> You will not be able to move units or oppose a single mission this round.");
+    if (u === "D" && nMis > pool.length / 2) w.push("<b>Mission-heavy.</b> Troops find bases, and moving troops takes reserve leaders.");
+    if (u === "I") {
+      var dg = B.danger(g);
+      var hasRel = Object.keys(ch).some(function (k) { return ch[k] === "relocate"; });
+      if (dg.lvl >= 2 && !hasRel) w.push("<b>Danger:</b> " + esc(dg.why) + ". Consider a Relocate.");
+      Object.keys(ch).forEach(function (k) { var L = D.leader(g, k); if (ch[k] === "sabotage" && !D.missionTargets(g, "I", "sabotage").length) w.push("No system can be sabotaged right now."); if (L && L.int === 1 && ch[k] !== "reserve") w.push("<b>" + esc(L.name) + "</b> rolls one intrigue die; an opposed mission will usually fail."); });
+    }
+    if (w.length) h += "<div class='warn'>" + w.join("<br>") + "</div>";
+    h += "<div class='row'><button class='btn primary' data-act='submitAssign'>Confirm: " + nMis + " on missions, " + res + " in reserve</button></div>";
+    return h;
+  }
+
+  function opposePanel() {
+    var g = A.g, s = g.s, p = s.pending, Att = D.leader(g, p.leader), u = A.user;
+    var what = p.type === "hunt" ? "Hunt for " + D.leader(g, p.huntLeader).name + " in " + nm(p.sys) : MIS[p.type].name + " at " + nm(p.sys);
+    var h = "<h2>Oppose this mission?</h2><p><b>" + esc(Att.name) + "</b> (intrigue " + Att.int + ") attempts <b>" + esc(what) + "</b>.</p><p class='small'>" + esc(MIS[p.type].blurb) + "</p><div class='btnlist'>";
+    poolOf(u, "pool").forEach(function (O) {
+      var stop = 1 - D.missionOdds(Att.int, O.int), pinned = D.anyUnits(g, p.sys, u), exposed = u === "I" && D.anyUnits(g, p.sys, "D") && D.leadersOf(g, "D", "mission").length;
+      h += "<button class='btn block' data-act='oppose' data-l='" + O.id + "'>Oppose with " + esc(O.name) + " · " + pct(stop) + " to stop it<span class='sub'>" + O.int + " dice. Goes to " + nm(p.sys) + (pinned ? " and pins your units there" : "") + (exposed ? "; it could be hunted there" : "") + ".</span></button>";
+    });
+    h += "<button class='btn block ghost' data-act='oppose' data-l=''>Let it succeed<span class='sub'>Keep your leaders for something else.</span></button></div>";
+    return h;
+  }
+
+  function commandPanel() {
+    var g = A.g, s = g.s, u = A.user, ui = A.ui, h = "";
+    if (ui.mode === "moves") return movesPanel();
+    if (ui.mode === "pickActivate") {
+      return "<h2>Activate which system?</h2><p class='small'>Click a highlighted system. Your units next to it can move in. A battle follows if enemies are there.</p><div class='opts'>" +
+        activationTargets().map(function (i) { return "<button data-act='actSys' data-sys='" + i + "'>" + nm(i) + "</button>"; }).join("") + "</div><button class='btn ghost' data-act='cancel'>Cancel</button>";
+    }
+    if (ui.mode === "pickMission") {
+      var L = D.leader(g, ui.leader);
+      h = "<h2>" + MIS[ui.type].name + ": pick a target</h2><p class='small'>" + esc(MIS[ui.type].blurb) + "</p>";
+      if (ui.type === "relocate") h += "<p class='small'>Highlighted: systems the hunter has not ruled out with a probe card and that hold no Dominion units. Your choice stays secret.</p>";
+      h += "<div class='opts'>" + ui.targets.map(function (t) {
+        if (typeof t === "object") return "<button data-act='misTarget' data-t='" + t.leader + "'>" + esc(D.leader(g, t.leader).name) + " at " + nm(t.sys) + "</button>";
+        return "<button data-act='misTarget' data-t='" + t + "'>" + nm(t) + "</button>";
+      }).join("") + "</div>";
+      var warn = missionWarn(L, ui);
+      if (warn) h += "<div class='warn'>" + warn + "</div>";
+      return h + "<button class='btn ghost' data-act='cancel'>Cancel</button>";
+    }
+    var pool = poolOf(u, "pool"), mis = poolOf(u, "mission"), opp = D.other(u);
+    h = "<h2>Your turn</h2><p class='small'>" + SIDE[opp] + ": " + poolOf(opp, "pool").length + " in reserve, " + poolOf(opp, "mission").length + " on hidden missions.</p><div class='btnlist'>";
+    if (pool.length) h += "<button class='btn block' data-act='activate'>Activate a system<span class='sub'>Use one of " + pool.length + " reserve leader" + (pool.length === 1 ? "" : "s") + " to move units in and fight.</span></button>";
+    mis.forEach(function (L) {
+      var t = D.missionTargets(g, u, L.mission, L.id);
+      h += "<button class='btn block' data-act='reveal' data-l='" + L.id + "'" + (t.length ? "" : " disabled") + ">Reveal " + MIS[L.mission].name + " (" + esc(L.name) + ")<span class='sub'>" + (t.length ? esc(MIS[L.mission].blurb) : "No valid target right now.") + "</span></button>";
+    });
+    h += "<button class='btn block ghost' data-act='pass'>Pass<span class='sub'>" + (poolOf(opp, "mission").length && pool.length ? "Holding a reserve leader lets you oppose what is still hidden." : "End your part of the round if the other side also passes.") + "</span></button></div>";
+    return h;
+  }
+
+  function missionWarn(L, ui) {
+    var g = A.g, u = A.user, w = [];
+    if (u === "I" && (ui.type === "sway" || ui.type === "sabotage") && D.leadersOf(g, "D", "mission").length) {
+      var risky = ui.targets.filter(function (t) { return D.anyUnits(g, t, "D"); });
+      if (risky.length) w.push("Targets holding Dominion units (" + risky.map(nm).join(", ") + ") leave " + esc(L.name) + " exposed to a Hunt.");
+    }
+    return w.join("<br>");
+  }
+
+  function movesPanel() {
+    var g = A.g, s = g.s, u = A.user, ui = A.ui, sys = ui.sys, h = "";
+    var orig = D.origins(g, u, sys), pool = poolOf(u, "pool");
+    h += "<h2>Activate " + nm(sys) + "</h2>";
+    h += "<div class='row'><label class='small' for='lsel'>Leader</label><select class='lsel' id='lsel' data-act='leaderSel'>" + pool.map(function (L) { return "<option value='" + L.id + "'" + (L.id === ui.leader ? " selected" : "") + ">" + esc(L.name) + " (tactics " + L.tac + ")</option>"; }).join("") + "</select></div>";
+    h += "<div>";
+    orig.forEach(function (o) {
+      var m = ui.moves[o.from] || { s: 0, t: 0 };
+      var label = o.from === "base" ? "<b class='reb'>Hidden base</b>" : "From " + nm(o.from);
+      h += "<div class='mrow'><span>" + label + "</span>" +
+        "<span class='step'><button data-act='mv' data-f='" + o.from + "' data-k='s' data-d='-1' aria-label='fewer ships'>−</button><output>▲" + m.s + "/" + o.s + "</output><button data-act='mv' data-f='" + o.from + "' data-k='s' data-d='1' aria-label='more ships'>+</button></span>" +
+        "<span class='step'><button data-act='mv' data-f='" + o.from + "' data-k='t' data-d='-1' aria-label='fewer troops'>−</button><output>■" + m.t + "/" + o.t + "</output><button data-act='mv' data-f='" + o.from + "' data-k='t' data-d='1' aria-label='more troops'>+</button></span></div>";
+    });
+    h += "</div><p class='small'>Each ship carries two troops.</p>";
+    if (u === "I" && D.canEnterBaseBox(g, sys)) h += "<label class='toggle'><input type='checkbox' id='intoBase' data-act='intoBase'" + (ui.intoBase ? " checked" : "") + "> Move these units into the hidden base</label>";
+    // preview and warnings
+    var tot = { s: 0, t: 0 }, fromBase = false, bad = false;
+    Object.keys(ui.moves).forEach(function (f) { var m = ui.moves[f]; tot.s += m.s; tot.t += m.t; if (f === "base" && m.s + m.t > 0) fromBase = true; if (m.t > m.s * 2) bad = true; });
+    var w = [], info = [];
+    if (bad) w.push("<b>Not enough ships:</b> each ship carries two troops from the same system.");
+    if (fromBase) w.push("<b>This leaks.</b> Units leaving the hidden base tell the Dominion it is in " + nm(sys) + " or next to it.");
+    if (ui.intoBase) w.push("<b>This gives the base away.</b> Moving into the base means activating its system, so the Dominion will know it is in " + nm(sys) + ".");
+    var u0 = s.u[sys], enemy = u === "I" ? { s: u0.Ds, t: u0.Dt } : { s: u0.Is, t: u0.It };
+    var mine = u === "I" ? { s: u0.Is + tot.s, t: u0.It + tot.t } : { s: u0.Ds + tot.s, t: u0.Dt + tot.t };
+    if (enemy.s + enemy.t > 0 && tot.s + tot.t > 0 && !ui.intoBase) {
+      var Ld = D.leader(g, ui.leader), atBase = s.baseRevealed && sys === s.base;
+      var e = u === "I" ? B.estBattle(mine, enemy, Ld.tac, D.leaderTac(g, "D", sys, null), atBase ? 3 : 4, 4, 300) : B.estBattle(mine, enemy, Ld.tac, D.leaderTac(g, "I", sys, null), 4, atBase ? 3 : 4, 300);
+      var line = "Battle against " + D.unitStr(enemy.s, enemy.t) + ": about <b>" + pct(e.pWin) + "</b> to wipe them out. Expected losses: you " + e.lossA.toFixed(1) + ", them " + e.lossB.toFixed(1) + ".";
+      (e.pWin < 0.4 ? w : info).push(line + (e.pWin < 0.4 ? " Fight only when it pays." : ""));
+    }
+    if (u === "D" && tot.t > 0 && !s.baseRevealed && D.hunterCandidates(g).indexOf(sys) >= 0) info.push("Troops landing here search " + nm(sys) + ".");
+    if (u === "D" && tot.t === 0 && tot.s > 0 && !s.baseRevealed && D.hunterCandidates(g).indexOf(sys) >= 0) w.push("Ships alone cannot search. Bring troops.");
+    if (w.length) h += "<div class='warn'>" + w.join("<br>") + "</div>";
+    if (info.length) h += "<div class='okay'>" + info.join("<br>") + "</div>";
+    h += "<div class='row'><button class='btn primary' data-act='confirmMove'" + (bad ? " disabled" : "") + ">Activate " + nm(sys) + "</button><button class='btn ghost' data-act='cancel'>Cancel</button></div>";
+    return h;
+  }
+
+  function debrief() {
+    var g = A.g, s = g.s, won = s.winner === A.user, h = "";
+    h += "<h2>" + (won ? "You win" : "You lose") + "</h2><p>" + esc(s.winReason) + "</p>";
+    h += "<ul class='tight small'>";
+    h += "<li>Base sites: " + s.baseHistory.map(function (b) { return nm(b.sys) + " (round " + b.round + ")"; }).join(" → ") + ".</li>";
+    h += "<li>Probe cards drawn: " + s.probeHand.length + ". Systems searched by troops: " + s.log.filter(function (e) { return e.kind === "search"; }).length + ".</li>";
+    h += "<li>Objectives completed: " + (s.objScored.map(function (id) { return D.OBJ[id].name; }).join(", ") || "none") + ". Still in hand: " + (s.objHand.map(function (id) { return D.OBJ[id].name; }).join(", ") || "none") + ".</li>";
+    h += "<li>Relocations: " + s.relocations + ". Leaks from base movement: " + s.log.filter(function (e) { return e.kind === "leak"; }).length + ".</li></ul>";
+    h += "<p class='small'>" + esc(debriefTip()) + "</p>";
+    h += "<div class='btnlist'><button class='btn primary block' data-act='again'>Play again as the " + SIDE[A.user] + "</button><button class='btn block' data-act='switch'>Switch sides: play the " + SIDE[A.bot] + "</button><button class='btn block ghost' data-act='menu'>Back to the start screen</button></div>";
+    return h;
+  }
+  function debriefTip() {
+    var s = A.g.s, u = A.user;
+    if (u === "I") {
+      if (s.winner === "I") return "Next time, try the Dominion side: hunting teaches you what the Insurgent tells look like from the other chair.";
+      if (s.relocations === 0) return "The base fell without ever moving. Watch the hunter's candidate count and have a Relocate assigned before its troops are one jump away.";
+      if (s.objScored.length < 3) return "Too few objectives: the clock barely moved. Plan each round around the objective you can finish soonest.";
+      return "Close game. Look at the log for the round the hunter's candidate list collapsed: that is when to have moved.";
+    }
+    if (s.winner === "D") return "Next time, try the Insurgents: knowing what the hunter can deduce changes how you hide.";
+    if (s.probeHand.length < 8) return "Few probe cards drawn. A Probe mission most rounds is cheap information.";
+    return "Count the gap every round. Landings and probes together have to cover the candidates inside it.";
+  }
+
+  // ------------------------------------------------------------------ rendering: records
+  function renderLeaders() {
+    var g = A.g, s = g.s, u = A.user, h = "<h2>Leaders</h2>";
+    ["I", "D"].forEach(function (side) {
+      h += "<h3 class='" + (side === "I" ? "reb" : "imp") + "'>" + SIDE[side] + (side === u ? " (you)" : "") + "</h3><div>";
+      s.leaders.filter(function (L) { return L.side === side; }).forEach(function (L) {
+        var st = "", cls = "pill";
+        if (L.status === "pool") { st = "reserve"; cls += " go"; }
+        else if (L.status === "mission") { st = side === u || s.phase === "over" ? MIS[L.mission].name + " (face down)" : "hidden mission"; cls += " hid"; }
+        else if (L.status === "placed") st = L.loc === "base" ? "at the base" : "spent at " + nm(L.loc);
+        else if (L.status === "captured") { st = "captured (" + L.capturedFor + ")"; cls += " bad"; }
+        else if (L.status === "future") st = "joins round " + L.from;
+        h += "<div class='lrow'><span>" + esc(L.name) + " <span class='stats'>int " + L.int + " · tac " + L.tac + "</span></span><span class='" + cls + "'>" + esc(st) + "</span></div>";
+      });
+      h += "</div>";
+    });
+    var v = D.view(g, u);
+    if (v.baseBox && !A.preview && s.phase !== "setup") h += "<p class='small'>" + (s.baseRevealed ? "Your base at " + nm(s.base) + " is revealed." : "Hidden base at <b>" + nm(s.base) + "</b>: " + D.unitStr(v.baseBox.s, v.baseBox.t) + " off the map.") + "</p>";
+    $("leadersPanel").innerHTML = h;
+  }
+
+  function renderObjectives() {
+    var g = A.g, s = g.s, u = A.user, h = "<h2>Objectives</h2>";
+    if (u === "I" || s.phase === "over") {
+      if (!s.objHand.length) h += "<p class='small'>No objectives in hand.</p>";
+      s.objHand.forEach(function (id) {
+        var o = D.OBJ[id], ready = !A.preview && o.test(s);
+        h += "<div class='obj" + (ready ? " ready" : "") + "'><div class='t'><span>" + esc(o.name) + "</span><span class='mono'>+" + o.val + "</span></div><span class='small'>" + esc(o.text) + "</span>" + (ready ? "<span class='pill go'>met: scores at round end</span>" : "") + "</div>";
+      });
+      h += "<p class='small'>One objective per round. You draw a new card every round; " + s.objDeck.length + " left, stage II cards are worth 2.</p>";
+    } else {
+      h += "<p>The Insurgents hold <b>" + s.objHand.length + "</b> secret objective" + (s.objHand.length === 1 ? "" : "s") + ". They score at most one per round.</p>";
+      h += "<details><summary class='small'>What they could be holding</summary><div class='notes'>" + D.OBJECTIVES.map(function (o) { return "<span class='small'><b>" + esc(o.name) + "</b> (+" + o.val + "): " + esc(o.text) + "</span>"; }).join("") + "</div></details>";
+    }
+    if (s.objScored.length) h += "<p class='small'>Completed: " + s.objScored.map(function (id) { return esc(D.OBJ[id].name); }).join(", ") + ".</p>";
+    $("objPanel").innerHTML = h;
+  }
+
+  var KEY = { battle: 1, reveal: 1, win: 1, objective: 1, relocate: 1, capture: 1, leak: 1 };
+  function renderLog() {
+    var s = A.g.s, el = $("log"), h = "";
+    var items = A.preview ? [{ kind: "phase", text: "The match log appears here." }] : s.log.slice(-120);
+    items.forEach(function (e) {
+      var c = "le " + (e.side || "") + (e.kind === "why" ? " why" : "") + (e.kind === "phase" || e.kind === "setup" ? " phase" : "") + (KEY[e.kind] ? " key" : "");
+      h += "<div class='" + c + "'>" + esc(e.text) + "</div>";
+    });
+    var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    el.innerHTML = h;
+    if (atBottom || true) el.scrollTop = el.scrollHeight;
+  }
+
+  function render() {
+    renderMap(); renderClock(); renderCoach(); renderAct(); renderLeaders(); renderObjectives(); renderLog();
+  }
+
+  // ------------------------------------------------------------------ events
+  function startActivation(sys) {
+    var g = A.g, u = A.user, plan = B.planMoves(g, u, sys);
+    var moves = {}; plan.moves.forEach(function (m) { moves[m.from] = { s: m.s, t: m.t }; });
+    var enemy = D.anyUnits(g, sys, D.other(u));
+    var pool = poolOf(u, "pool").slice().sort(function (a, b) { return enemy ? b.tac - a.tac : a.tac - b.tac; });
+    A.ui = { mode: "moves", sys: sys, leader: pool[0].id, moves: moves, intoBase: false };
+    render();
+  }
+
+  function onSys(i) {
+    var g = A.g, s = g.s, ui = A.ui, tg = pickTargets();
+    if (!tg || !tg[i]) return;
+    if (s.phase === "setup") return userDo(function () { D.placeBase(g, i); });
+    if (ui.mode === "pickActivate") return startActivation(i);
+    if (ui.mode === "pickMission") {
+      var t = ui.targets.filter(function (x) { return (typeof x === "number" ? x : x.sys) === i; })[0];
+      var target = typeof t === "number" ? t : t.leader;
+      return userDo(function () { D.revealMission(g, A.user, ui.leader, target); });
+    }
+  }
+
+  document.addEventListener("click", function (ev) {
+    var sysEl = ev.target.closest && ev.target.closest("#map [data-sys]");
+    if (sysEl) { onSys(+sysEl.getAttribute("data-sys")); return; }
+    var b = ev.target.closest && ev.target.closest("[data-act]");
+    if (!b || b.tagName === "SELECT" || (b.tagName === "INPUT")) return;
+    var act = b.getAttribute("data-act"), g = A.g, u = A.user;
+    switch (act) {
+      case "pickSide": A.pickSide = b.getAttribute("data-side"); render(); break;
+      case "pickLvl": A.pickLvl = b.getAttribute("data-lvl"); render(); break;
+      case "start": startMatch(A.pickSide, A.pickLvl); break;
+      case "resume": resume(); break;
+      case "again": startMatch(A.user, A.lvl); break;
+      case "switch": startMatch(A.bot, A.lvl); break;
+      case "menu": store.del("save"); bootPreview(); A.seen = {}; A.shown = null; A.queue = []; render(); break;
+      case "suggest": suggest(); break;
+      case "applySug": if (A.suggestion) A.suggestion.apply(); break;
+      case "dropSug": A.suggestion = null; render(); break;
+      case "nextLesson": A.shown = A.queue.length ? A.queue.shift() : null; render(); break;
+      case "showLesson": A.shown = b.getAttribute("data-id"); render(); break;
+      case "base": userDo(function () { D.placeBase(g, +b.getAttribute("data-sys")); }); break;
+      case "choose":
+        A.ui.choice[b.getAttribute("data-l")] = b.getAttribute("data-m");
+        if (b.getAttribute("data-m") === "reserve") delete A.ui.choice[b.getAttribute("data-l")];
+        render(); break;
+      case "submitAssign":
+        var ch = A.ui.choice, list = Object.keys(ch).map(function (k) { return { leader: k, mission: ch[k] }; });
+        userDo(function () { D.submitAssignment(g, u, list); }); break;
+      case "oppose": var l = b.getAttribute("data-l") || null; userDo(function () { D.oppose(g, u, l); }); break;
+      case "activate": A.ui = { mode: "pickActivate" }; A.suggestion = null; render(); break;
+      case "actSys": startActivation(+b.getAttribute("data-sys")); break;
+      case "reveal":
+        var L = D.leader(g, b.getAttribute("data-l"));
+        A.ui = { mode: "pickMission", leader: L.id, type: L.mission, targets: D.missionTargets(g, u, L.mission, L.id) }; A.suggestion = null; render(); break;
+      case "misTarget":
+        var t = b.getAttribute("data-t"), tv = A.ui.type === "hunt" ? t : +t, lid = A.ui.leader;
+        userDo(function () { D.revealMission(g, u, lid, tv); }); break;
+      case "pass": userDo(function () { D.pass(g, u); }); break;
+      case "cancel": A.ui = { mode: "idle" }; render(); break;
+      case "mv":
+        var f = b.getAttribute("data-f"), k = b.getAttribute("data-k"), d = +b.getAttribute("data-d");
+        var o = D.origins(g, u, A.ui.sys).filter(function (x) { return String(x.from) === f; })[0];
+        var m = A.ui.moves[f] || { s: 0, t: 0 };
+        m[k] = Math.max(0, Math.min(o[k], m[k] + d));
+        if (k === "s" && m.t > m.s * 2) m.t = m.s * 2;
+        if (k === "t" && m.t > m.s * 2 && m.s < o.s) m.s = Math.min(o.s, Math.ceil(m.t / 2));
+        A.ui.moves[f] = m; render(); break;
+      case "confirmMove":
+        var ui = A.ui, mv = Object.keys(ui.moves).map(function (fr) { return { from: fr === "base" ? "base" : +fr, s: ui.moves[fr].s, t: ui.moves[fr].t }; }).filter(function (x) { return x.s + x.t > 0; });
+        if (ui.intoBase) userDo(function () { D.reinforceBase(g, ui.leader, mv.filter(function (x) { return x.from !== "base"; })); });
+        else userDo(function () { D.activate(g, u, ui.leader, ui.sys, mv); });
+        break;
+    }
+  });
+  document.addEventListener("change", function (ev) {
+    var t = ev.target;
+    if (t.id === "overlay") { A.overlay = t.checked; render(); }
+    if (t.id === "lsel") { A.ui.leader = t.value; render(); }
+    if (t.id === "intoBase") { A.ui.intoBase = t.checked; render(); }
+  });
+  document.addEventListener("keydown", function (ev) {
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target.closest && ev.target.closest("#map [data-sys]")) { ev.preventDefault(); onSys(+ev.target.getAttribute("data-sys")); }
+  });
+
+  // mission reference list
+  $("missionList").innerHTML = Object.keys(MIS).map(function (k) { var m = MIS[k]; return "<li><b class='" + (m.side === "I" ? "reb" : "imp") + "'>" + m.name + "</b>: " + esc(m.blurb) + "</li>"; }).join("");
+
+  bootPreview();
+  render();
+})();
+
+</script>
+
+</body>
+</html>

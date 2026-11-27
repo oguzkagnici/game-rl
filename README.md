@@ -10,7 +10,8 @@ folder with a rules engine in C++, a training loop in PyTorch, tests, logs and t
 | [`quoridor/`](quoridor/README.md) | Quoridor | Engine and training loop only, never trained | none |
 
 Also in this repo: [`rebellion-guide/`](rebellion-guide/README.md), an interactive learning guide for *Star Wars: Rebellion*
-(no trained agent; see its README for why).
+with a coached sparring drill against a scripted bot (an original simplified game, tuned by self-play; see its README for why
+it is not a trained agent).
 
 ## The approach
 

@@ -1,0 +1,360 @@
+<title>Rebellion Sparring Drill</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Play a coached sparring match against a bot to practise the core decisions of Star Wars: Rebellion.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a plotting table. The star map is the board on the left; the rail on the right reads top to bottom
+   like a turn: clock, coach, what you can do now. Records (leaders, objectives, log) sit under the map.
+   Same tokens as the Rebellion Field Manual so the two pages read as one guide. */
+:root {
+  --paper: #eceff3; --surface: #f8f9fb; --sunk: #e1e6ec; --ink: #17202a; --muted: #566372; --line: #c6ced8;
+  --rebel: #b4441c; --rebel-soft: #f6e1d8; --empire: #2f5679; --empire-soft: #dbe5ef;
+  --clock: #a86d0c; --clock-soft: #f4e6c8; --good: #23784a; --good-soft: #d9efe2; --bad: #b3261e; --bad-soft: #f7dcda;
+  --map: #e4e9ef; --edge: #b4bfcc; --on-accent: #ffffff;
+  --font-display: "Chakra Petch", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10151b; --surface: #171e26; --sunk: #0c1015; --ink: #e5eaf0; --muted: #97a3b1; --line: #2a3541;
+    --rebel: #ee7a4c; --rebel-soft: #3a2118; --empire: #8db4dc; --empire-soft: #1c2a38;
+    --clock: #e2ae4f; --clock-soft: #3a2e15; --good: #5cc28a; --good-soft: #15301f; --bad: #f2776c; --bad-soft: #3a1917;
+    --map: #0d1218; --edge: #2c3846; --on-accent: #10151b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10151b; --surface: #171e26; --sunk: #0c1015; --ink: #e5eaf0; --muted: #97a3b1; --line: #2a3541;
+  --rebel: #ee7a4c; --rebel-soft: #3a2118; --empire: #8db4dc; --empire-soft: #1c2a38;
+  --clock: #e2ae4f; --clock-soft: #3a2e15; --good: #5cc28a; --good-soft: #15301f; --bad: #f2776c; --bad-soft: #3a1917;
+  --map: #0d1218; --edge: #2c3846; --on-accent: #10151b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: var(--empire); text-underline-offset: 2px; }
+button, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--clock); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.wrap { max-width: 82rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.reb { color: var(--rebel); } .imp { color: var(--empire); }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; gap: 1rem; padding-block: 0.55rem; justify-content: space-between; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+.brand svg { width: 1.3rem; height: 1.3rem; }
+.topnav { display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.topnav a { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); text-decoration: none; padding: 0.3rem 0.55rem; border-radius: 4px; white-space: nowrap; }
+.topnav a:hover { color: var(--ink); background: var(--sunk); }
+
+header.intro { padding-block: 1.6rem 1.2rem; }
+header.intro .wrap { display: grid; gap: 0.5rem; }
+header.intro h1 { font-size: clamp(1.8rem, 4.5vw, 2.6rem); font-weight: 700; }
+header.intro p { color: var(--muted); max-width: 52rem; }
+
+/* the table */
+.table { display: grid; grid-template-columns: minmax(0, 1fr) 23.5rem; gap: 1.1rem; align-items: start; padding-bottom: 1.25rem; }
+.col { display: grid; gap: 1rem; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; min-width: 0; display: grid; gap: 0.75rem; }
+.panel h2 { font-size: 1.15rem; font-weight: 600; }
+.panel h3 { font-size: 1rem; font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.between { justify-content: space-between; }
+.small { font-size: 0.85rem; color: var(--muted); }
+
+/* map */
+.mapbox { background: var(--map); border: 1px solid var(--line); border-radius: var(--radius); position: relative; overflow: hidden; }
+.mapscroll { overflow-x: auto; }
+.mapbar { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; justify-content: space-between; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, var(--map)); }
+.mapbar .phase { font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+.toggle { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; }
+.toggle input { accent-color: var(--clock); width: 1rem; height: 1rem; }
+svg.map { display: block; width: 100%; min-width: 600px; height: auto; user-select: none; }
+svg.map text { font-family: var(--font-body); }
+.edge { stroke: var(--edge); stroke-width: 2; }
+.sys .body { fill: var(--surface); stroke: var(--muted); stroke-width: 2; }
+.sys.remote .body { fill: var(--map); stroke-dasharray: 4 3; }
+.sys.loy-I .body { fill: var(--rebel-soft); stroke: var(--rebel); stroke-width: 3; }
+.sys.loy-D .body { fill: var(--empire-soft); stroke: var(--empire); stroke-width: 3; }
+.sys .core-ring { fill: none; stroke: var(--empire); stroke-width: 1.5; }
+.sys .star { fill: var(--empire); }
+.sys .nm { font-size: 15px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+.sys .why { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); text-anchor: middle; letter-spacing: 0.04em; }
+.sys .cand { fill: none; stroke: var(--clock); stroke-width: 2.5; stroke-dasharray: 6 5; animation: spin 14s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.sys.out .nm { fill: var(--muted); }
+.sys .pickring { fill: none; stroke: var(--ink); stroke-width: 3; }
+.sys.pick { cursor: pointer; }
+.sys.pick:hover .pickring, .sys.pick:focus .pickring { stroke: var(--clock); stroke-width: 4; }
+.sys.dim { opacity: 0.38; }
+.sys.sel .pickring { stroke: var(--clock); stroke-width: 5; }
+.chip-I rect { fill: var(--rebel); } .chip-D rect { fill: var(--empire); }
+.chip text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; fill: var(--on-accent); }
+.chip .ico { fill: var(--on-accent); }
+.ldr circle { stroke: var(--surface); stroke-width: 2; }
+.ldr-I circle { fill: var(--rebel); } .ldr-D circle { fill: var(--empire); }
+.ldr text { font-family: var(--font-mono); font-size: 10px; font-weight: 600; fill: var(--on-accent); text-anchor: middle; }
+.sab circle { fill: var(--bad); } .sab text { font-family: var(--font-mono); font-size: 10px; font-weight: 700; fill: var(--on-accent); text-anchor: middle; }
+.basemark { fill: var(--rebel); }
+.basemark-old { fill: none; stroke: var(--rebel); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; padding: 0.55rem 0.8rem; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.sw { width: 0.85rem; height: 0.85rem; border-radius: 50%; display: inline-block; border: 2px solid; }
+
+/* clock */
+.track { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 2px; }
+.cell { position: relative; aspect-ratio: 1 / 1.5; background: var(--sunk); border-radius: 3px; font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); display: grid; justify-items: center; align-content: start; padding-top: 1px; }
+.cell.gap { background: var(--clock-soft); }
+.tok { position: absolute; left: 50%; transform: translateX(-50%); width: 80%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 0.7rem; color: var(--on-accent); }
+.tok.t { bottom: 42%; background: var(--clock); } .tok.r { bottom: 6%; background: var(--rebel); }
+.clockread { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.85rem; align-items: center; }
+.bignum { font-family: var(--font-display); font-weight: 700; font-size: 2.6rem; line-height: 1; color: var(--clock); font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; }
+
+/* coach */
+.coach { border-left: 4px solid var(--clock); }
+.coach .lesson h3 { font-size: 1.1rem; }
+.coach .lesson { display: grid; gap: 0.5rem; }
+.coach .lesson p { font-size: 0.95rem; }
+.table-note { font-size: 0.88rem; background: var(--sunk); border-radius: 4px; padding: 0.5rem 0.65rem; color: var(--ink); }
+.table-note b { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.1rem; font-weight: 500; }
+.suggest { background: var(--clock-soft); border-radius: 4px; padding: 0.6rem 0.7rem; font-size: 0.92rem; display: grid; gap: 0.5rem; }
+.warn { background: var(--bad-soft); border-radius: 4px; padding: 0.5rem 0.65rem; font-size: 0.88rem; color: var(--ink); }
+.warn b { color: var(--bad); }
+.okay { background: var(--good-soft); border-radius: 4px; padding: 0.5rem 0.65rem; font-size: 0.88rem; }
+
+/* buttons */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 0.5rem 0.8rem; cursor: pointer; font-size: 0.9rem; font-weight: 500; line-height: 1.2; text-align: left; }
+.btn:hover:not([disabled]) { border-color: var(--muted); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.reb { border-color: var(--rebel); color: var(--rebel); }
+.btn.imp { border-color: var(--empire); color: var(--empire); }
+.btn.ghost { background: transparent; }
+.btn.block { width: 100%; }
+.btn .sub { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 400; margin-top: 0.15rem; }
+.btn.primary .sub { color: color-mix(in srgb, var(--paper) 75%, transparent); }
+.btnlist { display: grid; gap: 0.45rem; }
+
+/* side picker */
+.sides { display: grid; gap: 0.6rem; }
+.sidecard { text-align: left; border: 1px solid var(--line); border-top: 4px solid var(--c); background: var(--surface); border-radius: var(--radius); padding: 0.75rem 0.85rem; cursor: pointer; display: grid; gap: 0.25rem; }
+.sidecard[aria-pressed="true"] { outline: 2px solid var(--c); outline-offset: 1px; }
+.sidecard h3 { color: var(--c); font-size: 1.05rem; }
+.sidecard p { font-size: 0.88rem; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+/* assignment */
+.arow { display: grid; gap: 0.35rem; padding: 0.55rem 0; border-top: 1px solid var(--line); }
+.arow:first-child { border-top: 0; padding-top: 0; }
+.aname { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+.aname b { font-weight: 600; }
+.stats { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.opts { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.opts button { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.82rem; cursor: pointer; }
+.opts button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.opts button[disabled] { opacity: 0.4; cursor: default; }
+
+/* moves */
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.4rem 0.6rem; align-items: center; padding: 0.4rem 0; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.step { display: inline-flex; align-items: center; gap: 0.2rem; font-family: var(--font-mono); font-size: 0.85rem; }
+.step button { width: 1.7rem; height: 1.7rem; border: 1px solid var(--line); background: var(--surface); border-radius: 4px; cursor: pointer; padding: 0; }
+.step output { min-width: 3.4ch; text-align: center; }
+select.lsel { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; padding: 0.3rem 0.4rem; max-width: 100%; }
+
+/* records */
+.records { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; align-items: start; }
+.lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.6rem; padding: 0.35rem 0; border-top: 1px solid var(--line); font-size: 0.88rem; align-items: baseline; }
+.lrow:first-of-type { border-top: 0; }
+.pill { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em; padding: 0.1rem 0.45rem; border-radius: 3px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.pill.go { background: var(--good-soft); color: var(--good); }
+.pill.hid { background: var(--clock-soft); color: var(--clock); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.obj { border: 1px solid var(--line); border-radius: 5px; padding: 0.5rem 0.65rem; display: grid; gap: 0.15rem; font-size: 0.88rem; }
+.obj.ready { border-color: var(--good); background: var(--good-soft); }
+.obj .t { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
+.logbox { max-height: 22rem; overflow-y: auto; display: grid; gap: 0.1rem; font-size: 0.86rem; align-content: start; }
+.le { padding: 0.25rem 0 0.25rem 0.6rem; border-left: 3px solid var(--line); }
+.le.I { border-left-color: var(--rebel); } .le.D { border-left-color: var(--empire); }
+.le.why { font-style: italic; color: var(--muted); border-left-style: dotted; }
+.le.phase { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--muted); border-left-color: transparent; padding-top: 0.55rem; }
+.le.key { font-weight: 600; }
+.notes { display: grid; gap: 0.3rem; }
+.notes button { text-align: left; border: 0; background: none; padding: 0.2rem 0; cursor: pointer; color: var(--empire); text-decoration: underline; text-underline-offset: 2px; font-size: 0.88rem; }
+
+/* reference sections */
+section.ref { padding-block: 2rem; border-top: 1px solid var(--line); }
+section.ref .wrap { display: grid; gap: 1rem; }
+section.ref h2 { font-size: 1.6rem; }
+.prose { max-width: 46rem; display: grid; gap: 0.75rem; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+.ref table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.ref th, .ref td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ref th { font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+ul.tight, ol.tight { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+footer { padding-block: 2rem 3rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); }
+footer .wrap { display: grid; gap: 0.5rem; }
+
+@media (max-width: 980px) { .table { grid-template-columns: minmax(0, 1fr); } .rail { order: -1; } }
+@media (max-width: 520px) { .bignum { font-size: 2rem; } .cell { font-size: 0.5rem; } }
+</style>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="currentColor" stroke-width="2"/></svg>
+      Sparring Drill
+    </div>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#play">Play</a>
+      <a href="#rules">Drill rules</a>
+      <a href="#mapping">Rebellion mapping</a>
+      <a href="index.html" id="guideLink">Field Manual</a>
+    </nav>
+  </div>
+</div>
+
+<header class="intro">
+  <div class="wrap">
+    <span class="eyebrow">Rebellion Field Manual · Practice</span>
+    <h1>Spar with a bot, with a coach at your shoulder</h1>
+    <p>An original mini-game built to train the decisions that decide <i>Star Wars: Rebellion</i>: hiding or hunting a base, reading the clock, spending leaders as actions, opposing missions, and choosing when to relocate. The map, names and rules are simplified and invented. The coach explains each idea as it comes up in play and tells you how it carries over to the real game. A match takes about 15 minutes.</p>
+  </div>
+</header>
+
+<main id="play">
+  <div class="wrap table">
+    <div class="col">
+      <div class="mapbox">
+        <div class="mapbar">
+          <span class="phase" id="phaseLabel">New match</span>
+          <label class="toggle"><input type="checkbox" id="overlay" checked> <span id="overlayLabel">Show what the hunter knows</span></label>
+        </div>
+        <div class="mapscroll"><svg class="map" id="map" viewBox="0 0 1000 650" role="img" aria-label="Star map"></svg></div>
+        <div class="legend" id="legend">
+          <span><i class="sw" style="border-color:var(--rebel);background:var(--rebel-soft)"></i>Insurgent-loyal</span>
+          <span><i class="sw" style="border-color:var(--empire);background:var(--empire-soft)"></i>Dominion-loyal</span>
+          <span><i class="sw" style="border-color:var(--muted);background:var(--surface)"></i>Populous, neutral</span>
+          <span><i class="sw" style="border-color:var(--muted);border-style:dashed;background:var(--map)"></i>Remote (no loyalty, no production)</span>
+          <span><i class="sw" style="border-color:var(--clock);border-style:dashed;background:transparent"></i>Base could still be here</span>
+          <span class="mono">▲ ships · ■ troops</span>
+        </div>
+      </div>
+      <div class="records">
+        <div class="panel" id="leadersPanel"></div>
+        <div class="panel" id="objPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="row between"><h2>Battle log</h2><span class="small">Bot reasoning in italics</span></div>
+        <div class="logbox" id="log" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <aside class="col rail">
+      <div class="panel" id="clockPanel">
+        <div class="row between"><h2>The clock</h2><span class="small mono" id="roundLabel">Round 1</span></div>
+        <div class="track" id="track"></div>
+        <div class="clockread"><div class="bignum" id="gapNum">13</div><p class="small" id="gapText">rounds left for the Dominion if the Insurgents never score.</p></div>
+      </div>
+      <div class="panel coach" id="coachPanel"></div>
+      <div class="panel" id="actPanel"></div>
+    </aside>
+  </div>
+</main>
+
+<section class="ref" id="rules">
+  <div class="wrap">
+    <span class="eyebrow">Reference</span>
+    <h2>Drill rules on one screen</h2>
+    <div class="cols">
+      <div class="prose">
+        <h3>Winning</h3>
+        <p><b class="imp">Dominion</b> wins by landing troops in the hidden base's system and leaving no Insurgent troops alive there.</p>
+        <p><b class="reb">Insurgents</b> win when the time marker reaches the reputation marker. Time starts at 1 and moves up one space every round. Reputation starts at 14 and moves down when the Insurgents complete objectives (at most one per round, checked at the end of the round).</p>
+        <h3>A round</h3>
+        <ol class="tight">
+          <li><b>Assignment.</b> Both sides secretly send leaders on missions or keep them in reserve.</li>
+          <li><b>Command.</b> Players alternate, Insurgents first. On your turn, either reveal a mission and pick its target, or use a reserve leader to <b>activate</b> a system, or pass. The phase ends when both pass in a row.</li>
+          <li><b>Refresh.</b> Objectives are checked, the Dominion draws a probe card, every loyal system builds a unit, leaders return, time advances.</li>
+        </ol>
+      </div>
+      <div class="prose">
+        <h3>Activation and pinning</h3>
+        <p>Put a reserve leader in a system. Your units in adjacent systems may move in; each ship carries two troops. If enemy units are there, a battle follows: every unit rolls a die and hits on 4+, ships against ships, troops against troops, and the leaders present add their tactics as extra dice.</p>
+        <p><b>Pinning:</b> units in a system that holds one of your leaders cannot move out for the rest of the round. That includes leaders sent there to attempt or oppose a mission.</p>
+        <h3>The hidden base</h3>
+        <p>The base's units sit off the map. They can move out to the base system or next to it, which tells the Dominion roughly where the base is. Dominion troops or Dominion loyalty in the base system reveal it. Revealed base defenders hit on 3+.</p>
+      </div>
+      <div class="prose">
+        <h3>Missions</h3>
+        <ul class="tight" id="missionList"></ul>
+        <p class="small">Missions succeed automatically unless the other side opposes with a reserve leader. Then each rolls intrigue dice (4+ succeeds) and the attempt must roll more successes. Ties go to the opposer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ref" id="mapping">
+  <div class="wrap">
+    <span class="eyebrow">Carry-over</span>
+    <h2>What the drill teaches about the real game</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>In the drill</th><th>At the Rebellion table</th><th>Same lesson?</th></tr></thead>
+        <tbody>
+          <tr><td>Insurgents / Dominion</td><td>Rebel Alliance / Galactic Empire</td><td>Yes: one side hides and runs the clock, the other hunts against it.</td></tr>
+          <tr><td>Time 1, reputation 14, objectives move reputation</td><td>The same starting markers on the time track; Rebel objective cards move reputation</td><td>Yes. Every objective is one round taken from the Empire.</td></tr>
+          <tr><td>Leaders: missions or reserve, one action each</td><td>Leaders on mission cards or in the leader pool</td><td>Yes, including opposing, pinning and the "last word" when one side runs out.</td></tr>
+          <tr><td>Hidden base and base units off the map</td><td>The Rebel base and the Rebel Base space</td><td>Yes. Moving units in or out of the base leaks its location.</td></tr>
+          <tr><td>Probe cards, troop searches, Decree</td><td>Probe cards, Imperial ground units, Imperial loyalty</td><td>Yes. Ships alone never find a base.</td></tr>
+          <tr><td>Relocate</td><td>Rapid Mobilization</td><td>Yes in spirit: move before contact, the new site comes from systems the Empire has not ruled out, units at the old site get stranded.</td></tr>
+          <tr><td>Sway, Sabotage, Hunt</td><td>Diplomacy-style missions, sabotage, capture missions</td><td>Yes in spirit. Real cards are more varied and need matching skill icons.</td></tr>
+          <tr><td>Intrigue / tactics</td><td>Skill icons / space and ground tactic values</td><td>Simplified to two numbers.</td></tr>
+          <tr><td>Ships carry two troops</td><td>Transport capacity on capital ships</td><td>Yes. Plan fleets around what they can carry.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cols">
+      <div class="prose">
+        <h3>Left out on purpose</h3>
+        <p>The Death Star and Imperial projects, action cards, tactic cards, unit types and their costs, the build queue, retreat, rescue missions and the combat dice system. Learn those from the Field Manual and the rulebook. The drill exists to make the strategic shape of the game feel familiar before your first real session.</p>
+      </div>
+      <div class="prose">
+        <h3>About the bots</h3>
+        <p>Both bots are scripted. They score each option with the same ideas the coach teaches and show their reasoning in the log. The Insurgent bot never mentions where its base is. Their numbers were tuned with 500 bot-against-bot games: the Insurgents win about 58% at Veteran level, and games last 7 to 9 rounds. "Recruit" makes noisier choices and opposes less often.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Unofficial study aid. <i>Star Wars: Rebellion</i> is a game by Fantasy Flight Games, © Lucasfilm Ltd. This drill is an original simplified game with its own map, names and rules, and contains no game components; you need the real game to play Rebellion.</p>
+    <p>Strategy sources: the Field Manual's playbooks, the FFG forum archive threads <a href="https://ffg-forum-archive.entropicdreams.com/topic/217680-general-rebel-strategy">General Rebel Strategy</a> and <a href="https://ffg-forum-archive.entropicdreams.com/topic/217790-i-need-a-better-strategy-with-the-empire">I need a better strategy with the Empire</a>, and the <a href="https://www.orderofgamers.com/downloads/StarWarsRebellion_v2.5.pdf">Esoteric Order of Gamers rules summary</a>.</p>
+  </div>
+</footer>
+
+<script>
+/*@ENGINE@*/
+</script>
+<script>
+/*@BOTS@*/
+</script>
+<script>
+/*@LESSONS@*/
+</script>
+<script>
+/*@APP@*/
+</script>
