@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rebellion Field Manual</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="An unofficial interactive guide to learning and winning Star Wars: Rebellion (base game).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a briefing dossier. One reading column with full-width "instrument" panels (clock, planner, trainer) set into it. */
+:root {
+  --paper: #eceff3;
+  --surface: #f8f9fb;
+  --sunk: #e1e6ec;
+  --ink: #17202a;
+  --muted: #566372;
+  --line: #c6ced8;
+  --rebel: #b4441c;
+  --rebel-soft: #f6e1d8;
+  --empire: #2f5679;
+  --empire-soft: #dbe5ef;
+  --clock: #a86d0c;
+  --clock-soft: #f4e6c8;
+  --good: #23784a;
+  --good-soft: #d9efe2;
+  --ok: #8a6410;
+  --ok-soft: #f3e8cc;
+  --bad: #b3261e;
+  --bad-soft: #f7dcda;
+  --s1: #84b9f3;
+  --s2: #2370cd;
+  --s3: #0f4a96;
+  --font-display: "Chakra Petch", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.1875rem;
+  --step-2: 1.5rem;
+  --step-3: 2rem;
+  --step-4: clamp(2.25rem, 6vw, 3.5rem);
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10151b; --surface: #171e26; --sunk: #0c1015; --ink: #e5eaf0; --muted: #97a3b1; --line: #2a3541;
+    --rebel: #ee7a4c; --rebel-soft: #3a2118; --empire: #8db4dc; --empire-soft: #1c2a38;
+    --clock: #e2ae4f; --clock-soft: #3a2e15; --good: #5cc28a; --good-soft: #15301f;
+    --ok: #dcb458; --ok-soft: #342a12; --bad: #f2776c; --bad-soft: #3a1917;
+    --s1: #1b64be; --s2: #519ced; --s3: #b6d5f8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10151b; --surface: #171e26; --sunk: #0c1015; --ink: #e5eaf0; --muted: #97a3b1; --line: #2a3541;
+  --rebel: #ee7a4c; --rebel-soft: #3a2118; --empire: #8db4dc; --empire-soft: #1c2a38;
+  --clock: #e2ae4f; --clock-soft: #3a2e15; --good: #5cc28a; --good-soft: #15301f;
+  --ok: #dcb458; --ok-soft: #342a12; --bad: #f2776c; --bad-soft: #3a1917;
+  --s1: #1b64be; --s2: #519ced; --s3: #b6d5f8;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; letter-spacing: 0.005em; }
+h2 { font-size: var(--step-3); font-weight: 700; }
+h3 { font-size: var(--step-1); font-weight: 600; }
+p { margin: 0; }
+a { color: var(--empire); text-underline-offset: 2px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--clock); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.wrap {
+  max-width: 68rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.prose { max-width: 42rem; display: grid; gap: 0.9rem; }
+.prose p { color: var(--ink); }
+.lede { font-size: var(--step-1); color: var(--muted); max-width: 40rem; }
+.reb { color: var(--rebel); }
+.imp { color: var(--empire); }
+
+/* top bar */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar .wrap { display: flex; align-items: center; gap: 1rem; padding-block: 0.6rem; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
+.brand-mark { width: 1.3rem; height: 1.3rem; flex: none; }
+.nav { display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em; text-decoration: none; color: var(--muted);
+  padding: 0.3rem 0.55rem; border-radius: 4px; white-space: nowrap;
+}
+.nav a:hover { color: var(--ink); background: var(--sunk); }
+
+/* hero */
+.hero { padding-block: 3.5rem 2.5rem; border-bottom: 1px solid var(--line); }
+.hero .wrap { display: grid; gap: 1.5rem; }
+.hero h1 { font-size: var(--step-4); font-weight: 700; max-width: 18ch; }
+.hero h1 .split { display: block; }
+.sides { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin-top: 0.5rem; }
+.side {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 1.1rem 1.2rem; display: grid; gap: 0.5rem; border-top: 4px solid var(--c);
+}
+.side h3 { color: var(--c); }
+.side .win { font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); }
+.side ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
+.disclaimer { font-size: var(--step--1); color: var(--muted); max-width: 46rem; }
+
+/* sections */
+section.block { padding-block: 3.25rem; border-bottom: 1px solid var(--line); }
+section.block > .wrap { display: grid; gap: 1.5rem; }
+.sec-head { display: grid; gap: 0.5rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem; min-width: 0; }
+.callout { border-left: 3px solid var(--clock); padding: 0.2rem 0 0.2rem 1rem; color: var(--ink); max-width: 44rem; }
+.callout strong { font-family: var(--font-display); font-weight: 600; }
+
+/* buttons */
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 0.5rem 0.85rem; cursor: pointer;
+  font-size: 0.9rem; font-weight: 500; line-height: 1.2;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.primary:hover { opacity: 0.9; }
+.btn.reb { border-color: var(--rebel); color: var(--rebel); }
+.btn.reb:hover { background: var(--rebel-soft); }
+.btn.imp { border-color: var(--empire); color: var(--empire); }
+.btn.imp:hover { background: var(--empire-soft); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 0.5rem 0.9rem; cursor: pointer; font-weight: 500; font-size: 0.9rem; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"].r { background: var(--rebel); color: #fff; }
+.seg button[aria-pressed="true"].i { background: var(--empire); color: var(--paper); }
+.seg button[aria-pressed="true"].n { background: var(--ink); color: var(--paper); }
+
+/* clock */
+.clock { display: grid; gap: 1.1rem; }
+.track { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
+.cell {
+  position: relative; aspect-ratio: 1 / 1.35; max-width: 100%; background: var(--sunk); border-radius: 3px;
+  display: grid; align-content: start; justify-items: center; padding-top: 0.2rem;
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted);
+}
+.cell.between { background: var(--clock-soft); }
+.tok {
+  position: absolute; left: 50%; transform: translateX(-50%); width: 72%; aspect-ratio: 1; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: clamp(0.6rem, 1.6vw, 0.9rem); color: #fff;
+  transition: left 0.25s;
+}
+.tok.t { bottom: 46%; background: var(--clock); }
+.tok.r { bottom: 8%; background: var(--rebel); }
+.clock-read { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: center; }
+.bignum { font-family: var(--font-display); font-weight: 700; font-size: 3.5rem; line-height: 1; color: var(--clock); font-variant-numeric: tabular-nums; min-width: 3ch; text-align: center; }
+.clock-read p { max-width: 38rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 1rem; font-size: var(--step--1); color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.dot { width: 0.8rem; height: 0.8rem; border-radius: 50%; display: inline-block; }
+.log { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); min-height: 1.3em; }
+
+/* round stepper */
+.phase-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.phase-tab {
+  text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.75rem 0.9rem; cursor: pointer;
+  display: grid; gap: 0.15rem;
+}
+.phase-tab .n { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.phase-tab .t { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; }
+.phase-tab[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--ink); }
+.phase-body { display: grid; gap: 0.75rem; }
+.who { font-size: 0.9rem; color: var(--muted); }
+.step { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0.75rem; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.step:first-of-type { border-top: 0; }
+.step-n { font-family: var(--font-mono); font-weight: 600; color: var(--muted); font-size: 0.9rem; padding-top: 0.1rem; }
+.step h4 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.35rem; }
+.step-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.6rem 1.25rem; }
+.step-cols .lab { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.15rem; }
+.step-cols .think { color: var(--ink); }
+.step-cols .think .lab { color: var(--clock); }
+
+/* leaders */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1.25rem; align-items: start; }
+.tokens { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-block: 0.75rem; }
+.leader {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 0.45rem 0.9rem 0.45rem 0.45rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500;
+}
+.leader .ic { width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; background: var(--sunk); color: var(--muted); }
+.leader[data-on="mission"] { border-color: var(--clock); }
+.leader[data-on="mission"] .ic { background: var(--clock); color: #fff; }
+.budget { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+.meter { background: var(--sunk); border-radius: var(--radius); padding: 0.7rem 0.85rem; }
+.meter .k { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.meter .v { font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1.1; }
+.verdict-line { font-weight: 600; font-family: var(--font-display); font-size: 1.05rem; }
+.diagram { width: 100%; height: auto; display: block; }
+.diagram text { font-family: var(--font-body); font-size: 13px; fill: var(--ink); }
+.diagram .small { font-size: 11.5px; fill: var(--muted); }
+
+/* playbooks */
+.plays { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; counter-reset: play; }
+.play { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; display: grid; gap: 0.45rem; align-content: start; }
+.play h3 { font-size: 1.08rem; display: flex; gap: 0.6rem; align-items: baseline; }
+.play h3::before { counter-increment: play; content: counter(play, decimal-leading-zero); font-family: var(--font-mono); font-size: 0.78rem; color: var(--c); font-weight: 600; }
+.play p { color: var(--muted); font-size: 0.95rem; }
+.play p b { color: var(--ink); font-weight: 600; }
+.faction-head { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+.tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 3px; border: 1px solid currentColor; }
+
+/* chart */
+.chart-wrap { overflow-x: auto; }
+.chart-svg { width: 100%; min-width: 26rem; height: auto; display: block; }
+.chart-svg text { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.chart-svg .lbl { font-family: var(--font-body); font-size: 12px; fill: var(--ink); font-weight: 500; }
+.chart-controls { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; margin-bottom: 0.75rem; }
+.chart-controls label { font-size: 0.9rem; color: var(--muted); }
+.tip {
+  position: absolute; pointer-events: none; background: var(--ink); color: var(--paper); border-radius: 5px; padding: 0.45rem 0.6rem;
+  font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.45; white-space: nowrap; transform: translate(-50%, -110%);
+}
+.chart-box { position: relative; }
+details.table-view { margin-top: 0.75rem; font-size: 0.85rem; }
+details.table-view summary { cursor: pointer; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* trainer */
+.trainer { display: grid; gap: 1rem; }
+.trainer-bar { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; justify-content: space-between; }
+.pips { display: flex; gap: 4px; flex-wrap: wrap; }
+.pip { width: 1.4rem; height: 0.45rem; border-radius: 2px; background: var(--sunk); }
+.pip.cur { background: var(--ink); }
+.pip.best { background: var(--good); }
+.pip.ok { background: var(--ok); }
+.pip.bad { background: var(--bad); }
+.scen { display: grid; gap: 1rem; }
+.scen-head { display: grid; gap: 0.35rem; }
+.scen-head h3 { font-size: var(--step-2); }
+.facts { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.fact { font-family: var(--font-mono); font-size: 0.75rem; background: var(--sunk); border-radius: 3px; padding: 0.2rem 0.5rem; color: var(--muted); }
+.opts { display: grid; gap: 0.6rem; }
+.opt {
+  text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 0.8rem 1rem; cursor: pointer;
+  display: grid; grid-template-columns: 1.8rem minmax(0, 1fr); gap: 0.6rem; align-items: start; font-size: 0.97rem;
+}
+.opt:hover:not([disabled]) { border-color: var(--ink); }
+.opt[disabled] { cursor: default; }
+.opt .k { font-family: var(--font-mono); font-weight: 600; color: var(--muted); }
+.opt .fb { display: block; margin-top: 0.45rem; color: var(--muted); font-size: 0.92rem; }
+.opt .badge { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-right: 0.4rem; }
+.opt.best { border-color: var(--good); background: var(--good-soft); }
+.opt.best .badge { color: var(--good); }
+.opt.ok { border-color: var(--ok); background: var(--ok-soft); }
+.opt.ok .badge { color: var(--ok); }
+.opt.bad { border-color: var(--bad); background: var(--bad-soft); }
+.opt.bad .badge { color: var(--bad); }
+.opt.picked { outline: 2px solid var(--ink); outline-offset: 1px; }
+.reply { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.75rem; align-items: start; background: var(--sunk); border-radius: var(--radius); padding: 0.85rem 1rem; }
+.reply .who-tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 3px; color: var(--paper); background: var(--muted); white-space: nowrap; }
+.principle { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; border-left: 3px solid var(--clock); padding-left: 0.9rem; }
+.summary-list { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+
+/* companion */
+.comp-top { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; }
+.stepper { display: inline-flex; align-items: center; gap: 0.4rem; }
+.stepper .lab { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 0.2rem; }
+.stepper button { width: 2rem; height: 2rem; border: 1px solid var(--line); background: var(--surface); border-radius: 4px; cursor: pointer; font-family: var(--font-mono); }
+.stepper output { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+.gap-chip { font-family: var(--font-mono); font-size: 0.85rem; padding: 0.35rem 0.7rem; border-radius: 4px; background: var(--clock-soft); color: var(--ink); }
+.gap-chip b { color: var(--clock); }
+.focus { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c, var(--clock)); border-radius: var(--radius); padding: 0.9rem 1rem; display: grid; gap: 0.3rem; }
+.focus .eyebrow { color: var(--c, var(--clock)); }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+.checkcol { display: grid; gap: 0.5rem; align-content: start; }
+.checkcol h3 { font-size: 1rem; display: flex; justify-content: space-between; gap: 0.5rem; }
+.checkcol h3 .mono { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+.check { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); gap: 0.55rem; align-items: start; font-size: 0.93rem; padding: 0.5rem 0.6rem; border-radius: 5px; background: var(--surface); border: 1px solid var(--line); cursor: pointer; }
+.check input { margin: 0.2rem 0 0; width: 1rem; height: 1rem; accent-color: var(--good); }
+.check:has(input:checked) { color: var(--muted); background: transparent; }
+.check:has(input:checked) span { text-decoration: line-through; text-decoration-color: var(--line); }
+details.setup { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.85rem 1rem; }
+details.setup summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; }
+details.setup[open] summary { margin-bottom: 0.75rem; }
+.setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; font-size: 0.92rem; }
+.setup-grid ul, .setup-grid ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+
+/* pitfalls */
+.pit-wrap { overflow-x: auto; }
+.pit td:first-child { font-weight: 500; width: 45%; }
+.pit td { font-size: 0.93rem; padding-block: 0.6rem; }
+
+footer { padding-block: 2.5rem 3rem; color: var(--muted); font-size: var(--step--1); }
+footer .wrap { display: grid; gap: 0.6rem; max-width: 68rem; }
+footer ul { margin: 0; padding-left: 1.1rem; }
+
+@media (max-width: 640px) {
+  .brand span.full { display: none; }
+  .phase-tabs { grid-template-columns: 1fr; }
+  .clock-read { grid-template-columns: 1fr; gap: 0.5rem; }
+  .bignum { text-align: left; }
+  .cell { font-size: 0.58rem; }
+  .budget { grid-template-columns: 1fr 1fr; }
+  section.block { padding-block: 2.5rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--clock)" stroke-width="2"/><path d="M12 6v6l4 2" stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <span>Field Manual</span>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#clock">Clock</a>
+      <a href="#round">Round</a>
+      <a href="#leaders">Leaders</a>
+      <a href="#rebels">Rebels</a>
+      <a href="#empire">Empire</a>
+      <a href="#trainer">Trainer</a>
+      <a href="#first-game">First game</a>
+      <a href="#pitfalls">Pitfalls</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Learning guide · Star Wars: Rebellion base game · 2 players</p>
+    <h1><span class="split">One side is hunting.</span> <span class="split">The other is running out the clock.</span></h1>
+    <p class="lede">Rebellion is two different games sharing one board. Most of what feels confusing in the rulebook makes sense once you know what each side is actually trying to do. This guide teaches that first, then the rules that serve it, then lets you practise decisions against a scripted opponent before your first real game.</p>
+    <div class="sides">
+      <div class="side" style="--c: var(--empire)">
+        <h3>The Galactic Empire</h3>
+        <p class="win">Wins by: conquering the hidden Rebel base</p>
+        <ul>
+          <li>Starts huge: fleets, troops, a Death Star.</li>
+          <li>Does not know where the base is. Learns it from probe cards, missions and clues.</li>
+          <li>Has a deadline. Every round that passes is one it doesn't get back.</li>
+        </ul>
+      </div>
+      <div class="side" style="--c: var(--rebel)">
+        <h3>The Rebel Alliance</h3>
+        <p class="win">Wins by: making the time and reputation markers meet</p>
+        <ul>
+          <li>Starts small and can't win a straight war.</li>
+          <li>Wins by staying hidden long enough and scoring objectives to speed up the clock.</li>
+          <li>Fights only when a fight pays: an objective, a freed system, a saved base.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="disclaimer">Unofficial fan-made study aid. Star Wars: Rebellion is a game by Fantasy Flight Games, © Lucasfilm Ltd. This page contains no game components; you need the game itself to play. Rules here follow the base-game Learn to Play booklet. When the Rules Reference or a card says otherwise, the card wins.</p>
+  </div>
+</section>
+
+<!-- CLOCK -->
+<section class="block" id="clock">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Concept 1 · The clock</p>
+      <h2>Every reputation point is a round the Empire loses</h2>
+    </div>
+    <div class="prose">
+      <p>The time track runs along the board. The <b class="mono" style="color:var(--clock)">time marker</b> starts on space 1 and moves forward one space at the end of every round. The <b class="mono reb">reputation marker</b> starts on space 14. When the Rebels score objectives, reputation moves <em>toward</em> the time marker. The moment both markers share a space, the Rebels win.</p>
+      <p>So the number that matters all game is the gap between them. Try it below.</p>
+    </div>
+    <div class="panel clock" id="clockPanel">
+      <div class="track" id="track" aria-label="Time track"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--clock)"></i>Time marker</span>
+        <span><i class="dot" style="background:var(--rebel)"></i>Reputation marker</span>
+        <span><i class="dot" style="background:var(--clock-soft);border-radius:2px"></i>Rounds the Empire still has</span>
+      </div>
+      <div class="clock-read">
+        <div class="bignum" id="gapNum" aria-live="polite">13</div>
+        <p id="gapText">rounds left for the Empire if the Rebels never score. Each round the time marker steps forward once. Each objective the Rebels score pulls reputation closer, so a Rebel who scores one point every round closes the gap twice as fast.</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="cRound" type="button">End a round</button>
+        <button class="btn reb" id="cScore1" type="button">Rebels score 1</button>
+        <button class="btn reb" id="cScore2" type="button">Rebels score 2</button>
+        <button class="btn" id="cReset" type="button">Reset</button>
+      </div>
+      <p class="log" id="cLog" aria-live="polite"></p>
+    </div>
+    <p class="callout"><strong>What this means for play.</strong> The Rebels should treat objectives as their real army. The Empire should check the gap every single round and ask: can my current plan find the base in that many rounds?</p>
+  </div>
+</section>
+
+<!-- ROUND -->
+<section class="block" id="round">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Concept 2 · Shape of a round</p>
+      <h2>Three phases, and what to think about in each</h2>
+    </div>
+    <div class="prose"><p>Every round has the same three phases in the same order. For each step you get the rule and, more usefully, what a good player is thinking at that moment.</p></div>
+    <div class="phase-tabs" role="tablist" id="phaseTabs"></div>
+    <div class="panel phase-body" id="phaseBody" role="tabpanel"></div>
+  </div>
+</section>
+
+<!-- LEADERS -->
+<section class="block" id="leaders">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Concept 3 · Leaders are actions</p>
+      <h2>You have only as many actions as you have leaders</h2>
+    </div>
+    <div class="prose">
+      <p>Every leader you own does exactly one thing per round. Either it goes on a mission during Assignment, or it stays in your pool and later does one of two things: <b>activate a system</b> (move units, start a battle) or <b>oppose</b> one enemy mission. Once used, it stays on the board until the round ends.</p>
+      <p>This is the real economy of the game. Toggle your leaders below to see how a split changes your round.</p>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <p class="eyebrow">Leader budget</p>
+        <div class="tokens" id="tokens"></div>
+        <div class="budget">
+          <div class="meter"><div class="k">On missions</div><div class="v" id="bMis">2</div></div>
+          <div class="meter"><div class="k">In the pool</div><div class="v" id="bPool">2</div></div>
+        </div>
+        <p class="verdict-line" id="bHead"></p>
+        <p id="bText" style="color:var(--muted)"></p>
+      </div>
+      <div class="panel" style="display:grid;gap:0.75rem">
+        <p class="eyebrow">The pinning rule</p>
+        <svg class="diagram" viewBox="0 0 420 190" role="img" aria-label="A fleet with its own leader in system A cannot move to system B this round">
+          <rect x="1" y="1" width="418" height="188" rx="6" fill="var(--sunk)"/>
+          <circle cx="105" cy="92" r="58" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+          <circle cx="320" cy="92" r="58" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+          <text x="105" y="22" text-anchor="middle">System A</text>
+          <text x="320" y="22" text-anchor="middle">System B</text>
+          <polygon points="80,96 100,84 100,108" fill="var(--empire)"/>
+          <polygon points="104,104 124,92 124,116" fill="var(--empire)"/>
+          <circle cx="110" cy="66" r="11" fill="var(--clock)"/>
+          <text x="110" y="70.5" text-anchor="middle" style="fill:#fff;font-weight:700;font-size:11px">L</text>
+          <line x1="168" y1="92" x2="255" y2="92" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>
+          <polygon points="255,85 266,92 255,99" fill="var(--muted)"/>
+          <line x1="203" y1="78" x2="225" y2="106" stroke="var(--bad)" stroke-width="3"/>
+          <line x1="225" y1="78" x2="203" y2="106" stroke="var(--bad)" stroke-width="3"/>
+          <text x="105" y="170" text-anchor="middle" class="small">Your fleet + your leader</text>
+          <text x="320" y="170" text-anchor="middle" class="small">Where you wanted to go</text>
+        </svg>
+        <p>You cannot move units out of a system that already holds one of your own leaders. That includes a leader you placed there to <b>oppose</b> a mission or to <b>attempt</b> one.</p>
+        <p style="color:var(--muted)">Use it as a weapon: attempt a mission in the system where your opponent's fleet sits. If they oppose, their leader lands on their own fleet and freezes it for the rest of the round. If they don't, your mission succeeds for free.</p>
+      </div>
+    </div>
+    <div class="callout"><strong>Tempo: the last word.</strong> Turns alternate during the Command Phase, Rebels first. When one player runs out of leaders or passes, the other takes all remaining actions in a row with full information. Keeping one more leader in reserve than your opponent often means you make the last, best-informed move of the round.</div>
+  </div>
+</section>
+
+<!-- REBELS -->
+<section class="block" id="rebels">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="faction-head"><p class="eyebrow">Playbook</p><span class="tag reb">Rebel Alliance</span></div>
+      <h2>Play the clock, not the war</h2>
+    </div>
+    <div class="plays" style="--c: var(--rebel)">
+      <article class="play"><h3>Objectives are your army</h3><p>Reputation is the only resource that wins. Before every Assignment Phase look at your objective hand and ask which one you can finish soonest. <b>Pick missions and fights that move a card forward.</b> Everything else is secondary.</p></article>
+      <article class="play"><h3>Hide the base away from the action</h3><p>Choose a base far from the Imperial core and also away from where your own fleet will operate. The Empire watches your fleet. <b>Distance costs the Empire activations and transports</b>, and those are rounds.</p></article>
+      <article class="play"><h3>The base space leaks information</h3><p>Moving units to or from the Rebel Base space tells the Empire the base is in that system or next to it. <b>Do your fighting with a separate mobile fleet</b> and keep base movement for when it's worth the clue.</p></article>
+      <article class="play"><h3>Keep a reserve to oppose</h3><p>An "attempt" mission succeeds automatically unless you send a leader. Captures and base-hunting missions are the ones to stop. <b>The opposer wins ties</b>, so even one die is a real chance.</p></article>
+      <article class="play"><h3>Bait the pin</h3><p>Attempt missions where Imperial fleets are parked. Opposing puts their leader there and <b>freezes that fleet for the round</b>. Either you get the mission or you buy a round of safety.</p></article>
+      <article class="play"><h3>Loyalty is your factory</h3><p>Rebels only build in loyal systems (and the base). <b>Diplomacy early</b> gives you units every build round. Turning an Imperial-loyal system neutral also takes production away from them.</p></article>
+      <article class="play"><h3>Sabotage before the build</h3><p>A sabotaged system can't build or receive new units. <b>Time it just before a build round</b>, ideally on a system that makes Imperial troops, which they need to search for you.</p></article>
+      <article class="play"><h3>Fight only when it pays</h3><p>You can't out-trade the Empire. Take a battle when it <b>scores an objective, frees a subjugated system, or saves the base</b>. Bring a leader so you can retreat once you've got what you came for.</p></article>
+      <article class="play"><h3>Relocate before contact</h3><p>Rapid Mobilization moves the base, but your units in the base space are left at the old, now-revealed location and the new base starts empty. <b>Do it before Imperial troops arrive</b>; you take the first turn of each Command Phase.</p></article>
+      <article class="play"><h3>Guard your leaders</h3><p>A Rebel leader standing in a system with an Imperial unit can be targeted by capture missions. <b>Know where your mission leaders will end up</b> and whether you can afford to defend them.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- EMPIRE -->
+<section class="block" id="empire">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="faction-head"><p class="eyebrow">Playbook</p><span class="tag imp">Galactic Empire</span></div>
+      <h2>Search two ways at once, and never forget the deadline</h2>
+    </div>
+    <div class="plays" style="--c: var(--empire)">
+      <article class="play"><h3>Count the gap every round</h3><p>Reputation minus time is how many rounds you have, and it shrinks faster when the Rebels score. <b>Every plan should fit inside that number.</b></p></article>
+      <article class="play"><h3>Presence rules out systems</h3><p>When your ground units enter a system, the Rebels must say if the base is there. <b>Every system you occupy with troops is a system ruled out</b>, and subjugated systems also build for you.</p></article>
+      <article class="play"><h3>Ground units find bases</h3><p>Ships alone never reveal the base. Only Imperial ground units or Imperial loyalty do. <b>Plan fleets around transport capacity</b>; TIE Fighters need transport too.</p></article>
+      <article class="play"><h3>Information narrows the map</h3><p>You draw two probe cards every round, and some missions draw more. Each card names a system where the base is not. <b>Keep a written list</b> and combine it with what you see.</p></article>
+      <article class="play"><h3>Read Rebel movement</h3><p>Units moving to or from the Rebel Base space mean the base is in or next to that system. <b>Where they deploy, defend and refuse to fight</b> are clues too.</p></article>
+      <article class="play"><h3>Oppose selectively</h3><p>Opposing a mission parks your leader in that system and pins your units there. <b>Oppose missions that score objectives or cost you production</b>; let cheap decoys go.</p></article>
+      <article class="play"><h3>Capture, then exploit</h3><p>Captured Rebel leaders can't help their side and can be targeted by your missions for information. <b>Keep a unit with the captive</b>: if no Imperial units remain in that system, the leader is rescued.</p></article>
+      <article class="play"><h3>Use the Death Star early</h3><p>Only the Death Star Plans objective can destroy it, so early on it's nearly untouchable. <b>Use it to spearhead sweeps.</b> Later, escort it with TIE Fighters, and remember a fleet with it can't retreat.</p></article>
+    </div>
+
+    <div class="panel" id="probeChart">
+      <div class="sec-head" style="margin-bottom:0.75rem">
+        <p class="eyebrow">Why probe droids alone are not enough</p>
+        <h3>Systems the base could still be in, round by round</h3>
+        <p style="color:var(--muted);font-size:0.92rem;max-width:44rem">First-game setup: 26 possible base systems once the Imperial starting systems are removed. Idealised, assuming each new card or occupied system rules out one candidate. Rebels can reset much of this with Rapid Mobilization.</p>
+      </div>
+      <div class="chart-controls">
+        <label for="paceSel">Rebel scoring pace</label>
+        <div class="seg" id="paceSel" role="group" aria-label="Rebel scoring pace">
+          <button type="button" class="n" data-pace="0" aria-pressed="false">0 per round</button>
+          <button type="button" class="n" data-pace="0.5" aria-pressed="true">1 every 2 rounds</button>
+          <button type="button" class="n" data-pace="1" aria-pressed="false">1 per round</button>
+        </div>
+      </div>
+      <div class="chart-box" id="chartBox">
+        <div class="chart-wrap"><svg class="chart-svg" id="chartSvg" viewBox="0 0 640 300" role="img" aria-label="Line chart of remaining candidate base systems by round for three Imperial search strategies, with the Rebel win deadline"></svg></div>
+        <div class="tip" id="chartTip" hidden></div>
+      </div>
+      <div class="legend" style="margin-top:0.5rem">
+        <span><i class="dot" style="background:var(--s1)"></i>Probe droids only (2 cards a round)</span>
+        <span><i class="dot" style="background:var(--s2)"></i>+1 intel card a round</span>
+        <span><i class="dot" style="background:var(--s3)"></i>+1 intel card and +1 system occupied a round</span>
+        <span><i class="dot" style="background:var(--rebel);border-radius:1px;width:0.25rem;height:0.9rem"></i>Rebels win</span>
+      </div>
+      <p id="chartNote" style="margin-top:0.75rem;font-weight:500"></p>
+      <details class="table-view"><summary>Show as a table</summary><div style="overflow-x:auto"><table id="chartTable"></table></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- TRAINER -->
+<section class="block" id="trainer">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Practice · Decision trainer</p>
+      <h2>Make the calls, see how the opponent answers</h2>
+    </div>
+    <div class="prose"><p>Nine situations per side, in the order they tend to come up during a game. Pick what you would do. A scripted opponent replies to the best move, and each scenario ends with the principle behind it. No luck involved; this is about the reasoning.</p></div>
+    <div class="panel trainer" id="trainerPanel">
+      <div class="trainer-bar">
+        <div class="seg" role="group" aria-label="Choose your side">
+          <button type="button" class="r" data-side="rebel" aria-pressed="true">Play as Rebels</button>
+          <button type="button" class="i" data-side="empire" aria-pressed="false">Play as Empire</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div class="pips" id="pips" aria-hidden="true"></div>
+          <span class="mono" id="tScore" style="font-size:0.85rem;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="scen" id="scen" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FIRST GAME -->
+<section class="block" id="first-game">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Play · First-game companion</p>
+      <h2>Keep this open next to the board</h2>
+    </div>
+    <div class="prose"><p>Set up your copy with the Learn to Play first-game setup, pick your side here, and work through the checklist each round. It tracks the clock for you and changes its advice as the game moves from opening to endgame. Your progress stays in this browser.</p></div>
+
+    <details class="setup">
+      <summary>First-game setup at a glance</summary>
+      <div class="setup-grid">
+        <div>
+          <p class="eyebrow" style="margin-bottom:0.4rem">Both players</p>
+          <ol>
+            <li>Time marker on 1, reputation marker on 14.</li>
+            <li>Objective deck: III at the bottom, II on it, I on top. Rebels draw one.</li>
+            <li>Each side takes its 4 leaders without a recruit icon. Recruit-icon leaders wait beside the board.</li>
+            <li>Action decks: only cards with a recruit icon. Ignore their abilities in game one.</li>
+            <li>Each side keeps its 4 starting missions (curved arrow) and draws 2 more. Imperial project cards form their own deck.</li>
+            <li>Remove Corellia, Mandalore, Saleucami, Sullust and Mustafar from the probe deck. Rebels secretly pick a base not adjacent to Imperial units.</li>
+          </ol>
+        </div>
+        <div>
+          <p class="eyebrow imp" style="margin-bottom:0.4rem">Imperial units</p>
+          <ul>
+            <li><b>Coruscant:</b> Star Destroyer, Assault Carrier, 2 TIE, 3 Stormtroopers, AT-AT, AT-ST</li>
+            <li><b>Mandalore:</b> Death Star, 4 TIE, 2 Stormtroopers, AT-ST, subjugated</li>
+            <li><b>Saleucami:</b> Star Destroyer, 2 TIE, 2 Stormtroopers, AT-ST, loyal</li>
+            <li><b>Sullust:</b> Star Destroyer, 2 TIE, 2 Stormtroopers, AT-ST, subjugated</li>
+            <li><b>Mustafar:</b> Assault Carrier, 2 TIE, 2 Stormtroopers, AT-ST, loyal</li>
+            <li><b>Corellia:</b> Assault Carrier, 1 Stormtrooper, loyal</li>
+          </ul>
+        </div>
+        <div>
+          <p class="eyebrow reb" style="margin-bottom:0.4rem">Rebel units</p>
+          <ul>
+            <li><b>Bothawui:</b> Corellian Corvette, Rebel Transport, X-wing, Y-wing, 3 Rebel Troopers, Airspeeder, loyal</li>
+            <li><b>Rebel Base space:</b> X-wing, Y-wing, 3 Rebel Troopers, Airspeeder</li>
+            <li><b>Loyal:</b> Kashyyyk and Naboo</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <div class="panel" style="display:grid;gap:1rem">
+      <div class="comp-top">
+        <div class="seg" role="group" aria-label="Your side">
+          <button type="button" class="r" data-cside="rebel" aria-pressed="true">I'm the Rebels</button>
+          <button type="button" class="i" data-cside="empire" aria-pressed="false">I'm the Empire</button>
+        </div>
+        <div class="stepper"><span class="lab">Round</span><button type="button" data-adj="round:-1" aria-label="Previous round">−</button><output id="oRound">1</output><button type="button" data-adj="round:1" aria-label="Next round">+</button></div>
+        <div class="stepper"><span class="lab">Time</span><button type="button" data-adj="time:-1" aria-label="Time marker back">−</button><output id="oTime">1</output><button type="button" data-adj="time:1" aria-label="Time marker forward">+</button></div>
+        <div class="stepper"><span class="lab">Reputation</span><button type="button" data-adj="rep:-1" aria-label="Reputation marker down">−</button><output id="oRep">14</output><button type="button" data-adj="rep:1" aria-label="Reputation marker up">+</button></div>
+        <span class="gap-chip" id="oGap"></span>
+      </div>
+      <div class="focus" id="focus"></div>
+      <div class="checks" id="checks"></div>
+      <div class="btn-row">
+        <button type="button" class="btn primary" id="nextRound">Finish round: advance time, clear checklist</button>
+        <button type="button" class="btn" id="resetGame">Start a new game</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PITFALLS -->
+<section class="block" id="pitfalls">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Reference · Rules new players get wrong</p>
+      <h2>Fourteen rules that change how you play</h2>
+    </div>
+    <div class="panel pit-wrap">
+      <table class="pit">
+        <thead><tr><th>The rule</th><th>Why it matters</th></tr></thead>
+        <tbody id="pitBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>Sources.</b> Rules: the Star Wars: Rebellion <i>Learn to Play</i> booklet (Fantasy Flight Games) and the Esoteric Order of Gamers rules summary. Strategy: community discussion such as the FFG forum thread "General Rebel Strategy", combined with the reasoning above.</p>
+    <ul>
+      <li><a href="https://www.fantasyflightgames.com/en/products/star-wars-rebellion/" target="_blank" rel="noopener">Fantasy Flight Games product page</a> (rules downloads)</li>
+      <li><a href="https://www.orderofgamers.com/downloads/StarWarsRebellion_v2.5.pdf" target="_blank" rel="noopener">Esoteric Order of Gamers rules summary</a></li>
+      <li><a href="https://ffg-forum-archive.entropicdreams.com/topic/217680-general-rebel-strategy" target="_blank" rel="noopener">FFG forum archive: General Rebel Strategy</a></li>
+    </ul>
+    <p>Unofficial and not affiliated with Fantasy Flight Games or Lucasfilm.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem("rfm:" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem("rfm:" + k, JSON.stringify(v)); } catch (e) {} }
+  };
+  function el(tag, attrs, html) {
+    var n = document.createElement(tag);
+    if (attrs) for (var k in attrs) { if (k === "class") n.className = attrs[k]; else n.setAttribute(k, attrs[k]); }
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+
+  /* ---------- CLOCK ---------- */
+  var clk = { t: 1, r: 14 };
+  var track = document.getElementById("track");
+  function drawClock(msg) {
+    track.innerHTML = "";
+    for (var i = 1; i <= 16; i++) {
+      var c = el("div", { class: "cell" + (i > clk.t && i <= clk.r ? " between" : "") }, String(i));
+      if (i === clk.t) c.appendChild(el("span", { class: "tok t", title: "Time marker" }, "T"));
+      if (i === clk.r) c.appendChild(el("span", { class: "tok r", title: "Reputation marker" }, "R"));
+      track.appendChild(c);
+    }
+    var gap = clk.r - clk.t;
+    document.getElementById("gapNum").textContent = gap <= 0 ? "0" : gap;
+    var txt = document.getElementById("gapText");
+    if (gap <= 0) txt.innerHTML = "<b class='reb'>The markers met. The Rebels win.</b> Reset to try again.";
+    else txt.textContent = (gap === 1 ? "round" : "rounds") + " left for the Empire if the Rebels never score again. Each round the time marker steps forward once. Each objective point pulls reputation one space closer, so a Rebel who scores 1 every round closes the gap twice as fast.";
+    document.getElementById("cLog").textContent = msg || "";
+    ["cRound", "cScore1", "cScore2"].forEach(function (id) { document.getElementById(id).disabled = gap <= 0; });
+  }
+  function scoreRep(n) {
+    var before = clk.r;
+    clk.r = Math.max(clk.t, clk.r - n);
+    drawClock("Rebels play an objective worth " + n + ". Reputation " + before + " → " + clk.r + ".");
+  }
+  document.getElementById("cRound").onclick = function () { clk.t = Math.min(16, clk.t + 1); drawClock("Refresh Phase: time marker advances to " + clk.t + "."); };
+  document.getElementById("cScore1").onclick = function () { scoreRep(1); };
+  document.getElementById("cScore2").onclick = function () { scoreRep(2); };
+  document.getElementById("cReset").onclick = function () { clk = { t: 1, r: 14 }; drawClock(""); };
+  drawClock("");
+
+  /* ---------- ROUND ---------- */
+  var phases = [
+    { name: "Assignment", who: "Rebels assign first, then the Empire, who sees how many leaders you committed.", steps: [
+      { t: "Assign leaders to missions", rule: "Place a mission card from your hand face down and put one or two leaders on it. Together they must show the skill icons the card asks for (diplomacy, intel, spec ops, logistics).", think: "Which mission moves an objective forward or protects the base? Put your best-matching leader on it: more matching icons means more dice if you're opposed." },
+      { t: "Keep leaders in the pool", rule: "Leaders you don't assign stay in your leader pool for the Command Phase.", think: "Each pooled leader is one move or one opposition. Keep one or two for the enemy missions that would hurt most: captures and base hunting for Rebels, objective-scoring missions for the Empire." },
+      { t: "Bluff when it helps", rule: "A mission you never reveal returns to your hand at the end of the round, and its leaders come back.", think: "A face-down card makes your opponent keep a leader back to answer it. It costs you that leader for the round, so only bluff when the pressure is worth it." }
+    ]},
+    { name: "Command", who: "Players alternate turns, Rebels first. Each turn: reveal a mission, activate a system, or pass for the rest of the phase.", steps: [
+      { t: "Reveal a mission", rule: "Flip one of your assigned missions and declare the system. The leaders move there. \"Resolve\" missions just happen. \"Attempt\" missions succeed unless the opponent sends one leader from their pool to oppose.", think: "Where will this leave my leader? In a system with enemy units it may become a target. Where would an opposing leader land? If it's on their fleet, it pins that fleet." },
+      { t: "Opposed missions", rule: "Each side rolls one die per matching skill icon among its leaders there. A hit or direct hit is one success, the special icon is two. The mission succeeds only with more successes than the opponent. A leader pictured on the card adds two successes.", think: "Ties go to the defender, so one die can stop two. Before opposing, check whether it pins a fleet you need this round." },
+      { t: "Activate a system", rule: "Place a pooled leader in any system, then move ships from adjacent systems into it. Ground units and TIE Fighters ride along up to the ships' transport capacity. You cannot move units out of a system that holds one of your leaders.", think: "For the Empire: arrive with ground units, or the base can't be revealed. For the Rebels: moving to or from the Rebel Base space gives away the base's neighborhood." },
+      { t: "Combat", rule: "If units end up with enemy units, fight. Each side may add a leader, draws tactic cards from its best leader's values, then rolls space battle and ground battle each round. Retreat needs a leader in the system.", think: "Rebels: is there an objective in this fight? Empire: does winning here reveal or rule out anything? Leave when the point of the fight is achieved." },
+      { t: "Pass", rule: "Once you pass, your turns are skipped until the phase ends.", think: "If your opponent has more leaders left than you, they will act last. Sometimes it's worth spending a weak action just to keep the timing in your favour." }
+    ]},
+    { name: "Refresh", who: "Bookkeeping, but two steps (probes and objectives) decide the game.", steps: [
+      { t: "Retrieve leaders", rule: "All leaders return to their pools. Unrevealed missions go back to hand.", think: "Pins and captures-in-waiting end here. Captured leaders stay captured." },
+      { t: "Draw missions", rule: "Each player draws two mission cards, then discards down to 10.", think: "Starting missions come back after use; others are discarded. A thick hand gives you bluffs and options." },
+      { t: "Launch probe droids", rule: "The Empire draws two probe cards. Each names a system where the base is not.", think: "Empire: add them to your written list and compare with what Rebel movement told you." },
+      { t: "Draw objective", rule: "The Rebels draw one objective card. Only one objective can be played per combat and one per Refresh Phase.", think: "Rebels: plan the next one or two rounds around what's in your hand. Holding scored cards wastes them because of the one-per-phase limit." },
+      { t: "Advance time", rule: "The time marker moves one space. If the new space shows a recruit icon, each player draws two action cards and gains a leader from one. If it shows a build icon, each player queues units from their loyal and subjugated systems.", think: "Check the gap. Look one space ahead: is a build coming? That's when sabotage and subjugation pay off." },
+      { t: "Deploy units", rule: "Units slide one space down the build queue; those that slide off are deployed into your loyal or subjugated systems (Rebels also the base space), at most two per system. No deploying into systems with enemy units or sabotage.", think: "Empire: put troops where the next sweep starts. Rebels: deploying into the base space reveals nothing; deploying near it can." }
+    ]}
+  ];
+  var tabs = document.getElementById("phaseTabs"), body = document.getElementById("phaseBody");
+  function showPhase(i) {
+    Array.prototype.forEach.call(tabs.children, function (b, j) { b.setAttribute("aria-selected", j === i ? "true" : "false"); b.tabIndex = j === i ? 0 : -1; });
+    var p = phases[i];
+    body.innerHTML = "";
+    body.appendChild(el("p", { class: "who" }, p.who));
+    var list = el("div");
+    p.steps.forEach(function (s, k) {
+      list.appendChild(el("div", { class: "step" },
+        "<div class='step-n'>" + (i + 1) + "." + (k + 1) + "</div><div><h4>" + s.t + "</h4><div class='step-cols'><p><span class='lab'>Rule</span>" + s.rule + "</p><p class='think'><span class='lab'>Think</span>" + s.think + "</p></div></div>"));
+    });
+    body.appendChild(list);
+  }
+  phases.forEach(function (p, i) {
+    var b = el("button", { class: "phase-tab", role: "tab", type: "button" }, "<span class='n'>Phase " + (i + 1) + "</span><span class='t'>" + p.name + "</span>");
+    b.onclick = function () { showPhase(i); };
+    b.onkeydown = function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") { var n = (i + (e.key === "ArrowRight" ? 1 : 2)) % 3; showPhase(n); tabs.children[n].focus(); }
+    };
+    tabs.appendChild(b);
+  });
+  showPhase(0);
+
+  /* ---------- LEADERS ---------- */
+  var leaders = [true, true, false, false];
+  var tokWrap = document.getElementById("tokens");
+  var budgetText = {
+    0: ["Pure reaction", "You'll probably act last and can answer everything, but nothing moves forward. Missions are where objectives, loyalty and probe cards come from. A whole round of this is usually a round lost."],
+    1: ["Reactive", "Good when the opponent is threatening something specific and you need several answers. One mission keeps a little progress going."],
+    2: ["Balanced", "The usual shape. Two missions make progress, two leaders can oppose the opponent's key mission and still move a fleet."],
+    3: ["Aggressive", "Plenty of progress, one answer. Fine when you know which enemy mission you must stop, or when the opponent has few leaders left in their pool."],
+    4: ["All in", "You can't oppose anything and can't move a single unit this round. Every enemy \"attempt\" mission against you succeeds automatically."]
+  };
+  function drawLeaders() {
+    tokWrap.innerHTML = "";
+    leaders.forEach(function (on, i) {
+      var b = el("button", { class: "leader", type: "button", "data-on": on ? "mission" : "pool", "aria-pressed": on ? "true" : "false" },
+        "<span class='ic'>L" + (i + 1) + "</span>" + (on ? "On a mission" : "In the pool"));
+      b.onclick = function () { leaders[i] = !leaders[i]; drawLeaders(); };
+      tokWrap.appendChild(b);
+    });
+    var m = leaders.filter(Boolean).length;
+    document.getElementById("bMis").textContent = m;
+    document.getElementById("bPool").textContent = 4 - m;
+    document.getElementById("bHead").textContent = budgetText[m][0];
+    document.getElementById("bText").textContent = budgetText[m][1];
+  }
+  drawLeaders();
+
+  /* ---------- PROBE CHART ---------- */
+  var START = 26, ROUNDS = 14;
+  var series = [
+    { name: "Probe droids only", rate: 2, cls: "var(--s1)" },
+    { name: "+1 intel card a round", rate: 3, cls: "var(--s2)" },
+    { name: "+1 intel, +1 system occupied", rate: 4, cls: "var(--s3)" }
+  ];
+  var pace = 0.5;
+  function remaining(rate, r) { return Math.max(1, START - rate * r); }
+  function deadline(p) { return 13 / (1 + p); }
+  var svg = document.getElementById("chartSvg"), tip = document.getElementById("chartTip"), box = document.getElementById("chartBox");
+  var W = 640, H = 300, M = { l: 44, r: 24, t: 16, b: 40 };
+  var px = function (r) { return M.l + (r / ROUNDS) * (W - M.l - M.r); };
+  var py = function (v) { return M.t + (1 - v / START) * (H - M.t - M.b); };
+  function drawChart() {
+    var s = "";
+    [0, 5, 10, 15, 20, 25].forEach(function (v) {
+      s += "<line x1='" + M.l + "' x2='" + (W - M.r) + "' y1='" + py(v) + "' y2='" + py(v) + "' stroke='var(--line)' stroke-width='1'/>";
+      s += "<text x='" + (M.l - 8) + "' y='" + (py(v) + 4) + "' text-anchor='end'>" + v + "</text>";
+    });
+    for (var r = 0; r <= ROUNDS; r += 2) s += "<text x='" + px(r) + "' y='" + (H - M.b + 18) + "' text-anchor='middle'>" + r + "</text>";
+    s += "<text x='" + ((M.l + W - M.r) / 2) + "' y='" + (H - 4) + "' text-anchor='middle'>Rounds played</text>";
+    var d = deadline(pace);
+    s += "<rect x='" + px(d) + "' y='" + M.t + "' width='" + (px(ROUNDS) - px(d)) + "' height='" + (H - M.t - M.b) + "' fill='var(--rebel-soft)' opacity='0.7'/>";
+    s += "<line x1='" + px(d) + "' x2='" + px(d) + "' y1='" + M.t + "' y2='" + (H - M.b) + "' stroke='var(--rebel)' stroke-width='2' stroke-dasharray='5 4'/>";
+    var late = d > 10;
+    s += "<text class='lbl' x='" + (late ? px(d) - 6 : px(d) + 6) + "' y='" + (M.t + 14) + "' text-anchor='" + (late ? "end" : "start") + "'>Rebels win ≈ round " + (Math.round(d * 10) / 10) + "</text>";
+    series.forEach(function (se) {
+      var pts = [];
+      for (var r = 0; r <= ROUNDS; r++) pts.push(px(r) + "," + py(remaining(se.rate, r)));
+      s += "<polyline points='" + pts.join(" ") + "' fill='none' stroke='" + se.cls + "' stroke-width='2' stroke-linejoin='round'/>";
+    });
+    series.forEach(function (se) {
+      s += "<circle cx='" + px(ROUNDS) + "' cy='" + py(remaining(se.rate, ROUNDS)) + "' r='4' fill='" + se.cls + "' stroke='var(--surface)' stroke-width='2'/>";
+    });
+    s += "<line id='xh' x1='0' x2='0' y1='" + M.t + "' y2='" + (H - M.b) + "' stroke='var(--muted)' stroke-width='1' visibility='hidden'/>";
+    s += "<rect id='hit' x='" + M.l + "' y='" + M.t + "' width='" + (W - M.l - M.r) + "' height='" + (H - M.t - M.b) + "' fill='transparent'/>";
+    svg.innerHTML = s;
+    var dr = Math.floor(d);
+    var at = series.map(function (se) { return remaining(se.rate, d); });
+    document.getElementById("chartNote").innerHTML = "When the Rebels win (about round " + (Math.round(d * 10) / 10) + "), probes alone still leave <b>" + Math.round(at[0]) + "</b> candidate systems. Adding intel missions leaves <b>" + Math.round(at[1]) + "</b>; adding intel and occupation leaves <b>" + Math.round(at[2]) + "</b>. The Empire also needs time to actually reach the base, so it must search by every means from round one.";
+    var tb = "<thead><tr><th>Round</th>" + series.map(function (se) { return "<th>" + se.name + "</th>"; }).join("") + "</tr></thead><tbody>";
+    for (var r2 = 0; r2 <= ROUNDS; r2++) tb += "<tr><td class='num'>" + r2 + (r2 > d ? " (Rebels have won)" : "") + "</td>" + series.map(function (se) { return "<td class='num'>" + remaining(se.rate, r2) + "</td>"; }).join("") + "</tr>";
+    document.getElementById("chartTable").innerHTML = tb + "</tbody>";
+    var hit = document.getElementById("hit"), xh = document.getElementById("xh");
+    function move(evt) {
+      var pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
+      var loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      var r = Math.max(0, Math.min(ROUNDS, Math.round((loc.x - M.l) / (W - M.l - M.r) * ROUNDS)));
+      xh.setAttribute("x1", px(r)); xh.setAttribute("x2", px(r)); xh.setAttribute("visibility", "visible");
+      tip.hidden = false;
+      tip.innerHTML = "Round " + r + (r > d ? " · Rebels have won" : "") + "<br>" + series.map(function (se) { return se.name + ": " + remaining(se.rate, r); }).join("<br>");
+      var bb = box.getBoundingClientRect();
+      var sp = svg.createSVGPoint(); sp.x = px(r); sp.y = M.t + 10;
+      var scr = sp.matrixTransform(svg.getScreenCTM());
+      var left = Math.max(110, Math.min(bb.width - 110, scr.x - bb.left));
+      tip.style.left = left + "px"; tip.style.top = (scr.y - bb.top + 80) + "px";
+    }
+    hit.addEventListener("pointermove", move);
+    hit.addEventListener("pointerleave", function () { tip.hidden = true; xh.setAttribute("visibility", "hidden"); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#paceSel button"), function (b) {
+    b.onclick = function () {
+      pace = parseFloat(b.getAttribute("data-pace"));
+      Array.prototype.forEach.call(document.querySelectorAll("#paceSel button"), function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+      drawChart();
+    };
+  });
+  drawChart();
+
+  /* ---------- TRAINER ---------- */
+  var SCEN = {
+    rebel: [
+      { tag: "Setup", title: "Where do you hide the base?",
+        sit: "First game. Your starting fleet sits at Bothawui. The Empire holds Coruscant, Corellia, Mandalore, Saleucami, Sullust and Mustafar. You now secretly pick the probe card your base hides under. First-game rule: it can't be adjacent to Imperial units.",
+        facts: ["Time 1 · Reputation 14", "Empire draws 2 probe cards a round"],
+        opts: [
+          { txt: "Next to Bothawui, so the fleet can protect it.", v: "bad", fb: "Your fleet is the most visible thing you own. Wherever it operates, the Empire looks. A base next door means every fleet move points at home." },
+          { txt: "A quiet system far from the Imperial core and away from where your fleet will operate.", v: "best", fb: "Distance costs the Empire activations and transports, and those cost rounds. Your fleet is then free to draw attention elsewhere." },
+          { txt: "Somewhere central, so units can reach every region.", v: "ok", fb: "Reach from the base matters less than it seems: moving units in or out of the base space gives away its neighborhood anyway. Central systems also lie on the Empire's natural expansion routes." }
+        ],
+        reply: "The Empire subjugates a system next to its core and draws two probe cards. Neither touches your region.",
+        principle: "Hide the base away from where the action will be, including your own." },
+      { tag: "Round 1 · Assignment", title: "How many leaders go on missions?",
+        sit: "You have four leaders and a hand of six missions. You assign first; the Empire sees how many leaders you committed before it assigns.",
+        facts: ["4 leaders", "6 missions in hand"],
+        opts: [
+          { txt: "All four. Missions are how Rebels make progress.", v: "bad", fb: "With an empty pool you can't oppose anything, so Imperial captures and base-hunting missions succeed automatically. You also can't move a single unit." },
+          { txt: "Two or three on missions, one or two in the pool.", v: "best", fb: "Missions advance your plan; the pool is your shield. One pooled leader can stop the Empire's most dangerous mission, or move a fleet when a chance appears." },
+          { txt: "None. React to whatever the Empire does.", v: "bad", fb: "Rebels win on the clock, and objectives don't score themselves. A fully reactive Rebel hands the Empire free rounds to expand." }
+        ],
+        reply: "Seeing two of your leaders in reserve, the Empire assigns two and keeps two back to oppose you.",
+        principle: "Split leaders between progress (missions) and protection (the pool)." },
+      { tag: "Round 2 · Command", title: "A capture attempt",
+        sit: "Your leader finished a mission in a system that contains a Stormtrooper. The Empire reveals Capture Rebel Operative against her, using a leader with two spec ops icons. You have one leader in your pool with one spec ops icon.",
+        facts: ["Imperial dice: 2", "Your dice if you oppose: 1"],
+        opts: [
+          { txt: "Oppose. Ties go to me, and one die is a real chance.", v: "best", fb: "The Empire needs strictly more successes than you. A captured leader is gone for many rounds and can be exploited for information. Note that your opposing leader now also stands in a system with an Imperial unit, so it becomes a capture target too." },
+          { txt: "Don't oppose. One die against two is hopeless.", v: "bad", fb: "Unopposed, the capture succeeds automatically. With one die you're the underdog, not hopeless, and a tie counts for you." },
+          { txt: "Let it happen and plan a rescue later.", v: "ok", fb: "A captured leader is rescued the moment no Imperial units remain in its system. That usually means winning a battle, which costs far more than one opposition roll." }
+        ],
+        reply: "The Empire rolls one success; you roll one. A tie, so the capture fails.",
+        principle: "The opposer wins ties. Contest the missions that would cost you a leader or the base." },
+      { tag: "Round 3 · Command", title: "Freeze their fleet",
+        sit: "A Star Destroyer group carrying troops sits one system from the region where your base hides. You have an unrevealed mission that can be attempted in any system containing an Imperial unit. The Empire has one leader left in its pool.",
+        facts: ["Empire pool: 1 leader", "Threat: 1 jump from your region"],
+        opts: [
+          { txt: "Attempt it right where that fleet sits.", v: "best", fb: "If the Empire opposes, its leader lands in that system, and nobody can move units out of a system holding one of their own leaders. The fleet is frozen for the round. If it doesn't oppose, your mission succeeds for free." },
+          { txt: "Attempt it far away, so the Empire doesn't look at your region.", v: "ok", fb: "Misdirection has value, but here you leave the most dangerous fleet free to use that last leader to move toward home." },
+          { txt: "Hold the mission for another round.", v: "bad", fb: "The Empire's last leader will activate the next system along. Waiting hands it the move." }
+        ],
+        reply: "The Empire opposes. Its leader joins the fleet, and those ships stay put until next round.",
+        principle: "A leader in a system pins its own side's units there. Make the Empire choose between stopping your mission and moving its fleet." },
+      { tag: "Round 4 · Command", title: "Should you attack?",
+        sit: "Your mobile fleet sits next to a subjugated system held by two Stormtroopers and an AT-ST. You hold an objective that scores when enough Imperial ground units die in a combat you start. The system was loyal to you before the Empire subjugated it.",
+        facts: ["Objective in hand: combat", "System: subjugated, Rebel loyalty underneath"],
+        opts: [
+          { txt: "Attack: it scores the objective and frees the system.", v: "best", fb: "This fight pays three times. You score reputation, and once no Imperial ground units remain the subjugation marker is removed and your loyalty there builds for you again." },
+          { txt: "Avoid combat. Rebels shouldn't fight.", v: "ok", fb: "The real rule is to avoid fights that don't pay. A fight that scores an objective and costs the Empire production is exactly the one to take." },
+          { txt: "Attack the biggest Imperial fleet instead; it's the main threat.", v: "bad", fb: "You can't out-trade the Empire, and your losses don't come back. Big fleets don't satisfy objectives any better than small garrisons." }
+        ],
+        reply: "You win the ground battle and play the objective. The subjugation marker comes off and the system builds for you next build round.",
+        principle: "Fight when the fight scores reputation or protects the base. Otherwise move on." },
+      { tag: "Round 5 · Command", title: "Reinforce from the base?",
+        sit: "A battle is building two systems from your base. You could activate a system next to the base and move units out of the Rebel Base space, or bring your mobile fleet the long way round.",
+        facts: ["Base: still hidden", "Probe cards held by Empire: about 10"],
+        opts: [
+          { txt: "Move units out of the Rebel Base space; they're closest.", v: "bad", fb: "Moving to or from the base space tells the Empire your base is in that system or adjacent to it. Combined with its probe cards, that may leave only a couple of candidates." },
+          { txt: "Bring the mobile fleet, even if it's slower.", v: "best", fb: "It reveals nothing. Base units are best used where moving them gives nothing away: defending the base, or after you've already been found." },
+          { txt: "Move units out, then relocate the base later.", v: "ok", fb: "That works if Rapid Mobilization is already in your hand and you're ready to use it. Without it, you've traded your secrecy for one battle." }
+        ],
+        reply: "The Empire watches your fleet arrive from the far side of the map and learns nothing about your base.",
+        principle: "Every move to or from the Rebel Base space is a clue. Give it away only on purpose." },
+      { tag: "Round 6 · Assignment", title: "Sabotage timing",
+        sit: "At the end of this round the time marker lands on a build icon. You hold a mission that places a sabotage marker in a system.",
+        facts: ["Next space: build icon"],
+        opts: [
+          { txt: "Sabotage a system that would build Imperial units this coming build.", v: "best", fb: "A sabotaged system can't build or take deployments. Placed right before a build, it deletes a production cycle, and clearing it costs the Empire a mission and a leader." },
+          { txt: "Save it until the base is threatened.", v: "ok", fb: "Sabotage doesn't stop an attack that's already on its way. Its value is in production denied, and that's highest just before builds." },
+          { txt: "Sabotage a remote system near your base.", v: "bad", fb: "Remote systems produce nothing, so there's nothing to deny, and it points the Empire toward your neighborhood." }
+        ],
+        reply: "The Empire's build round comes up short by a Stormtrooper and an AT-ST, and it spends a leader next round clearing the marker.",
+        principle: "Hit production right before builds. Units the Empire never gets are rounds you gain." },
+      { tag: "Round 8 · Command", title: "The net is closing",
+        sit: "An Imperial fleet with ground troops is one activation away from your base system. Six units wait in the Rebel Base space. You have Rapid Mobilization assigned, and Rebels take the first turn of the Command Phase.",
+        facts: ["Base: hidden, under threat", "6 units in base space"],
+        opts: [
+          { txt: "Reveal Rapid Mobilization now, before the fleet can move.", v: "best", fb: "You act first, so you move before the Empire can. You draw four probe cards and choose a new home. The cost: the old base is revealed, the six units are placed there, and the new base starts empty. The three cards you didn't choose go to the bottom of the probe deck, where the Empire is unlikely to reach them." },
+          { txt: "Pile every unit into the base and fight.", v: "bad", fb: "If you lose that battle, you lose the game. The Empire can usually bring more than you, possibly with the Death Star." },
+          { txt: "Wait. They may not have guessed right.", v: "bad", fb: "If their ground units enter your base system, the base is revealed before combat, and a lost battle there ends the game." }
+        ],
+        reply: "The Imperial fleet lands on your old base and finds six Rebel units with nothing left to protect. Its search starts over.",
+        principle: "Relocate before contact, not after. The first move of the Command Phase is yours." },
+      { tag: "Round 10 · Refresh", title: "Doing the clock math",
+        sit: "Time marker on 9, reputation on 12. You hold two objectives you can complete right now. Only one objective can be played per Refresh Phase (and one per combat).",
+        facts: ["Time 9 · Reputation 12", "2 objectives ready"],
+        opts: [
+          { txt: "Score one now and one next Refresh Phase.", v: "best", fb: "Time advances 1 each round and each point pulls reputation 1 closer, so scoring every Refresh closes the gap by 2. You win two Refresh Phases from now instead of three." },
+          { txt: "Hold both and play them together later.", v: "bad", fb: "You can't: the one-per-Refresh limit means held objectives are wasted rounds." },
+          { txt: "Stop scoring and hide; the clock will finish it.", v: "ok", fb: "It will, one round later. That's a whole extra round for the Empire to find you." }
+        ],
+        reply: "You play the first objective. The gap is now 1, and the Empire has a single round left to find you.",
+        principle: "Each reputation point is one fewer round for the Empire. Score steadily." }
+    ],
+    empire: [
+      { tag: "Round 1 · Planning", title: "Where do you start?",
+        sit: "Your fleets sit around your core systems. The base could be in any of roughly two dozen systems. You draw two probe cards a round.",
+        facts: ["Time 1 · Reputation 14", "~26 candidate systems"],
+        opts: [
+          { txt: "Send the biggest fleet straight to the far edge of the galaxy.", v: "bad", fb: "A long trip with no information. If the guess is wrong you've spent rounds, and your core is exposed to sabotage and loyalty swings." },
+          { txt: "Expand: push ground units into nearby populous systems while missions gather intel.", v: "best", fb: "Every system your ground units enter is checked for the base on the spot, and subjugated systems build for you. You learn and grow at once." },
+          { txt: "Stay at Coruscant until probe cards point somewhere.", v: "bad", fb: "Two probe cards a round takes most of the game to finish the search. The Rebels are scoring while you wait." }
+        ],
+        reply: "The Rebels quietly turn a neutral system loyal far from your expansion. You write down where.",
+        principle: "Search by presence and by information at the same time. Waiting is losing." },
+      { tag: "Round 2 · Command", title: "Ships or troops?",
+        sit: "You suspect a system two jumps away. Your nearest group is two Star Destroyers with no ground units aboard. Picking up troops means a detour.",
+        facts: ["Group: 2 Star Destroyers, no troops"],
+        opts: [
+          { txt: "Send the Star Destroyers in now; speed matters.", v: "bad", fb: "Ships alone never reveal the base. Only Imperial ground units, or Imperial loyalty, in the system force the Rebels to reveal it." },
+          { txt: "Take the detour and arrive with ground units.", v: "best", fb: "Ground units do the finding and the conquering: you win when you have a unit in the revealed base system and the Rebels have none. Plan fleets around transport capacity." },
+          { txt: "Send the ships now, troops next round.", v: "ok", fb: "It works, but you've spent an extra activation and warned the Rebels which system you suspect." }
+        ],
+        reply: "Your troops arrive and the Rebels declare the base isn't there. One more system crossed off for good.",
+        principle: "Ground units find bases. Ships carry them." },
+      { tag: "Round 3 · Command", title: "The bait",
+        sit: "The Rebels attempt a diplomacy mission in a neutral system where your main strike fleet sits. You have one leader left in your pool, and you planned to use it to move that fleet toward your best lead.",
+        facts: ["Your pool: 1 leader", "Mission: 1 loyalty"],
+        opts: [
+          { txt: "Oppose. Never let a Rebel mission through.", v: "bad", fb: "Your leader would land in that system, and you can't move units out of a system holding your own leader. Your strike fleet would be frozen. That's the bait." },
+          { txt: "Let it succeed and move the fleet as planned.", v: "best", fb: "One loyalty is cheap next to a lost round of hunting. Oppose when a mission threatens the search or scores objectives. This one is a decoy." },
+          { txt: "Oppose now, move the fleet next round.", v: "ok", fb: "Acceptable if that loyalty mattered a lot, but you've handed the Rebels exactly the delay they wanted." }
+        ],
+        reply: "The system turns Rebel. Your fleet lands two systems closer to the base region.",
+        principle: "Opposing pins your own units. Choose your oppositions." },
+      { tag: "Round 4 · Command", title: "One die against two",
+        sit: "The Rebels reveal a mission that would help them score an objective. Their leader has two matching skill icons. Your only free leader has one.",
+        facts: ["Rebel dice: 2", "Your dice: 1"],
+        opts: [
+          { txt: "Oppose. A tie fails their mission.", v: "best", fb: "The Rebels need strictly more successes, and the special icon counts as two. One die can tie or beat them. Note where their leader stands afterward: if your units are there, it's a capture target." },
+          { txt: "Don't bother; one die can't win.", v: "bad", fb: "Unopposed, the mission succeeds automatically. One die makes it genuinely risky for them." },
+          { txt: "Wait until you can oppose with two leaders.", v: "bad", fb: "Only one leader can be sent to oppose a mission. Waiting just lets it through." }
+        ],
+        reply: "You roll a special: two successes. The Rebels roll one. The mission fails.",
+        principle: "The defender wins ties. One die is often enough." },
+      { tag: "Round 5 · Command", title: "Reading the clue",
+        sit: "The Rebels activate a system and move units out of the Rebel Base space into it. No special mission is involved.",
+        facts: ["Rebel move: from base space"],
+        opts: [
+          { txt: "The base is in that system.", v: "bad", fb: "Too narrow. A normal move from the base space can go to the base system or any system adjacent to it." },
+          { txt: "The base is in that system or adjacent to it.", v: "best", fb: "Cross off everything else, then compare with your probe cards. Often only one or two systems survive." },
+          { txt: "Nothing. Units can leave the base for anywhere.", v: "bad", fb: "Only a few missions let Rebels move between the base and any system. A normal activation can't." }
+        ],
+        reply: "Three systems border that one. Your probe cards already rule out two of them.",
+        principle: "Log every Rebel move to or from the base space. It's the best intel you'll get." },
+      { tag: "Round 6 · Command", title: "You captured a leader",
+        sit: "Your capture mission succeeded. The captive sits in a system with one of your Stormtroopers, and you'd like that Stormtrooper for a sweep.",
+        facts: ["Captive guarded by 1 Stormtrooper"],
+        opts: [
+          { txt: "Move the trooper on; the captive stays captured.", v: "bad", fb: "A captured leader is rescued the moment no Imperial units remain in its system." },
+          { txt: "Keep units with the captive and plan missions that target captured leaders.", v: "best", fb: "Missions against a captured leader can pull information out of the Rebels. The captive still opposes those missions, so send a leader with strong matching skills." },
+          { txt: "Go capture a second Rebel leader as well.", v: "ok", fb: "You have only one captured-leader ring. A second capture frees the first, so only do it if the new captive matters more." }
+        ],
+        reply: "The Rebels spend a round trying to free their leader instead of scoring.",
+        principle: "A captive is only worth something while you hold it. Guard it and use it." },
+      { tag: "Round 7 · Command", title: "Using the Death Star",
+        sit: "Your Death Star is in play. The Rebels are early in their objective deck, so the Death Star Plans card is probably not in their hand yet.",
+        facts: ["Death Star: active", "Rebels: early objectives"],
+        opts: [
+          { txt: "Park it at Coruscant to protect the capital.", v: "bad", fb: "Coruscant can never lose its loyalty, and the Rebels win on the clock, not by taking your capital. A parked Death Star does nothing." },
+          { txt: "Use it to spearhead troop sweeps now; escort it with TIEs later.", v: "best", fb: "Only the Death Star Plans objective can destroy it, so it's nearly untouchable early. Later, when the Plans can turn up, keep TIE Fighters around it. Remember a fleet containing it can't retreat." },
+          { txt: "Send it alone to chase the Rebel fleet.", v: "bad", fb: "The Rebel fleet just runs. Chasing it doesn't find the base, and a lone Death Star carries no troops to reveal anything." }
+        ],
+        reply: "The Rebels pull their fleet away from your sweep rather than fight the Death Star.",
+        principle: "Your biggest unit should be doing your most important job: escorting the search." },
+      { tag: "Round 8 · Command", title: "They moved the base",
+        sit: "The Rebels revealed Rapid Mobilization. Their old base is now revealed with six Rebel units sitting on it. The new location is secret.",
+        facts: ["Old base: revealed, 6 Rebel units", "New base: hidden, empty"],
+        opts: [
+          { txt: "Crush the six units at the old base.", v: "ok", fb: "Free kills feel good, but those units protect nothing now. Only do it if it's on the way." },
+          { txt: "Ignore them and sweep fast: the new base starts empty.", v: "best", fb: "The new base has no units until the Rebels move or deploy some there. If your ground units find it before then, nothing defends it and you win on the spot." },
+          { txt: "Spend a round drawing probe cards before moving.", v: "bad", fb: "The three systems the Rebels didn't choose went to the bottom of the probe deck. Probes just got slower; sweeping is your fastest tool." }
+        ],
+        reply: "Your troops enter two candidate systems. Neither is the base, but the Rebels must now spend deployments shoring up the new location.",
+        principle: "A relocated base is weakest right after it moves. Hit it then." },
+      { tag: "Round 9 · Command", title: "Three rounds left",
+        sit: "Time marker on 8, reputation on 11. Probe cards and Rebel movement point to two regions.",
+        facts: ["Time 8 · Reputation 11", "2 candidate regions"],
+        opts: [
+          { txt: "Draw more probe cards with intel missions this round, sweep next round.", v: "ok", fb: "Two more cards rarely settle it, and it spends a round you barely have." },
+          { txt: "Split into two troop-carrying groups and sweep both regions now, with intel missions alongside.", v: "best", fb: "With three rounds (fewer if they score), coverage beats certainty. Make each group strong enough to beat whatever defends the base." },
+          { txt: "Go all-in on the likelier region.", v: "ok", fb: "Fine if the evidence is strong. On a coin flip, you're betting the game on it." }
+        ],
+        reply: "Your second group lands on a remote system and the Rebel player sighs: the base is revealed.",
+        principle: "Count rounds left every round: reputation minus time. Spend them like the deadline they are." }
+    ]
+  };
+  var tState = store.get("trainer", { side: "rebel", rebel: { i: 0, ans: [] }, empire: { i: 0, ans: [] } });
+  if (!tState.rebel || !tState.empire) tState = { side: "rebel", rebel: { i: 0, ans: [] }, empire: { i: 0, ans: [] } };
+  var scenEl = document.getElementById("scen");
+  var VLABEL = { best: "Best", ok: "Workable", bad: "Weak" };
+  function sideBtns() {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-side]"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-side") === tState.side ? "true" : "false"); });
+  }
+  function drawTrainer() {
+    sideBtns();
+    var list = SCEN[tState.side], st = tState[tState.side];
+    var pips = document.getElementById("pips"); pips.innerHTML = "";
+    list.forEach(function (_, k) {
+      var a = st.ans[k];
+      pips.appendChild(el("span", { class: "pip" + (a != null ? " " + list[k].opts[a].v : (k === st.i ? " cur" : "")) }));
+    });
+    var best = st.ans.filter(function (a, k) { return a != null && list[k].opts[a].v === "best"; }).length;
+    var done = st.ans.filter(function (a) { return a != null; }).length;
+    document.getElementById("tScore").textContent = best + " best of " + done + " answered";
+    scenEl.innerHTML = "";
+    if (st.i >= list.length) {
+      var opp = tState.side === "rebel" ? "empire" : "rebel";
+      var s = el("div", { class: "scen" });
+      s.appendChild(el("div", { class: "scen-head" }, "<p class='eyebrow'>Debrief</p><h3>You found the best move " + best + " of " + list.length + " times</h3>"));
+      s.appendChild(el("p", { style: "color:var(--muted)" }, "The principles you just practised. These are the ones to carry into your first game:"));
+      s.appendChild(el("ol", { class: "summary-list" }, list.map(function (x) { return "<li>" + x.principle + "</li>"; }).join("")));
+      var row = el("div", { class: "btn-row" });
+      var again = el("button", { class: "btn", type: "button" }, "Run these again");
+      again.onclick = function () { tState[tState.side] = { i: 0, ans: [] }; save(); drawTrainer(); };
+      var sw = el("button", { class: "btn primary", type: "button" }, "Now try the " + (opp === "rebel" ? "Rebel" : "Imperial") + " side");
+      sw.onclick = function () { tState.side = opp; save(); drawTrainer(); };
+      row.appendChild(sw); row.appendChild(again);
+      s.appendChild(row);
+      scenEl.appendChild(s);
+      return;
+    }
+    var sc = list[st.i], picked = st.ans[st.i];
+    var head = el("div", { class: "scen-head" }, "<p class='eyebrow'>" + (st.i + 1) + " of " + list.length + " · " + sc.tag + "</p><h3>" + sc.title + "</h3>");
+    scenEl.appendChild(head);
+    scenEl.appendChild(el("p", null, sc.sit));
+    scenEl.appendChild(el("div", { class: "facts" }, sc.facts.map(function (f) { return "<span class='fact'>" + f + "</span>"; }).join("")));
+    var opts = el("div", { class: "opts" });
+    sc.opts.forEach(function (o, k) {
+      var answered = picked != null;
+      var b = el("button", { class: "opt" + (answered ? " " + o.v : "") + (picked === k ? " picked" : ""), type: "button" });
+      b.innerHTML = "<span class='k'>" + "ABC"[k] + "</span><span>" + (answered ? "<span class='badge'>" + VLABEL[o.v] + (picked === k ? " · your pick" : "") + "</span>" : "") + o.txt + (answered ? "<span class='fb'>" + o.fb + "</span>" : "") + "</span>";
+      if (answered) b.disabled = true;
+      else b.onclick = function () { st.ans[st.i] = k; save(); drawTrainer(); var f = scenEl.querySelector(".reply"); if (f && f.scrollIntoView) f.scrollIntoView({ block: "nearest", behavior: "smooth" }); };
+      opts.appendChild(b);
+    });
+    scenEl.appendChild(opts);
+    if (picked != null) {
+      var oppName = tState.side === "rebel" ? "Empire" : "Rebels";
+      scenEl.appendChild(el("div", { class: "reply" }, "<span class='who-tag' style='background:var(" + (tState.side === "rebel" ? "--empire" : "--rebel") + ")'>" + oppName + "</span><p>" + sc.reply + "</p>"));
+      scenEl.appendChild(el("p", { class: "principle" }, sc.principle));
+      var row2 = el("div", { class: "btn-row" });
+      var nx = el("button", { class: "btn primary", type: "button" }, st.i + 1 < list.length ? "Next situation" : "See debrief");
+      nx.onclick = function () { st.i++; save(); drawTrainer(); document.getElementById("trainerPanel").scrollIntoView({ block: "start", behavior: "smooth" }); };
+      row2.appendChild(nx);
+      if (st.i > 0) { var bk = el("button", { class: "btn", type: "button" }, "Previous"); bk.onclick = function () { st.i--; save(); drawTrainer(); }; row2.appendChild(bk); }
+      scenEl.appendChild(row2);
+    }
+  }
+  function save() { store.set("trainer", tState); }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-side]"), function (b) {
+    b.onclick = function () { tState.side = b.getAttribute("data-side"); save(); drawTrainer(); };
+  });
+  drawTrainer();
+
+  /* ---------- COMPANION ---------- */
+  var CHECKS = {
+    rebel: {
+      Assignment: [
+        "Which objective in my hand can I finish soonest? Pick missions that push it.",
+        "Keep 1–2 leaders in the pool to oppose captures and base-hunting missions.",
+        "Where will my mission leaders end up? Next to Imperial units they can be captured.",
+        "Any mission I can attempt where an Imperial fleet sits, to bait a pin?"
+      ],
+      Command: [
+        "I act first. If the base is threatened, defensive moves or relocation go now.",
+        "Before moving to or from the Rebel Base space: is the clue worth giving?",
+        "Fight only if it scores an objective, frees a system, or protects the base.",
+        "Count leaders left on both sides. Who gets the last word?"
+      ],
+      Refresh: [
+        "Play at most one objective this Refresh Phase.",
+        "Is the next time space a build? Plan sabotage for next round.",
+        "Deploy new units: up to 2 per system, base space included.",
+        "Update the gap below."
+      ]
+    },
+    empire: {
+      Assignment: [
+        "At least one mission that hunts the base (intel, probe cards).",
+        "Keep 1–2 leaders back for Rebel missions that score objectives.",
+        "Any Rebel leader standing with my units? Plan a capture.",
+        "Does my plan fit inside the rounds I have left?"
+      ],
+      Command: [
+        "Move ground units into unchecked systems. Every occupied system is ruled out.",
+        "Before opposing: will it pin a fleet I need this round?",
+        "Write down every Rebel move to or from the base space.",
+        "Count leaders left on both sides. Who gets the last word?"
+      ],
+      Refresh: [
+        "Add the two new probe cards to my ruled-out list.",
+        "Build round? Queue troops and transports, not only ships.",
+        "Deploy where the next sweep starts (max 2 per system).",
+        "Update the gap below."
+      ]
+    }
+  };
+  var FOCUS = {
+    rebel: [
+      { max: 1, t: "Opening", d: "Your Bothawui fleet is both decoy and hammer: operate it away from the base. Push diplomacy toward loyal systems, since loyalty is your only steady production." },
+      { max: 2, t: "Early game", d: "Expect the first capture attempts. Keep a reserve leader and don't leave key leaders standing beside Imperial units without a plan." },
+      { max: 4, t: "Early game", d: "Watch the direction of Imperial sweeps. If one is heading toward your region, start pinning it and think about when you'd relocate." },
+      { max: 99, t: "Middle game", d: "Later objectives are worth more. Sabotage right before build rounds, and only take battles that score." }
+    ],
+    empire: [
+      { max: 1, t: "Opening", d: "Expand from your core with ground units into neighbouring populous systems. Your Death Star at Mandalore is already active and nearly untouchable early. Use it as a spearhead." },
+      { max: 2, t: "Early game", d: "Capture targets appear as Rebel leaders finish missions near your units. Start a written list of ruled-out systems now." },
+      { max: 4, t: "Early game", d: "Combine the list with Rebel movement clues. Which regions have you not touched at all? That's where the base likes to be." },
+      { max: 99, t: "Middle game", d: "Commit. Pick the one or two regions the evidence points to and send troop-carrying fleets there." }
+    ]
+  };
+  var comp = store.get("companion", null);
+  function freshComp(side) { return { side: side || "rebel", round: 1, time: 1, rep: 14, checked: {} }; }
+  if (!comp || !comp.side) comp = freshComp();
+  function saveComp() { store.set("companion", comp); }
+  function drawComp() {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-cside]"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-cside") === comp.side ? "true" : "false"); });
+    document.getElementById("oRound").textContent = comp.round;
+    document.getElementById("oTime").textContent = comp.time;
+    document.getElementById("oRep").textContent = comp.rep;
+    var gap = comp.rep - comp.time;
+    var chip = document.getElementById("oGap");
+    chip.innerHTML = gap <= 0 ? "<b>Markers met: Rebels win</b>" : "<b>" + gap + "</b> " + (gap === 1 ? "round" : "rounds") + " left for the Empire";
+    var f, c = comp.side === "rebel" ? "var(--rebel)" : "var(--empire)";
+    if (gap <= 3 && gap > 0) {
+      f = comp.side === "rebel"
+        ? { t: "Endgame · survive", d: "Gap of " + gap + ". Survival beats everything: oppose every base-hunting mission, pin fleets near your region, relocate if troops are one move away, and score one objective each Refresh if you can." }
+        : { t: "Endgame · all in", d: "Gap of " + gap + ". Every activation should move ground units into an unchecked candidate system. Oppose only missions that would score objectives." };
+    } else if (gap <= 0) {
+      f = { t: "Game over", d: "The markers have met. Start a new game below, and try the other side next." };
+    } else {
+      f = FOCUS[comp.side].filter(function (x) { return comp.round <= x.max; })[0];
+    }
+    var fe = document.getElementById("focus");
+    fe.style.setProperty("--c", c);
+    fe.innerHTML = "<p class='eyebrow'>Round " + comp.round + " · " + f.t + "</p><p>" + f.d + "</p>";
+    var wrapC = document.getElementById("checks"); wrapC.innerHTML = "";
+    var phaseN = { Assignment: 1, Command: 2, Refresh: 3 };
+    Object.keys(CHECKS[comp.side]).forEach(function (ph) {
+      var col = el("div", { class: "checkcol" });
+      var items = CHECKS[comp.side][ph];
+      var done = items.filter(function (_, k) { return comp.checked[ph + k]; }).length;
+      col.appendChild(el("h3", null, "<span>" + phaseN[ph] + ". " + ph + "</span><span class='mono'>" + done + "/" + items.length + "</span>"));
+      items.forEach(function (txt, k) {
+        var id = "chk-" + comp.side + "-" + ph + "-" + k;
+        var lab = el("label", { class: "check", for: id });
+        var inp = el("input", { type: "checkbox", id: id });
+        inp.checked = !!comp.checked[ph + k];
+        inp.onchange = function () { comp.checked[ph + k] = inp.checked; saveComp(); drawComp(); var n = document.getElementById(id); if (n) n.focus(); };
+        lab.appendChild(inp);
+        lab.appendChild(el("span", null, txt));
+        col.appendChild(lab);
+      });
+      wrapC.appendChild(col);
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-cside]"), function (b) {
+    b.onclick = function () { comp.side = b.getAttribute("data-cside"); comp.checked = {}; saveComp(); drawComp(); };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-adj]"), function (b) {
+    b.onclick = function () {
+      var p = b.getAttribute("data-adj").split(":"), k = p[0], d = parseInt(p[1], 10);
+      var lim = { round: [1, 16], time: [1, 16], rep: [1, 14] }[k];
+      comp[k] = Math.max(lim[0], Math.min(lim[1], comp[k] + d));
+      saveComp(); drawComp();
+    };
+  });
+  document.getElementById("nextRound").onclick = function () {
+    if (comp.rep - comp.time <= 0) return;
+    comp.round = Math.min(16, comp.round + 1); comp.time = Math.min(16, comp.time + 1); comp.checked = {};
+    saveComp(); drawComp();
+  };
+  document.getElementById("resetGame").onclick = function () { comp = freshComp(comp.side); saveComp(); drawComp(); };
+  drawComp();
+
+  /* ---------- PITFALLS ---------- */
+  var PIT = [
+    ["Only Imperial ground units (or Imperial loyalty) in a system reveal the base. Ships alone do not.", "Imperial fleets without troops can't find anything. Plan transport."],
+    ["You can't move units out of a system that holds one of your leaders.", "Leaders who attempted or opposed a mission pin your units. The core of the bait tactic."],
+    ["A mission succeeds only with strictly more successes. Ties go to the opposer.", "Opposing with fewer dice is still worth it for missions that matter."],
+    ["Only one leader can be sent to oppose a mission.", "You can't pile defenders onto one mission; spread your reserve."],
+    ["Unrevealed missions return to hand. Starting missions return to hand after use; others are discarded.", "Bluffing costs a leader but not a card. Your starting missions are reusable tools."],
+    ["TIE Fighters need transport capacity, just like ground units.", "Imperial fighter swarms move slower than they look."],
+    ["Retreat requires a leader in the system. A fleet with the Death Star can't retreat.", "Bring a leader to any fight you might want to leave."],
+    ["A hit only damages a unit whose health colour matches the die. A direct hit damages either.", "Black dice are for fighters, red dice for capital ships. Mixed fleets soak damage."],
+    ["Deploy at most two units per system, and never into systems with enemy units or sabotage.", "Plan deployments a round ahead; sabotage really does block reinforcements."],
+    ["A subjugated system builds only from its left-most resource icon, and the Rebels can't build there at all.", "Subjugation is half a factory for the Empire and a full loss for the Rebels."],
+    ["Only one objective per combat and one per Refresh Phase.", "Rebels must score steadily; hoarding objectives wastes them."],
+    ["The Empire has one captured-leader ring. A second capture frees the first.", "Choose capture targets with care."],
+    ["Moving units to or from the Rebel Base space shows the base is in or adjacent to that system.", "Rebels: the biggest accidental giveaway. Empire: the best clue you'll get."],
+    ["An attack rolls at most five red and five black dice.", "Past that size, extra ships add health, not firepower."]
+  ];
+  document.getElementById("pitBody").innerHTML = PIT.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("");
+})();
+</script>
+</body>
+</html>

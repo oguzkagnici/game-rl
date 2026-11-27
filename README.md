@@ -9,6 +9,9 @@ folder with a rules engine in C++, a training loop in PyTorch, tests, logs and t
 | [`toy-battle/`](toy-battle/README.md) | [Toy Battle](https://www.rprod.com/en/games/toy-battle), all 8 terrains with one network | Finished: 6.3 hours of training | 98–100% against the scripted bot and hand-written search; 65% against its own checkpoint from 4 hours earlier |
 | [`quoridor/`](quoridor/README.md) | Quoridor | Engine and training loop only, never trained | none |
 
+Also in this repo: [`rebellion-guide/`](rebellion-guide/README.md), an interactive learning guide for *Star Wars: Rebellion*
+(no trained agent; see its README for why).
+
 ## The approach
 
 All three use the AlphaZero recipe:
